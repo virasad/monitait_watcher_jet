@@ -21,34 +21,43 @@ gpio21_4 = GPIO(3, "in")
 gpio23_5 = GPIO(2, "in")
 # Open GPIO 126 with output direction
 gpio24_ext = GPIO(6, "out")
+gpio24_ext.write(True)
 
 #gpio27_0 = GPIO(1, "out")
 #gpio28_1 = GPIO(0, "out")
-gpio26_0 = GPIO(5, "in")
+gpio26_0 = GPIO(5, "out")
 gpio29_1 = GPIO(122, "out")
 gpio31_2 = GPIO(123, "out")
 gpio33_3 = GPIO(124, "out")
 gpio35_4 = GPIO(125, "out")
 gpio37_5 = GPIO(126, "out")
 
-while flag:
-  gpio24_ext.write(True)
-
-  value = 1*gpio07_0.read() + 2*gpio16_1.read() + 4*gpio18_2.read() + 8*gpio19_3.read() + 16*gpio21_4.read() + 32*gpio23_5.read()
+def get_gpio_value():
+  in_bit_0 = gpio07_0.read()
+  in_bit_1 = gpio16_1.read()
+  in_bit_2 = gpio18_2.read()
+  in_bit_3 = gpio19_3.read()
+  in_bit_4 = gpio21_4.read()
+  in_bit_5 = gpio23_5.read()
+  value = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3 + 16*in_bit_4 + 32*in_bit_5
   print(value)
-  gpio26_0.write(gpio07_0.read())
-  gpio29_1.write(gpio16_1.read())
-  gpio31_2.write(gpio18_2.read())
-  gpio33_3.write(gpio19_3.read())
-  gpio35_4.write(gpio21_4.read())
-  gpio37_5.write(gpio23_5.read())
-  time.sleep(0.5)
-  gpio24_ext.write(False)
-  if(value != 0 and flag):
-    value = 1*gpio07_0.read() + 2*gpio16_1.read() + 4*gpio18_2.read() + 8*gpio19_3.read() + 16*gpio21_4.read() + 32*gpio23_5.read()
+  gpio26_0.write(in_bit_0)
+  gpio29_1.write(in_bit_1)
+  gpio31_2.write(in_bit_2)
+  gpio33_3.write(in_bit_3)
+  gpio35_4.write(in_bit_4)
+  gpio37_5.write(in_bit_5)  
+  return value
+
+while flag:
+  value = get_gpio_value()
+  if(value > 0):
     print("wait for arduino")
-    print(value)
-    time.sleep(0.1)
+    gpio24_ext.write(False)
+    time.sleep(1)
+    gpio24_ext.write(True)
+    time.sleep(1)
+
 
 gpio_out.write(False)
 gpio_in.close()
