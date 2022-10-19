@@ -2,6 +2,21 @@ from periphery import GPIO
 import time
 import signal
 import sys
+import requests
+import json
+
+
+def watcher_update(register_id, quantity):
+    DATA = {
+        "register_id" : register_id,
+        "quantity" : quantity
+    }
+    HEADER = {
+        "content-type": "application/json"
+    }
+    URL = "https://backend.monitait.com/api/factory/update-watcher/"
+    r = requests.post(URL, data=json.dumps(DATA), headers=HEADER)
+    return r.json()
 
 flag = True
 
@@ -20,7 +35,7 @@ gpio19_3 = GPIO(10, "in")
 gpio21_4 = GPIO(9, "in")
 gpio23_5 = GPIO(11, "in")
 # Open GPIO 126 with output direction
-gpio26_ext = GPIO(7, "out")
+gpio26_ext = GPIO(8, "out")
 gpio26_ext.write(True)
 
 #gpio27_0 = GPIO(1, "out")
@@ -58,6 +73,8 @@ while flag:
     time.sleep(0.5)
 
     gpio26_ext.write(True)
+    res = watcher_update("shyy2873gdj", value)
+    print(res)
     time.sleep(0.5)
 
 gpio_out.write(False)
