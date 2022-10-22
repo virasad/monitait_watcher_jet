@@ -1,6 +1,6 @@
 import requests
 import json
-
+import time
 
 def watcher_update(register_id, quantity):
     DATA = {
@@ -14,7 +14,10 @@ def watcher_update(register_id, quantity):
     r = requests.post(URL, data=json.dumps(DATA), headers=HEADER)
     return r.json()
     
-    
-res = watcher_update("shyy2873gdj", 10)
-print(res)
-
+while True:    
+    try:
+        res = watcher_update("1234567890", 0)
+        print(res)
+        time.sleep(60)
+    except:
+        pass
