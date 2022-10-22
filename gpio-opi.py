@@ -2,6 +2,22 @@ from periphery import GPIO
 import time
 import signal
 import sys
+import requests
+import json
+
+
+def watcher_update(register_id, quantity):
+    DATA = {
+        "register_id" : register_id,
+        "quantity" : quantity
+    }
+    HEADER = {
+        "content-type": "application/json"
+    }
+    URL = "https://backend.monitait.com/api/factory/update-watcher/"
+    r = requests.post(URL, data=json.dumps(DATA), headers=HEADER)
+    return r.json()
+
 
 flag = True
 
@@ -56,6 +72,8 @@ while flag:
     print("wait for arduino")
     gpio26_ext.write(False)
     time.sleep(0.5)
+    res = watcher_update("shyy2873gdj", value)
+    print(res)
 
     gpio26_ext.write(True)
     time.sleep(0.5)
