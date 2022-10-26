@@ -11,12 +11,12 @@ def watcher_update(register_id, quantity):
         "content-type": "application/json"
     }
     URL = "https://backend.monitait.com/api/factory/update-watcher/"
-    r = requests.post(URL, data=json.dumps(DATA), headers=HEADER)
+    r = requests.post(URL, data=json.dumps(DATA), headers=HEADER, timeout=10)
     return r.json()
     
 while True:    
     try:
-        res = watcher_update("1234567890", 0)
+        res = watcher_update("1234567890", 2)
         print(res)
         time.sleep(60)
     except:
