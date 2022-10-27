@@ -1,7 +1,7 @@
 const byte ledPin = 13;
 const byte sensorPin = 2;
 const byte piPin = 3;
-
+const byte DataCapture = 12;
 byte input_pins[5] = {
   14, 15, 16, 17, 18
 };
@@ -11,6 +11,7 @@ byte output_pins[6] = {
 };
 
 volatile byte state = LOW;
+volatile byte data_state = LOW;
 long counter = 0;
 byte out_pins_number;
 void setup() {
@@ -23,18 +24,24 @@ void setup() {
   pinMode(sensorPin, INPUT_PULLUP);
   
   pinMode(ledPin, OUTPUT);
+  pinMode(DataCapture, OUTPUT);
   pinMode(sensorPin, INPUT_PULLUP);
   pinMode(piPin, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(sensorPin), count_up, RISING);
-  attachInterrupt(digitalPinToInterrupt(piPin), sub_down, FALLING);
+  attachInterrupt(digitalPinToInterrupt(piPin), sub_down, RISING);
 }
 
 void loop() {
   digitalWrite(ledPin, state);
-  if (counter >= 0 and counter < 64)
-    out_pins_number = counter % 64;
-  else if (counter >= 64)
-    out_pins_number = 63;
+  digitalWrite(DataCapture, data_state);
+  if (counter >= 0 and counter < 32)
+    out_pins_number = counter % 32;
+  else if (counter >= 32)
+    out_pins_number = 31;
+  else if (counter < 0){
+    counter = 0;
+    out_pins_number = 0;
+    }
   else
     out_pins_number = 0;
   put_byte_on_pins(out_pins_number);
@@ -45,7 +52,7 @@ void loop() {
 }
 
 void put_byte_on_pins(byte in_byte){
-  for(int i = 0; i < 6; i++){
+  for(int i = 0; i < 5; i++){
       digitalWrite(output_pins[i], bitRead (in_byte, i));
     }
   return;
@@ -71,9 +78,6 @@ void sub_down(){
   bitClear(get_byte, 7);
   Serial.println(get_byte);
   counter = counter - get_byte;
-  state = !state;
-  digitalWrite(ledPin, state);
-  delay(200);
-  state = !state;
+  data_state = !data_state;
   return;
 }
