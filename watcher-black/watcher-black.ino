@@ -20,12 +20,11 @@ void setup() {
     pinMode(input_pins[i], INPUT_PULLUP);
     pinMode(output_pins[i],OUTPUT);
   }
-  pinMode(output_pins[6],OUTPUT);
-  pinMode(sensorPin, INPUT_PULLUP);
+  pinMode(output_pins[5],OUTPUT);
+  pinMode(sensorPin, INPUT);
   
   pinMode(ledPin, OUTPUT);
   pinMode(DataCapture, OUTPUT);
-  pinMode(sensorPin, INPUT_PULLUP);
   pinMode(piPin, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(sensorPin), count_up, RISING);
   attachInterrupt(digitalPinToInterrupt(piPin), sub_down, RISING);
@@ -59,8 +58,17 @@ void put_byte_on_pins(byte in_byte){
 }
 
 void count_up(){
+//  int j = 0;
   counter++;
-  state = !state;
+//  for(int i = 0; i < 6; i++){
+//    delay(1);
+//    if (digitalRead(sensorPin) == HIGH)
+//      j++;
+//  }
+//  if (j > 4){
+//    counter++;
+    state = !state;
+//  }  
   return;
 }
 
