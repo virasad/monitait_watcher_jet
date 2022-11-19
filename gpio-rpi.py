@@ -5,11 +5,14 @@ import sys
 import requests
 import json
 
-
-def watcher_update(register_id, quantity):
+def watcher_update(register_id, quantity, defect_quantity, product_id=0, lot_info=0, extra_info=None):
     DATA = {
         "register_id" : register_id,
-        "quantity" : quantity
+        "quantity" : quantity,
+        "defect_quantity": defect_quantity,
+        "product_id": product_id, 
+        "extra_info": extra_info,
+        "lot_info": lot_info
     }
     HEADER = {
         "content-type": "application/json"
@@ -17,6 +20,7 @@ def watcher_update(register_id, quantity):
     URL = "https://backend.monitait.com/api/factory/update-watcher/"
     r = requests.post(URL, data=json.dumps(DATA), headers=HEADER)
     return r.status_code, r.json()
+
 
 flag = True
 
@@ -75,8 +79,16 @@ def get_gpio_value():
 while flag:
   try:
     value = get_gpio_value()
+    print(value)
     if(value > 0):
-      r_c, resp = watcher_update("1234567890", value)
+      r_c, resp = watcher_update(
+          register_id="1234567894",
+          quantity=value,
+          defect_quantity=0,
+          product_id=0,
+          lot_info=0,
+          extra_info= {})
+
       print(r_c)
       if r_c == requests.codes.ok:
         print("send arduino: {}".format(value))
@@ -88,10 +100,15 @@ while flag:
       time.sleep(5)
       i=i+1
       if i > 12:
-        r_c, resp = watcher_update("1234567890", 0)
+        r_c, resp = watcher_update(
+          register_id="1234567894",
+          quantity=0,
+          defect_quantity=0,
+          product_id=0,
+          lot_info=0,
+          extra_info= {})
         if r_c == requests.codes.ok:
           i=0
-
   except Exception as e:
     print("error: {}".format(str(e)))
     time.sleep(2)
