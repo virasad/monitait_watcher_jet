@@ -58,17 +58,16 @@ void put_byte_on_pins(byte in_byte){
 }
 
 void count_up(){
-//  int j = 0;
-  counter++;
-//  for(int i = 0; i < 6; i++){
-//    delay(1);
-//    if (digitalRead(sensorPin) == HIGH)
-//      j++;
-//  }
-//  if (j > 4){
-//    counter++;
+  int j = 0;  
+  for(int i = 0; i < 6; i++){
+    delay(1);
+    if (digitalRead(sensorPin) == HIGH)
+      j++;
+  }
+  if (j > 4){
+    counter++;
     state = !state;
-//  }  
+  }  
   return;
 }
 
