@@ -4,23 +4,33 @@ import signal
 import sys
 import requests
 import json
+from requests.adapters import HTTPAdapter, Retry
 
-def watcher_update(register_id, quantity, defect_quantity, product_id=0, lot_info=0, extra_info=None):
-    DATA = {
-        "register_id" : register_id,
-        "quantity" : quantity,
-        "defect_quantity": defect_quantity,
-        "product_id": product_id, 
-        "extra_info": extra_info,
-        "lot_info": lot_info
-    }
-    HEADER = {
-        "content-type": "application/json"
-    }
-    URL = "https://backend.monitait.com/api/factory/update-watcher/"
-    r = requests.post(URL, data=json.dumps(DATA), headers=HEADER)
-    return r.status_code, r.json()
+watcher_register_id = "1234567895"
 
+def watcher_update(register_id , quantity, defect_quantity, product_id=0, lot_info=0, extra_info=None, url = "https://backend.monitait.com/api/factory/update-watcher/"):
+
+  DATA = {
+      "register_id" : register_id,
+      "quantity" : quantity,
+      "defect_quantity": defect_quantity,
+      "product_id": product_id,
+      "extra_info": extra_info,
+      "lot_info": lot_info
+  }
+  s = requests.Session()
+  retries = Retry(total=10, backoff_factor=2, ) # retry after n, 2n, 3n, 4n, 5n, ......
+  s.mount(url, HTTPAdapter(max_retries=retries))
+  HEADER = {
+      "content-type": "application/json"
+  }
+
+  r = s.post(url, data=json.dumps(DATA), headers=HEADER)
+  return r.status_code, r.json()
+
+def log(message):
+  with open("log.log", "a") as f:
+    f.write(message+"\n")
 
 flag = True
 
@@ -73,47 +83,61 @@ def get_gpio_value():
   gpio31_1.write(in_bit_1)
   gpio33_2.write(in_bit_2)
   gpio35_3.write(in_bit_3)
-  gpio37_4.write(in_bit_4)  
+  gpio37_4.write(in_bit_4)
   return value
 
-while flag:
-  try:
-    value = get_gpio_value()
-    print(value)
-    if(value > 0):
-      r_c, resp = watcher_update(
-          register_id="1234567894",
-          quantity=value,
-          defect_quantity=0,
-          product_id=0,
-          lot_info=0,
-          extra_info= {})
+i=0
+j=0
 
-      print(r_c)
-      if r_c == requests.codes.ok:
-        print("send arduino: {}".format(value))
-        gpio26_ext.write(True)
-        time.sleep(0.5)
-        gpio26_ext.write(False)
-        i=0
-    else:
-      time.sleep(5)
-      i=i+1
-      if i > 12:
+try:
+  j=0
+  while ( j < 30 and flag ):
+    try:
+      counter = get_gpio_value()
+      print(counter)
+      if(counter > 0):
         r_c, resp = watcher_update(
-          register_id="1234567894",
-          quantity=0,
-          defect_quantity=0,
-          product_id=0,
-          lot_info=0,
-          extra_info= {})
+            register_id = watcher_register_id,
+            quantity=counter,
+            defect_quantity=0)#,
+#            product_id=product_id,
+#            lot_info=lot_info,
+#            extra_info= extra_info,
+#            url = endpoint_url)
         if r_c == requests.codes.ok:
+          print("send arduino: {}".format(counter))
+          gpio26_ext.write(True)
+          time.sleep(0.5)
+          gpio26_ext.write(False)
           i=0
-  except Exception as e:
-    print("error: {}".format(str(e)))
-    time.sleep(2)
-    pass
+          j=0
+        else:
+          j=j+1
+      else:
+        time.sleep(5)
+        i=i+1
+        if i > 12:
+          r_c, resp = watcher_update(
+            register_id = watcher_register_id,
+            quantity=0,
+            defect_quantity=0)#,
+#            product_id=product_id,
+#            lot_info=lot_info,
+#            extra_info= extra_info,
+#            url = endpoint_url)
+          if r_c == requests.codes.ok:
+            i=0
+            j=0
+          else:
+            j=j+1
 
-gpio_out.write(False)
-gpio_in.close()
-gpio_out.close()
+    except Exception as e:
+      print("error: {}".format(str(e)))
+      log(str(e))
+      time.sleep(2)
+      pass
+except Exception as e:
+    print("reload app due to: {}".format(str(e)))
+    log(str(e))
+    j = 0
+    os.exec("python3 gpio-rpi.py")
