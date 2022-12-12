@@ -5,8 +5,10 @@ import sys
 import requests
 import json
 from requests.adapters import HTTPAdapter, Retry
+import redis
+watcher_register_id = "1234567899"
 
-watcher_register_id = "1234567895"
+r = redis.StrictRedis('localhost', 6379, charset="utf-8", decode_responses=True)
 
 def watcher_update(register_id , quantity, defect_quantity, product_id=0, lot_info=0, extra_info=None, url = "https://backend.monitait.com/api/factory/update-watcher/"):
 
@@ -88,56 +90,61 @@ def get_gpio_value():
 
 i=0
 j=0
-
+k=0
 try:
   j=0
   while ( j < 30 and flag ):
     try:
       counter = get_gpio_value()
-      print(counter)
-      if(counter > 0):
-        r_c, resp = watcher_update(
-            register_id = watcher_register_id,
-            quantity=counter,
-            defect_quantity=0)#,
-#            product_id=product_id,
-#            lot_info=lot_info,
-#            extra_info= extra_info,
-#            url = endpoint_url)
-        if r_c == requests.codes.ok:
+      if counter > 0:
+          r.incrby("counter", counter)
           print("send arduino: {}".format(counter))
           gpio26_ext.write(True)
           time.sleep(0.5)
           gpio26_ext.write(False)
           i=0
           j=0
-        else:
-          j=j+1
-      else:
-        time.sleep(5)
-        i=i+1
-        if i > 12:
+          print(counter)
+          k = k+1
+
+      if( k > 10):
+          k = 0
+          request_counter = r.get("counter")
           r_c, resp = watcher_update(
-            register_id = watcher_register_id,
-            quantity=0,
-            defect_quantity=0)#,
+              register_id = watcher_register_id,
+              quantity=request_counter,
+              defect_quantity=0) #,
 #            product_id=product_id,
 #            lot_info=lot_info,
 #            extra_info= extra_info,
 #            url = endpoint_url)
+          print("status_code", r_c," , rc", request_counter, " , response: ", resp)
           if r_c == requests.codes.ok:
-            i=0
-            j=0
+              r.incrby("counter", -1 * int(request_counter) )
           else:
-            j=j+1
+              j=j+1
+
+      else:
+        time.sleep(5)
+        i=i+1
+        if i > 12:
+            r_c, resp = watcher_update(
+                register_id = watcher_register_id,
+                quantity=0,
+                defect_quantity=0)
+            if r_c == requests.codes.ok:
+                i=0
+                j=0
+            else:
+                j=j+1
 
     except Exception as e:
-      print("error: {}".format(str(e)))
-      log(str(e))
-      time.sleep(2)
-      pass
+        print("error: {}".format(str(e)))
+        log(str(e))
+        time.sleep(2)
+        pass
 except Exception as e:
     print("reload app due to: {}".format(str(e)))
     log(str(e))
     j = 0
-    os.exec("python3 gpio-rpi.py")
+    os.exec("sudo reboot now")
