@@ -6,7 +6,7 @@ import requests
 import json
 from requests.adapters import HTTPAdapter, Retry
 import redis
-watcher_register_id = "1234567899"
+watcher_register_id = "watchersecgray1"
 
 r = redis.StrictRedis('localhost', 6379, charset="utf-8", decode_responses=True)
 
@@ -89,13 +89,22 @@ def get_gpio_value():
   return value
 
 i=0
-j=0
 k=0
+r.set("failed_requests", 0)
+
 try:
-  j=0
-  while ( j < 30 and flag ):
+  while flag:
     try:
+      failed_requests = int(r.get("failed_requests"))
+      if ( failed_requests > 100 ):
+          r.set("failed_requests", 0)
+          print("reboot os due to: {}".format(str(e)))
+          log(str(e))
+          import os
+          os.system("sudo reboot -r now")
+
       counter = get_gpio_value()
+
       if counter > 0:
           r.incrby("counter", counter)
           print("send arduino: {}".format(counter))
@@ -103,48 +112,48 @@ try:
           time.sleep(0.5)
           gpio26_ext.write(False)
           i=0
-          j=0
-          print(counter)
           k = k+1
 
+      else:
+          time.sleep(5)
+          i=i+1
+          if i > 11:
+              r_c, resp = watcher_update(
+                  register_id = watcher_register_id,
+                  quantity=0,
+                  defect_quantity=0)
+
+              if r_c == requests.codes.ok:
+                  i=0
+
+              else:
+                  r.incr("failed_requests")
+
+
       if( k > 10):
-          k = 0
-          request_counter = r.get("counter")
+          request_counter = int(r.get("counter"))
           r_c, resp = watcher_update(
               register_id = watcher_register_id,
               quantity=request_counter,
-              defect_quantity=0) #,
-#            product_id=product_id,
-#            lot_info=lot_info,
-#            extra_info= extra_info,
-#            url = endpoint_url)
+              defect_quantity=0)
+
           print("status_code", r_c," , rc", request_counter, " , response: ", resp)
+
           if r_c == requests.codes.ok:
               r.incrby("counter", -1 * int(request_counter) )
-          else:
-              j=j+1
+              k = 0
 
-      else:
-        time.sleep(5)
-        i=i+1
-        if i > 12:
-            r_c, resp = watcher_update(
-                register_id = watcher_register_id,
-                quantity=0,
-                defect_quantity=0)
-            if r_c == requests.codes.ok:
-                i=0
-                j=0
-            else:
-                j=j+1
+          else:
+              r.incr("failed_requests")
 
     except Exception as e:
         print("error: {}".format(str(e)))
         log(str(e))
         time.sleep(2)
         pass
+
 except Exception as e:
-    print("reload app due to: {}".format(str(e)))
+    print("reboot os due to: {}".format(str(e)))
     log(str(e))
-    j = 0
-    os.exec("sudo reboot now")
+    import os
+    os.system("sudo reboot -r now")

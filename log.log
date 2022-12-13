@@ -11,3 +11,6 @@ value is not an integer or out of range
 value is not an integer or out of range
 value is not an integer or out of range
 value is not an integer or out of range
+int() argument must be a string, a bytes-like object or a number, not 'NoneType'
+int() argument must be a string, a bytes-like object or a number, not 'NoneType'
+int() argument must be a string, a bytes-like object or a number, not 'NoneType'
