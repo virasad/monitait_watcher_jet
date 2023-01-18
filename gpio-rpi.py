@@ -6,11 +6,21 @@ import requests
 import json
 from requests.adapters import HTTPAdapter, Retry
 import redis
-watcher_register_id = "watchersecgray1"
+import pygame
+import pygame.camera
+
+pygame.camera.init()
+pygame.camera.list_cameras() #Camera detected or not
+try:
+  cam = pygame.camera.Camera("/dev/video0",(640,480))
+except:
+  cam = pygame.camera.Camera("/dev/video1",(640,480))
+
+session = requests.Session()
 
 r = redis.StrictRedis('localhost', 6379, charset="utf-8", decode_responses=True)
 
-def watcher_update(register_id , quantity, defect_quantity, product_id=0, lot_info=0, extra_info=None, url = "https://backend.monitait.com/api/factory/update-watcher/"):
+def watcher_update(register_id , quantity, defect_quantity, product_id=0, lot_info=0, extra_info=None, url = "https://app.monitait.com/api/factory/update-watcher/"):
 
   DATA = {
       "register_id" : register_id,
@@ -29,6 +39,58 @@ def watcher_update(register_id , quantity, defect_quantity, product_id=0, lot_in
 
   r = s.post(url, data=json.dumps(DATA), headers=HEADER)
   return r.status_code, r.json()
+
+
+import requests
+import json
+from datetime import datetime
+
+
+def watcher_update_image(session, register_id, *args, **kwargs):
+    quantity = kwargs.pop("quantity", 1)
+    defect_quantity = kwargs.pop("defect_quantity", 0)
+    product_id = kwargs.pop("product_id", 1)
+    lot_info = kwargs.pop("lot_info", 1)
+    extra_info = kwargs.pop("extra_info", None)
+    file_path = kwargs.pop("file_path", None)
+    timestamp = kwargs.pop("timestamp", datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f'))
+    product_info = kwargs.pop("product_info", None)
+        
+    # try:
+    DATA = {
+        "register_id" : register_id,
+        "quantity" : quantity,
+        "defect_quantity": defect_quantity,
+        "product_id": product_id, 
+        "extra_info": extra_info,
+        "lot_info": lot_info,
+        "timestamp":timestamp, 
+        "product_info":product_info
+    }
+    
+    URL_DATA = "https://app.monitait.com/api/factory/image-update-watcher-data/"
+    URL_IMAGE = "https://app.monitait.com/api/factory/image-update-watcher/"
+    
+    try:
+        response = session.post(URL_DATA, data=json.dumps(DATA), headers={"content-type": "application/json"})
+        result = response.json()
+        
+        if file_path is None:
+            return 
+        if _id := result.get('_id', None):
+            DATA = {
+                'register_id':result['register_id'],
+                'elastic_id':_id
+            }
+            print(DATA)
+            
+            files = {'image': open(file_path, 'rb')}
+            response = session.post(URL_IMAGE, files=files, data=DATA)
+            return response.json()
+        
+    except Exception as e:
+        print(e)
+
 
 def log(message):
   with open("log.log", "a") as f:
@@ -90,7 +152,9 @@ def get_gpio_value():
 
 i=0
 k=0
+watcher_register_id = "watchersecgray1"
 r.set("failed_requests", 0)
+file_path = 'scene.png'
 
 try:
   while flag:
@@ -118,14 +182,31 @@ try:
           time.sleep(5)
           i=i+1
           if i > 11:
-              r_c, resp = watcher_update(
-                  register_id = watcher_register_id,
-                  quantity=0,
-                  defect_quantity=0)
+              try:
+                cam.start()
+                img = cam.get_image()
+                pygame.image.save(img, file_path)
+              except:
+                print("cound't capture image")
+
+              res = watcher_update_image(
+                          session=session,
+                          register_id=watcher_register_id,
+                          quantity=0,
+                          defect_quantity=0,
+                          file_path=file_path,
+                          product_info={
+                              "weight":100,
+                              "height":200,
+                              "color":254,
+                              "size":400
+                          }
+                      ) 
+                      
+              print(res)
 
               if r_c == requests.codes.ok:
                   i=0
-
               else:
                   r.incr("failed_requests")
 
@@ -142,7 +223,6 @@ try:
           if r_c == requests.codes.ok:
               r.incrby("counter", -1 * int(request_counter) )
               k = 0
-
           else:
               r.incr("failed_requests")
 
