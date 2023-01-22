@@ -77,7 +77,10 @@ def watcher_update_image(session, register_id, *args, **kwargs):
         
         if file_path is None:
             return 
-        if _id := result.get('_id', None):
+
+        _id = result.get('_id', None)
+
+        if _id:
             DATA = {
                 'register_id':result['register_id'],
                 'elastic_id':_id
@@ -152,7 +155,7 @@ def get_gpio_value():
 
 i=0
 k=0
-watcher_register_id = "watchersecgray1"
+watcher_register_id = "12345678903"
 r.set("failed_requests", 0)
 file_path = 'scene.png'
 
