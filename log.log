@@ -171,3 +171,13 @@ name 'r_c' is not defined
 name 'r_c' is not defined
 name 'r_c' is not defined
 name 'r_c' is not defined
+name 'r_c' is not defined
+name 'r_c' is not defined
+name 'r_c' is not defined
+name 'r_c' is not defined
+name 'r_c' is not defined
+name 'r_c' is not defined
+'str' object has no attribute 'str'
+'str' object has no attribute 'str'
+'str' object has no attribute 'str'
+reentrant call inside <_io.BufferedWriter name='<stdout>'>

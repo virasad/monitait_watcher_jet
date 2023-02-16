@@ -11,10 +11,16 @@ import pygame.camera
 
 pygame.camera.init()
 pygame.camera.list_cameras() #Camera detected or not
+
 try:
   cam = pygame.camera.Camera("/dev/video0",(640,480))
+  cam.start()
+
 except:
   cam = pygame.camera.Camera("/dev/video1",(640,480))
+  cam.start()
+  pass
+#cam.start()
 
 session = requests.Session()
 
@@ -89,7 +95,7 @@ def watcher_update_image(session, register_id, *args, **kwargs):
             
             files = {'image': open(file_path, 'rb')}
             response = session.post(URL_IMAGE, files=files, data=DATA)
-            return response.json()
+            return response.status_code, response.json()
         
     except Exception as e:
         print(e)
@@ -155,7 +161,7 @@ def get_gpio_value():
 
 i=0
 k=0
-watcher_register_id = "12345678903"
+watcher_register_id = "1234567893"
 r.set("failed_requests", 0)
 file_path = 'scene.png'
 
@@ -186,13 +192,13 @@ try:
           i=i+1
           if i > 11:
               try:
-                cam.start()
                 img = cam.get_image()
                 pygame.image.save(img, file_path)
-              except:
-                print("cound't capture image")
 
-              res = watcher_update_image(
+              except Exception as e:
+                print("cound't capture image: {}".format(e))
+
+              r_c, res = watcher_update_image(
                           session=session,
                           register_id=watcher_register_id,
                           quantity=0,
@@ -204,8 +210,7 @@ try:
                               "color":254,
                               "size":400
                           }
-                      ) 
-                      
+                      )
               print(res)
 
               if r_c == requests.codes.ok:
