@@ -53,10 +53,10 @@ from datetime import datetime
 
 
 def watcher_update_image(session, register_id, *args, **kwargs):
-    quantity = kwargs.pop("quantity", 1)
+    quantity = kwargs.pop("quantity", 0)
     defect_quantity = kwargs.pop("defect_quantity", 0)
-    product_id = kwargs.pop("product_id", 1)
-    lot_info = kwargs.pop("lot_info", 1)
+    product_id = kwargs.pop("product_id", 0)
+    lot_info = kwargs.pop("lot_info", 0)
     extra_info = kwargs.pop("extra_info", None)
     file_path = kwargs.pop("file_path", None)
     timestamp = kwargs.pop("timestamp", datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f'))
