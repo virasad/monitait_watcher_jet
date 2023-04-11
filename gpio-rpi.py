@@ -15,11 +15,12 @@ pygame.camera.list_cameras() #Camera detected or not
 try:
   cam = pygame.camera.Camera("/dev/video0",(640,480))
   cam.start()
-
 except:
-  cam = pygame.camera.Camera("/dev/video1",(640,480))
-  cam.start()
-  pass
+  try:
+    cam = pygame.camera.Camera("/dev/video1",(640,480))
+    cam.start()
+  except:
+    pass
 #cam.start()
 
 session = requests.Session()
@@ -164,7 +165,7 @@ k=0
 watcher_register_id = "1234567893"
 r.set("failed_requests", 0)
 file_path = 'scene.png'
-
+camera_not_connected_file_path = 'camera_not_connected.png'
 try:
   while flag:
     try:
@@ -191,11 +192,13 @@ try:
           time.sleep(5)
           i=i+1
           if i > 11:
+              camera_not_connected = False
               try:
                 img = cam.get_image()
                 pygame.image.save(img, file_path)
 
               except Exception as e:
+                camera_not_connected=True
                 print("cound't capture image: {}".format(e))
 
               r_c, res = watcher_update_image(
@@ -203,7 +206,7 @@ try:
                           register_id=watcher_register_id,
                           quantity=0,
                           defect_quantity=0,
-                          file_path=file_path,
+                          file_path=camera_not_connected_file_path if camera_not_connected else file_path,
                           product_info={
                               "weight":100,
                               "height":200,
