@@ -8,6 +8,7 @@ from requests.adapters import HTTPAdapter, Retry
 import redis
 import pygame
 import pygame.camera
+import os
 
 pygame.camera.init()
 pygame.camera.list_cameras() #Camera detected or not
@@ -96,6 +97,7 @@ def watcher_update_image(session, register_id, *args, **kwargs):
             
             files = {'image': open(file_path, 'rb')}
             response = session.post(URL_IMAGE, files=files, data=DATA)
+            print(response.status_code)
             return response.status_code, response.json()
         
     except Exception as e:
