@@ -118,7 +118,7 @@ while flag:
         if (b > 0):
           print("send arduino: b: {}".format(b))
           set_gpio_value(b)
-          gpio37_c.write(False) # identify it is a
+          gpio37_c.write(True) # identify it is b
           gpio26_d.write(True)
           time.sleep(0.5)
           gpio26_d.write(False)
