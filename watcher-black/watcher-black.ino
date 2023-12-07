@@ -2,8 +2,8 @@ const byte input_a = 2;
 const byte input_b = 3;
 const byte piPin = 11;
 const byte a_or_b = 18;
-const byte Warning = 10;
-const byte DataCapture = 12;
+const byte Warning = 12;
+const byte DataCapture = 10;
 const byte rpi_off = 13;
 const byte a_identifier = 8;
 const byte b_identifier = 9;
@@ -48,23 +48,17 @@ void setup() {
 void loop() {
   // get analog data
   c = analogRead(A5);
-  battery = analogRead(A6);
-  if (battery < 800){
-    digitalWrite(warning, HIGH);
-  }
-  else{
-    digitalWrite(Warning, LOW);
-    Serial.print("a: ");
-    Serial.print(counter_a);
-    Serial.print(",b: ");
-    Serial.print(counter_b);
-    Serial.print(",c: ");
-    Serial.print(c);
-  }
-
-  
+  battery = analogRead(A6);  
   digitalWrite(DataCapture, LOW);
-
+  Serial.print("a: ");
+  Serial.print(counter_a);
+  Serial.print(",b: ");
+  Serial.print(counter_b);
+  Serial.print(",c: ");
+  Serial.print(c);
+  Serial.print(",battery: ");
+  Serial.print(battery/10);
+  Serial.println("%");
   // check if rpi inform the arduino
   if (digitalRead(piPin)==HIGH){
     digitalWrite(DataCapture, HIGH);
@@ -115,13 +109,27 @@ void loop() {
     }
 
     if (counter_a + counter_b <= 0){
-      out_pins_number = int(c/66) ;
-      digitalWrite(a_identifier, HIGH);
-      digitalWrite(b_identifier, HIGH);
-      put_byte_on_pins(out_pins_number);
+      if (battery < 780){
+        digitalWrite(Warning, HIGH);
+        out_pins_number = int(battery/66) ;
+        digitalWrite(a_identifier, LOW);
+        digitalWrite(b_identifier, LOW);
+        put_byte_on_pins(out_pins_number);
+      }
+      else{
+        digitalWrite(Warning, LOW);
+        out_pins_number = int(c/66) ;
+        digitalWrite(a_identifier, HIGH);
+        digitalWrite(b_identifier, HIGH);
+        put_byte_on_pins(out_pins_number);
+      }
       delay(5);
     }
 
+  }
+
+  if (counter_a + counter_b > 500){
+    digitalWrite(Warning, HIGH);
   }
 
   if (counter_a + counter_b > 10000){
