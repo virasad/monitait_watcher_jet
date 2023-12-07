@@ -54,7 +54,7 @@ gpio23_b = GPIO(11, "in")
 
 gpio37_c = GPIO(26, "out")
 gpio26_d = GPIO(8, "out")
-gpio37_c.write(False)
+gpio37_c.write(True) # identify default is a
 gpio26_d.write(False)
 
 
@@ -112,20 +112,21 @@ while flag:
         if (a > 0):
           print("send arduino: a: {}".format(a))
           set_gpio_value(a)
-          gpio37_c.write(True) # identify it is a
           gpio26_d.write(True)
-          time.sleep(0.2)
+          while (not(gpio21_a.read()) or not(gpio23_b.read())):
+            time.sleep(0.01)
           gpio26_d.write(False)
-          time.sleep(0.2)
 
         if (b > 0):
           print("send arduino: b: {}".format(b))
           set_gpio_value(b)
           gpio37_c.write(False) # identify it is b
           gpio26_d.write(True)
-          time.sleep(0.2)
+          while (not(gpio21_a.read()) or not(gpio23_b.read())):
+            time.sleep(0.01)
+          gpio37_c.write(True) # identify default is a
           gpio26_d.write(False)
-          time.sleep(0.2)
+          
         i=0
     
     else:

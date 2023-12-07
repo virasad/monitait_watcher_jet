@@ -82,6 +82,8 @@ void loop() {
       counter_a = counter_a - get_byte;
     }
     while (digitalRead(piPin)==HIGH){
+      digitalWrite(a_identifier, HIGH);
+      digitalWrite(b_identifier, HIGH);
       delay(1);
     }
   }
