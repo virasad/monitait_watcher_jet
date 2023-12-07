@@ -59,27 +59,30 @@ gpio26_d.write(False)
 
 
 def get_gpio_value():
+  count_a = 0
+  count_b = 0
+  count_c = 0
+  count_d = 0
   in_bit_a = gpio21_a.read()
   in_bit_b = gpio23_b.read()
   in_bit_0 = gpio07_0.read()
   in_bit_1 = gpio16_1.read()
   in_bit_2 = gpio18_2.read()
   in_bit_3 = gpio19_3.read()
-  
+
   if in_bit_a and not(in_bit_b):
     count_a = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
-  
+
   elif not(in_bit_a) and in_bit_b:
     count_b = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
 
   elif in_bit_a and in_bit_b:
     count_c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
+
   else:
-    count_a = 0
-    count_b = 0
-    count_c = 0
-  
-  return count_a, count_b, count_c
+    count_d = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
+
+  return count_a, count_b, count_c, count_d
 
 def int_to_bool_list(num):
   return [bool(num & (1<<n)) for n in range(4)]
@@ -94,8 +97,8 @@ def set_gpio_value(x):
 
 while flag:
   try:
-    a, b, c = get_gpio_value()
-    print("a: ", a," b: ",b," c: ",c)
+    a, b, c, d = get_gpio_value()
+    print("a: ", a," b: ",b," c: ",c, " d: ", d)
 
     if(a+b > 0):
       r_c, resp = watcher_update(
@@ -126,7 +129,7 @@ while flag:
         i=0
     
     else:
-      time.sleep(5)
+      time.sleep(10)
       i=i+1
       if i > 12:
         r_c, resp = watcher_update(
@@ -135,7 +138,7 @@ while flag:
           defect_quantity=0,
           product_id=0,
           lot_info=0,
-          extra_info= {"adc" : c})
+          extra_info= {"adc" : c, "battery" : d})
         if r_c == requests.codes.ok:
           i=0
   except Exception as e:
