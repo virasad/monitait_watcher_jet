@@ -57,33 +57,6 @@ gpio26_d = GPIO(8, "out")
 gpio37_c.write(True) # identify default is a
 gpio26_d.write(False)
 
-
-def get_gpio_value():
-  count_a = 0
-  count_b = 0
-  count_c = 0
-  count_d = 0
-  in_bit_a = gpio21_a.read()
-  in_bit_b = gpio23_b.read()
-  in_bit_0 = gpio07_0.read()
-  in_bit_1 = gpio16_1.read()
-  in_bit_2 = gpio18_2.read()
-  in_bit_3 = gpio19_3.read()
-
-  if in_bit_a and not(in_bit_b):
-    count_a = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
-
-  elif not(in_bit_a) and in_bit_b:
-    count_b = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
-
-  elif in_bit_a and in_bit_b:
-    count_c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
-
-  else:
-    count_d = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
-
-  return count_a, count_b, count_c, count_d
-
 def int_to_bool_list(num):
   return [bool(num & (1<<n)) for n in range(4)]
 
@@ -100,26 +73,42 @@ temp_b = 0
 
 while flag:
   try:
-    a, b, c, d = get_gpio_value()
-    if (a > 0):
-      print("send arduino: a: {}".format(a))
-      set_gpio_value(a)
-      gpio26_d.write(True)
-      while (not(gpio21_a.read()) or not(gpio23_b.read())):
-        time.sleep(0.01)
-      gpio26_d.write(False)
-      temp_a = temp_a + a
+    in_bit_a = gpio21_a.read()
+    in_bit_b = gpio23_b.read()
+    in_bit_0 = gpio07_0.read()
+    in_bit_1 = gpio16_1.read()
+    in_bit_2 = gpio18_2.read()
+    in_bit_3 = gpio19_3.read()
 
-    if (b > 0):
-      print("send arduino: b: {}".format(b))
-      set_gpio_value(b)
-      gpio37_c.write(False) # identify it is b
-      gpio26_d.write(True)
-      while (not(gpio21_a.read()) or not(gpio23_b.read())):
-        time.sleep(0.01)
-      gpio37_c.write(True) # identify default is a
-      gpio26_d.write(False)
-      temp_b = temp_b + b
+    if in_bit_a and not(in_bit_b):
+      a = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
+      if (a > 0):
+        print("send arduino: a: {}".format(a))
+        set_gpio_value(a)
+        gpio26_d.write(True)
+        while (gpio21_a.read() != gpio23_b.read()):
+          time.sleep(0.01)
+        gpio26_d.write(False)
+        temp_a = temp_a + a
+
+    elif not(in_bit_a) and in_bit_b:
+      b = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
+      if (b > 0):
+        print("send arduino: b: {}".format(b))
+        set_gpio_value(b)
+        gpio37_c.write(False) # identify it is b
+        gpio26_d.write(True)
+        while (gpio21_a.read() != gpio23_b.read()):
+          time.sleep(0.01)
+        gpio37_c.write(True) # identify default is a
+        gpio26_d.write(False)
+        temp_b = temp_b + b
+
+    elif in_bit_a and in_bit_b:
+      c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
+
+    else:
+      d = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
 
     print("temp_a: ", a,"temp_b: ",b," c: ",c, " d: ", d)
 
