@@ -95,53 +95,63 @@ def set_gpio_value(x):
   gpio29_0.write(b_list[0])
   return
 
+temp_a = 0
+temp_b = 0
+
 while flag:
   try:
     a, b, c, d = get_gpio_value()
-    print("a: ", a," b: ",b," c: ",c, " d: ", d)
+    if (a > 0):
+      print("send arduino: a: {}".format(a))
+      set_gpio_value(a)
+      gpio26_d.write(True)
+      while (not(gpio21_a.read()) or not(gpio23_b.read())):
+        time.sleep(0.01)
+      gpio26_d.write(False)
+      temp_a = temp_a + a
 
-    if(a+b > 0):
+    if (b > 0):
+      print("send arduino: b: {}".format(b))
+      set_gpio_value(b)
+      gpio37_c.write(False) # identify it is b
+      gpio26_d.write(True)
+      while (not(gpio21_a.read()) or not(gpio23_b.read())):
+        time.sleep(0.01)
+      gpio37_c.write(True) # identify default is a
+      gpio26_d.write(False)
+      temp_b = temp_b + b
+
+    print("temp_a: ", a,"temp_b: ",b," c: ",c, " d: ", d)
+
+    if(temp_a + temp_b > 100):
       r_c, resp = watcher_update(
           register_id=hostname,
-          quantity=a,
-          defect_quantity=b,
+          quantity=temp_a,
+          defect_quantity=temp_b,
           product_id=0,
           lot_info=0,
           extra_info= {})
       if r_c == requests.codes.ok:
-        if (a > 0):
-          print("send arduino: a: {}".format(a))
-          set_gpio_value(a)
-          gpio26_d.write(True)
-          while (not(gpio21_a.read()) or not(gpio23_b.read())):
-            time.sleep(0.01)
-          gpio26_d.write(False)
-
-        if (b > 0):
-          print("send arduino: b: {}".format(b))
-          set_gpio_value(b)
-          gpio37_c.write(False) # identify it is b
-          gpio26_d.write(True)
-          while (not(gpio21_a.read()) or not(gpio23_b.read())):
-            time.sleep(0.01)
-          gpio37_c.write(True) # identify default is a
-          gpio26_d.write(False)
-          
+        temp_a = temp_a - temp_a
+        temp_b = temp_b - temp_b
         i=0
     
-    else:
+    elif(temp_a + temp_b < 10) :
       time.sleep(10)
       i=i+1
       if i > 12:
         r_c, resp = watcher_update(
           register_id=hostname,
-          quantity=0,
-          defect_quantity=0,
+          quantity=temp_a,
+          defect_quantity=temp_b,
           product_id=0,
           lot_info=0,
           extra_info= {"adc" : c, "battery" : d})
         if r_c == requests.codes.ok:
+          temp_a = temp_a - temp_a
+          temp_b = temp_b - temp_b
           i=0
+
   except Exception as e:
     print("error: {}".format(str(e)))
     time.sleep(2)
