@@ -134,9 +134,9 @@ void loop() {
     digitalWrite(Warning, HIGH);
   }
 
-  if (counter_a + counter_b > 10000){
+  if (counter_a + counter_b > 1000){
     digitalWrite(rpi_off, HIGH);
-    delay(10000);
+    delay(600000);
     digitalWrite(rpi_off, LOW);
   }
 }
