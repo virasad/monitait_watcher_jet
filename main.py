@@ -70,7 +70,11 @@ def set_gpio_value(x):
 
 temp_a = 0
 temp_b = 0
-
+a = 0
+b = 0
+c = 0
+d = 0
+internet_access = True
 while flag:
   try:
     in_bit_a = gpio21_a.read()
@@ -82,8 +86,7 @@ while flag:
 
     if in_bit_a and not(in_bit_b):
       a = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
-      if (a > 0):
-        print("send arduino: a: {}".format(a))
+      if (a > 0 and internet_access):
         set_gpio_value(a)
         gpio26_d.write(True)
         while (gpio21_a.read() != gpio23_b.read()):
@@ -93,8 +96,7 @@ while flag:
 
     elif not(in_bit_a) and in_bit_b:
       b = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
-      if (b > 0):
-        print("send arduino: b: {}".format(b))
+      if (b > 0 and internet_access):
         set_gpio_value(b)
         gpio37_c.write(False) # identify it is b
         gpio26_d.write(True)
@@ -110,9 +112,7 @@ while flag:
     else:
       d = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
 
-    print("temp_a: ", a,"temp_b: ",b," c: ",c, " d: ", d)
-
-    if(temp_a + temp_b > 100):
+    if(temp_a + temp_b >= 100):
       r_c, resp = watcher_update(
           register_id=hostname,
           quantity=temp_a,
@@ -124,8 +124,11 @@ while flag:
         temp_a = temp_a - temp_a
         temp_b = temp_b - temp_b
         i=0
-    
-    elif(temp_a + temp_b < 10) :
+        internet_access = True
+      else:
+        internet_access = False
+
+    elif(temp_a + temp_b < 100) :
       time.sleep(10)
       i=i+1
       if i > 12:
@@ -137,9 +140,13 @@ while flag:
           lot_info=0,
           extra_info= {"adc" : c, "battery" : d})
         if r_c == requests.codes.ok:
+          print("liveniness server: {},{},{},{}".format(temp_a, temp_b,c,d))
           temp_a = temp_a - temp_a
           temp_b = temp_b - temp_b
           i=0
+          internet_access = True
+        else:
+          internet_access = False
 
   except Exception as e:
     print("error: {}".format(str(e)))
