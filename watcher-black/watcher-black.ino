@@ -59,7 +59,7 @@ void loop() {
   Serial.print(",battery: ");
   Serial.print(battery/10);
   Serial.println("%");
-  // check if rpi inform the arduino
+  // check if rpi informed the arduino
   if (digitalRead(piPin)==HIGH){
     digitalWrite(DataCapture, HIGH);
     get_byte = 0;
@@ -96,10 +96,10 @@ void loop() {
       else if (counter_a >= 16)
         out_pins_number = 15;
       put_byte_on_pins(out_pins_number);
-      delay(5);
+      delay(50);  
     }
 
-    if (counter_b > 0){
+    else if (counter_b > 0){
       digitalWrite(a_identifier, LOW);
       digitalWrite(b_identifier, HIGH);
       if (counter_b < 16)
@@ -107,10 +107,10 @@ void loop() {
       else if (counter_b >= 16)
         out_pins_number = 15;
       put_byte_on_pins(out_pins_number);
-      delay(5);
+      delay(50);   
     }
 
-    if (counter_a + counter_b <= 0){
+    else if (counter_a + counter_b <= 0){
       if (battery < 780){
         digitalWrite(Warning, HIGH);
         out_pins_number = int(battery/66) ;
@@ -125,7 +125,7 @@ void loop() {
         digitalWrite(b_identifier, HIGH);
         put_byte_on_pins(out_pins_number);
       }
-      delay(5);
+      delay(50); 
     }
 
   }
