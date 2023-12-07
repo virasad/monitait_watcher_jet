@@ -77,6 +77,7 @@ d = 0
 internet_access = True
 while flag:
   try:
+
     in_bit_a = gpio21_a.read()
     in_bit_b = gpio23_b.read()
     in_bit_0 = gpio07_0.read()
@@ -90,7 +91,7 @@ while flag:
         set_gpio_value(a)
         gpio26_d.write(True)
         while (gpio21_a.read() != gpio23_b.read()):
-          time.sleep(0.01)
+          time.sleep(0.001)
         gpio26_d.write(False)
         temp_a = temp_a + a
 
@@ -101,7 +102,7 @@ while flag:
         gpio37_c.write(False) # identify it is b
         gpio26_d.write(True)
         while (gpio21_a.read() != gpio23_b.read()):
-          time.sleep(0.01)
+          time.sleep(0.001)
         gpio37_c.write(True) # identify default is a
         gpio26_d.write(False)
         temp_b = temp_b + b
@@ -128,10 +129,10 @@ while flag:
       else:
         internet_access = False
 
-    elif(temp_a + temp_b < 100) :
-      time.sleep(10)
+    else:
+      time.sleep(0.1)
       i=i+1
-      if i > 12:
+      if i > 1200:
         r_c, resp = watcher_update(
           register_id=hostname,
           quantity=temp_a,
