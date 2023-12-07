@@ -104,25 +104,25 @@ while flag:
           defect_quantity=b,
           product_id=0,
           lot_info=0,
-          extra_info= {"adc" : c})
+          extra_info= {})
       if r_c == requests.codes.ok:
         if (a > 0):
           print("send arduino: a: {}".format(a))
           set_gpio_value(a)
-          gpio37_c.write(False) # identify it is a
+          gpio37_c.write(True) # identify it is a
           gpio26_d.write(True)
-          time.sleep(0.5)
+          time.sleep(0.2)
           gpio26_d.write(False)
-          time.sleep(0.5)
+          time.sleep(0.2)
 
         if (b > 0):
           print("send arduino: b: {}".format(b))
           set_gpio_value(b)
-          gpio37_c.write(True) # identify it is b
+          gpio37_c.write(False) # identify it is b
           gpio26_d.write(True)
-          time.sleep(0.5)
+          time.sleep(0.2)
           gpio26_d.write(False)
-          time.sleep(0.5)
+          time.sleep(0.2)
         i=0
     
     else:
@@ -135,7 +135,7 @@ while flag:
           defect_quantity=0,
           product_id=0,
           lot_info=0,
-          extra_info= {})
+          extra_info= {"adc" : c})
         if r_c == requests.codes.ok:
           i=0
   except Exception as e:

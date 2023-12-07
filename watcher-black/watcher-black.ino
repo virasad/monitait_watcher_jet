@@ -16,10 +16,12 @@ byte output_pins[4] = {
   4, 5, 6, 7
 };
 
-volatile byte state = LOW;
-volatile byte data_state = LOW;
 long counter_a = 0;
 long counter_b = 0;
+int battery;
+int c = 0;
+
+byte get_byte;
 byte out_pins_number;
 void setup() {
   Serial.begin(9600); 
@@ -44,45 +46,89 @@ void setup() {
 }
 
 void loop() {
-  
-  if (counter_a + counter_b > 0 and counter_a + counter_b < 10000) {
-    if (counter_a >= 0 and counter_a < 16)
-      out_pins_number = counter_a % 16;
-    else if (counter_a >= 16)
-      out_pins_number = 15;
-    else if (counter_a < 0){
-      counter_a = 0;
-      out_pins_number = 0;
-      }
-    else
-      out_pins_number = 0;  
-  }
-  else if (counter_a + counter_b > 10000){
-    digitalWrite(rpi_off, HIGH);
-    delay(10000)
-    digitalWrite(rpi_off, LOW);
-    counter_a = 0
-    counter_b = 0
-  }
-  
-  c = analogRead(A5)
-  battery = analogRead(A6)
-  if (battery < 800)
+  // get analog data
+  c = analogRead(A5);
+  battery = analogRead(A6);
+  if (battery < 800){
     digitalWrite(warning, HIGH);
-  else
-    digitalWrite(warning, LOW);
-  
-  digitalWrite(DataCapture, data_state);
+  }
+  else{
+    digitalWrite(Warning, LOW);
+    Serial.print("a: ");
+    Serial.print(counter_a);
+    Serial.print(",b: ");
+    Serial.print(counter_b);
+    Serial.print(",c: ");
+    Serial.print(c);
+  }
 
-  put_byte_on_pins(out_pins_number);
-  Serial.print("a: ");
-  Serial.print(counter_a);
-  Serial.print(",b: ");
-  Serial.print(counter_b);
-  Serial.print(",c: ");
-  Serial.print(c);
-  Serial.println(int(out_pins_number));
-  delay(100);
+  
+  digitalWrite(DataCapture, LOW);
+
+  // check if rpi inform the arduino
+  if (digitalRead(piPin)==HIGH){
+    digitalWrite(DataCapture, HIGH);
+    get_byte = 0;
+    for(int i = 0; i < 4; i++){
+      if(digitalRead(input_pins[i]) == 1)
+        bitSet(get_byte, i);
+      else
+        bitClear(get_byte, i);
+    }
+    bitClear(get_byte, 4);
+    bitClear(get_byte, 5);
+    bitClear(get_byte, 6);
+    bitClear(get_byte, 7);
+    Serial.print("get byte: ");
+    Serial.println(get_byte);
+    if(digitalRead(a_or_b)==LOW){
+      counter_b = counter_b - get_byte;
+    }
+    else{
+      counter_a = counter_a - get_byte;
+    }
+    while (digitalRead(piPin)==HIGH){
+      delay(1);
+    }
+  }
+  else {
+    if (counter_a > 0){
+      digitalWrite(a_identifier, HIGH);
+      digitalWrite(b_identifier, LOW);
+      if (counter_a < 16)
+        out_pins_number = counter_a % 16;
+      else if (counter_a >= 16)
+        out_pins_number = 15;
+      put_byte_on_pins(out_pins_number);
+      delay(5);
+    }
+
+    if (counter_b > 0){
+      digitalWrite(a_identifier, LOW);
+      digitalWrite(b_identifier, HIGH);
+      if (counter_b < 16)
+        out_pins_number = counter_b % 16;
+      else if (counter_b >= 16)
+        out_pins_number = 15;
+      put_byte_on_pins(out_pins_number);
+      delay(5);
+    }
+
+    if (counter_a + counter_b <= 0){
+      out_pins_number = int(c/66) ;
+      digitalWrite(a_identifier, HIGH);
+      digitalWrite(b_identifier, HIGH);
+      put_byte_on_pins(out_pins_number);
+      delay(5);
+    }
+
+  }
+
+  if (counter_a + counter_b > 10000){
+    digitalWrite(rpi_off, HIGH);
+    delay(10000);
+    digitalWrite(rpi_off, LOW);
+  }
 }
 
 void put_byte_on_pins(byte in_byte){
@@ -101,7 +147,6 @@ void count_up_a(){
   }
   if (j > 4){
     counter_a++;
-    state = !state;
   }  
   return;
 }
@@ -115,26 +160,6 @@ void count_up_b(){
   }
   if (j > 4){
     counter_b++;
-    state = !state;
   }  
-  return;
-}
-
-void sub_down(){
-  
-  byte get_byte = 0;
-  for(int i = 0; i < 4; i++){
-    if(digitalRead(input_pins[i]) == 1)
-      bitSet(get_byte, i);
-    else
-      bitClear(get_byte, i);
-  }
-  bitClear(get_byte, 4);
-  bitClear(get_byte, 5);
-  bitClear(get_byte, 6);
-  bitClear(get_byte, 7);
-  Serial.println(get_byte);
-  counter = counter - get_byte; ####
-  data_state = !data_state;
   return;
 }
