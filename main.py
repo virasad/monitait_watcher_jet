@@ -158,6 +158,9 @@ while flag:
     time.sleep(0.01)
 
   except Exception as e:
-    print("error: {}".format(str(e)))
+    try:
+      print("error: {}".format(str(e)))
+    except:
+      pass    
     time.sleep(2)
     pass
