@@ -74,10 +74,12 @@ a = 0
 b = 0
 c = 0
 d = 0
+get_ts = 0.01
+old_start_ts = 100
 internet_access = True
 while flag:
   try:
-
+    start_ts = time.time()
     in_bit_a = gpio21_a.read()
     in_bit_b = gpio23_b.read()
     in_bit_0 = gpio07_0.read()
@@ -94,6 +96,8 @@ while flag:
           time.sleep(0.001)
         gpio26_d.write(False)
         temp_a = temp_a + a
+        get_ts = 0.01*(start_ts - old_start_ts) + 0.99*get_ts
+        old_start_ts = time.time()
 
     elif not(in_bit_a) and in_bit_b:
       b = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
@@ -106,6 +110,8 @@ while flag:
         gpio37_c.write(True) # identify default is a
         gpio26_d.write(False)
         temp_b = temp_b + b
+        get_ts = 0.01*(start_ts - old_start_ts) + 0.99*get_ts
+        old_start_ts = time.time()
 
     elif in_bit_a and in_bit_b:
       c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
@@ -113,7 +119,7 @@ while flag:
     else:
       d = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
 
-    if(temp_a + temp_b >= 100):
+    if(temp_a + temp_b >= 100/(get_ts+1)):
       r_c, resp = watcher_update(
           register_id=hostname,
           quantity=temp_a,

@@ -20,7 +20,7 @@ long counter_a = 0;
 long counter_b = 0;
 int battery;
 int c = 0;
-
+int counter_rpi_reboot = 0;
 byte get_byte;
 byte out_pins_number;
 void setup() {
@@ -134,11 +134,16 @@ void loop() {
     digitalWrite(Warning, HIGH);
   }
 
-  if (counter_a + counter_b > 1000){
+  if (counter_a + counter_b > 1000*(counter_rpi_reboot + 1)){
     digitalWrite(rpi_off, HIGH);
-    delay(600000);
+    delay(10000);
     digitalWrite(rpi_off, LOW);
+    counter_rpi_reboot +=1;
+    counter_a += 15; // on reboot input pins are high by default, this is for compensentation
+    delay(100000);
   }
+  else
+    counter_rpi_reboot = 0;
 }
 
 void put_byte_on_pins(byte in_byte){
