@@ -50,15 +50,8 @@ void loop() {
   c = analogRead(A5);
   battery = analogRead(A6);  
   digitalWrite(DataCapture, LOW);
-  Serial.print("a: ");
-  Serial.print(counter_a);
-  Serial.print(",b: ");
-  Serial.print(counter_b);
-  Serial.print(",c: ");
-  Serial.print(c);
-  Serial.print(",battery: ");
-  Serial.print(battery/10);
-  Serial.println("%");
+  Serial.print("a: "); Serial.print(counter_a); Serial.print(",b: "); Serial.print(counter_b); Serial.print(",c: "); Serial.print(c); Serial.print(",battery: "); Serial.print(battery/10); Serial.println("%");
+ 
   // check if rpi informed the arduino
   if (digitalRead(piPin)==HIGH){
     digitalWrite(DataCapture, HIGH);
@@ -69,12 +62,7 @@ void loop() {
       else
         bitClear(get_byte, i);
     }
-    bitClear(get_byte, 4);
-    bitClear(get_byte, 5);
-    bitClear(get_byte, 6);
-    bitClear(get_byte, 7);
-    Serial.print("get byte: ");
-    Serial.println(get_byte);
+    bitClear(get_byte, 4); bitClear(get_byte, 5); bitClear(get_byte, 6); bitClear(get_byte, 7);
     if(digitalRead(a_or_b)==LOW){
       counter_b = counter_b - get_byte;
     }
@@ -96,7 +84,7 @@ void loop() {
       else if (counter_a >= 16)
         out_pins_number = 15;
       put_byte_on_pins(out_pins_number);
-      delay(50);  
+      delay(5);  
     }
 
     else if (counter_b > 0){
@@ -107,33 +95,32 @@ void loop() {
       else if (counter_b >= 16)
         out_pins_number = 15;
       put_byte_on_pins(out_pins_number);
-      delay(50);   
+      delay(5);   
     }
 
     else if (counter_a + counter_b <= 0){
       if (battery < 780){
-        digitalWrite(Warning, HIGH);
         out_pins_number = int(battery/66) ;
         digitalWrite(a_identifier, LOW);
         digitalWrite(b_identifier, LOW);
         put_byte_on_pins(out_pins_number);
       }
       else{
-        digitalWrite(Warning, LOW);
         out_pins_number = int(c/66) ;
         digitalWrite(a_identifier, HIGH);
         digitalWrite(b_identifier, HIGH);
         put_byte_on_pins(out_pins_number);
       }
-      delay(50); 
+      delay(5); 
     }
 
   }
 
-  if (counter_a + counter_b > 500){
+  if (battery < 780 or counter_a + counter_b > 500)
     digitalWrite(Warning, HIGH);
-  }
-
+  else
+    digitalWrite(Warning, LOW);
+      
   if (counter_a + counter_b > 1000*(counter_rpi_reboot + 1)){
     digitalWrite(rpi_off, HIGH);
     delay(10000);
