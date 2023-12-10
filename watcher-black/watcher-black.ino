@@ -116,7 +116,7 @@ void loop() {
 
   }
 
-  if (battery < 780 or counter_a + counter_b > 500)
+  if (battery < 800 or counter_a + counter_b > 500)
     digitalWrite(Warning, HIGH);
   else
     digitalWrite(Warning, LOW);

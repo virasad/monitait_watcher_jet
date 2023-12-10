@@ -159,7 +159,10 @@ while flag:
 
   except Exception as e:
     try:
+      import os
       print("error: {}".format(str(e)))
+      os.system("shutdown -t 0 -r -f")
+      
     except:
       pass    
     time.sleep(2)
