@@ -161,7 +161,7 @@ while flag:
     try:
       import os
       print("error: {}".format(str(e)))
-      os.system("shutdown -t 0 -r -f")
+      os.system("sudo shutdown -r now")
       
     except:
       pass    
