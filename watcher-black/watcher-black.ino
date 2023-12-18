@@ -125,7 +125,7 @@ void loop() {
     digitalWrite(rpi_off, HIGH);
     delay(1000);
     digitalWrite(rpi_off, LOW);
-    counter_rpi_reboot = counter_rpi_reboot * 2 + 1;
+    counter_rpi_reboot = counter_rpi_reboot * 2;
     counter_a += 15; // on reboot input pins are high by default, this is for compensentation
     delay(30000);
   }
