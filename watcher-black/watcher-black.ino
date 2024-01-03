@@ -19,8 +19,8 @@ byte output_pins[4] = {
 long counter_a = 0;
 long counter_b = 0;
 int battery;
-int c = 0;
-int counter_rpi_reboot = 1;
+unsigned int c = 0;
+unsigned int counter_rpi_reboot = 1;
 byte get_byte;
 byte out_pins_number;
 void setup() {
@@ -116,7 +116,7 @@ void loop() {
 
   }
 
-  if (battery < 800 or counter_a + counter_b > 500)
+  if (battery < 800 or counter_a + counter_b > 500*(counter_rpi_reboot))
     digitalWrite(Warning, HIGH);
   else
     digitalWrite(Warning, LOW);
