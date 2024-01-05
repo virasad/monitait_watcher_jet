@@ -130,8 +130,8 @@ while flag:
           lot_info=0,
           extra_info= {})
       if r_c == requests.codes.ok:
-        temp_a = temp_a - temp_a
-        temp_b = temp_b - temp_b
+        temp_a = 0
+        temp_b = 0
         i=0
         internet_access = True
       else:
@@ -149,8 +149,8 @@ while flag:
           lot_info=0,
           extra_info= {"adc" : c, "battery" : d})
         if r_c == requests.codes.ok:
-          temp_a = temp_a - temp_a
-          temp_b = temp_b - temp_b
+          temp_a = 0
+          temp_b = 0
           i=0
           internet_access = True
         else:

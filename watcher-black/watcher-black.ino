@@ -1,3 +1,5 @@
+#include <avr/wdt.h>
+
 const byte input_a = 2;
 const byte input_b = 3;
 const byte piPin = 11;
@@ -18,13 +20,14 @@ byte output_pins[4] = {
 
 long counter_a = 0;
 long counter_b = 0;
-int battery;
-int c = 0;
+unsigned int battery;
+unsigned int c = 0;
 unsigned long counter_a_b = 0;
 unsigned long counter_rpi_reboot = 1000;
 byte get_byte;
 byte out_pins_number;
 void setup() {
+  wdt_enable( WDTO_8S);
   Serial.begin(9600); 
   for(int i = 0; i < 4; i++){
     pinMode(input_pins[i], INPUT_PULLUP);
@@ -125,17 +128,19 @@ void loop() {
       
   if (counter_a_b > counter_rpi_reboot){
     digitalWrite(rpi_off, HIGH);
-    delay(10000);
+    delay(1000);
     digitalWrite(rpi_off, LOW);
-    if counter_rpi_reboot < 4200000000;
+    if (counter_rpi_reboot < 2100000000)
         counter_rpi_reboot = counter_rpi_reboot * 2;
     else
         counter_rpi_reboot = 1000;
     counter_a += 15; // on reboot input pins are high by default, this is for compensentation
-    delay(100000);
+    delay(1000);
   }
   else
     counter_rpi_reboot = 1000;
+    delay(1);
+  wdt_reset();
 }
 
 void put_byte_on_pins(byte in_byte){
