@@ -158,9 +158,9 @@ while flag:
     time.sleep(0.01)
 
   except Exception as e:
-    try:
-      import os
+    try:      
       print("error: {}".format(str(e)))
+      import os
       os.system("sudo shutdown -r now")
       
     except:
