@@ -32,6 +32,9 @@ unsigned long now_millis;
 
 byte get_byte;
 byte out_pins_number;
+
+void(* resetFunc) (void) = 0;
+
 void setup() {
   wdt_enable( WDTO_8S);
   Serial.begin(9600); 
@@ -149,6 +152,7 @@ void loop() {
       }
     else{
         restart_counter = 500;
+        resetFunc();
         }
     counter_a += 15; // on reboot input pins are high by default, this is for compensentation
     delay(1000);

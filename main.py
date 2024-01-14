@@ -55,7 +55,7 @@ gpio23_b = GPIO(11, "in")
 gpio37_c = GPIO(26, "out")
 gpio26_d = GPIO(8, "out")
 gpio37_c.write(True) # identify default is a
-gpio26_d.write(False)
+gpio26_d.write(True) # identify the default there is no read from RPI
 
 def int_to_bool_list(num):
   return [bool(num & (1<<n)) for n in range(4)]
@@ -90,10 +90,10 @@ while flag:
       a = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
       if (a > 0 and internet_access):
         set_gpio_value(a)
-        gpio26_d.write(True)
+        gpio26_d.write(False)
         while (gpio21_a.read() != gpio23_b.read()):
           time.sleep(0.001)
-        gpio26_d.write(False)
+        gpio26_d.write(True)
         temp_a = temp_a + a
         start_ts = time.time()
         get_ts = 10/(start_ts - old_start_ts)+0.9*get_ts
@@ -104,11 +104,11 @@ while flag:
       if (b > 0 and internet_access):
         set_gpio_value(b)
         gpio37_c.write(False) # identify it is b
-        gpio26_d.write(True)
+        gpio26_d.write(False)
         while (gpio21_a.read() != gpio23_b.read()):
           time.sleep(0.001)
         gpio37_c.write(True) # identify default is a
-        gpio26_d.write(False)
+        gpio26_d.write(True)
         temp_b = temp_b + b
         start_ts = time.time()
         get_ts = 10/(start_ts - old_start_ts)+0.9*get_ts
@@ -116,10 +116,10 @@ while flag:
 
 
     elif in_bit_a and in_bit_b:
-      c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
-
-    else:
       d = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
+    else:
+      c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
+      
 
     if(temp_a + temp_b >= get_ts):
       try:
@@ -169,8 +169,8 @@ while flag:
   except Exception as e:
     try:      
       print("error: {}".format(str(e)))
-      # import os
-      # os.system("sudo shutdown -r now")
+      import os
+      os.system("sudo shutdown -r now")
       
     except:
       pass    
