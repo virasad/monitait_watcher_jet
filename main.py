@@ -122,32 +122,15 @@ while flag:
       d = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
 
     if(temp_a + temp_b >= get_ts):
-      r_c, resp = watcher_update(
-          register_id=hostname,
-          quantity=temp_a,
-          defect_quantity=temp_b,
-          product_id=0,
-          lot_info=0,
-          extra_info= {})
-      if r_c == requests.codes.ok:
-        temp_a = 0
-        temp_b = 0
-        i=0
-        internet_access = True
-      else:
-        internet_access = False
-
-    else:
-      time.sleep(0.1)
-      i=i+1
-      if i > 1200:
+      try:
         r_c, resp = watcher_update(
           register_id=hostname,
           quantity=temp_a,
           defect_quantity=temp_b,
           product_id=0,
           lot_info=0,
-          extra_info= {"adc" : c, "battery" : d})
+          extra_info= {})
+        time.sleep(1)
         if r_c == requests.codes.ok:
           temp_a = 0
           temp_b = 0
@@ -155,13 +138,39 @@ while flag:
           internet_access = True
         else:
           internet_access = False
+      except:
+        time.sleep(1)
+        pass
+
+    else:
+      time.sleep(0.1)
+      i=i+1
+      if i > 1200:
+        try:
+          r_c, resp = watcher_update(
+            register_id=hostname,
+            quantity=temp_a,
+            defect_quantity=temp_b,
+            product_id=0,
+            lot_info=0,
+            extra_info= {"adc" : c, "battery" : d})
+          if r_c == requests.codes.ok:
+            temp_a = 0
+            temp_b = 0
+            i=0
+            internet_access = True
+          else:
+            internet_access = False    
+        except:
+          time.sleep(1)
+          pass
     time.sleep(0.01)
 
   except Exception as e:
     try:      
       print("error: {}".format(str(e)))
-      import os
-      os.system("sudo shutdown -r now")
+      # import os
+      # os.system("sudo shutdown -r now")
       
     except:
       pass    
