@@ -65,7 +65,7 @@ void loop() {
   digitalWrite(DataCapture, LOW);
   Serial.print("a: "); Serial.print(counter_a); Serial.print(",b: "); Serial.print(counter_b); Serial.print(",c: "); Serial.print(c); Serial.print(",battery: "); Serial.print(battery/10); Serial.print("%");Serial.print(" ,restart threshold: "); Serial.print(counter_rpi_reboot); Serial.print(" Counter for restart: ");Serial.println(restart_counter);;
   // check if rpi informed the arduino
-  if (digitalRead(piPin)==HIGH){
+  if (digitalRead(piPin)==LOW){
     digitalWrite(DataCapture, HIGH);
     get_byte = 0;
     for(int i = 0; i < 4; i++){
@@ -81,10 +81,10 @@ void loop() {
     else{
       counter_a = counter_a - get_byte;
     }
-    Serial.println("waiting for signal");
-    while (digitalRead(piPin)==HIGH){
-      digitalWrite(a_identifier, HIGH);
-      digitalWrite(b_identifier, HIGH);
+    Serial.println("waiting for RPI signal");
+    while (digitalRead(piPin)==LOW){
+      digitalWrite(a_identifier, LOW);
+      digitalWrite(b_identifier, LOW);
       delay(5);
       wdt_reset();
       
@@ -116,14 +116,14 @@ void loop() {
     else if (counter_a + counter_b <= 0){
       if (battery < 780){
         out_pins_number = int(battery/66) ;
-        digitalWrite(a_identifier, LOW);
-        digitalWrite(b_identifier, LOW);
+        digitalWrite(a_identifier, HIGH);
+        digitalWrite(b_identifier, HIGH);
         put_byte_on_pins(out_pins_number);
       }
       else{
         out_pins_number = int(c/66) ;
-        digitalWrite(a_identifier, HIGH);
-        digitalWrite(b_identifier, HIGH);
+        digitalWrite(a_identifier, LOW);
+        digitalWrite(b_identifier, LOW);
         put_byte_on_pins(out_pins_number);
       }
       delay(5); 
@@ -154,11 +154,11 @@ void loop() {
         restart_counter = 500;
         resetFunc();
         }
-    counter_a += 15; // on reboot input pins are high by default, this is for compensentation
+//    counter_a += 15; // on reboot input pins are high by default, this is for compensentation
     delay(1000);
   }
   
-  if ((counter_a_b < counter_rpi_reboot/10) and (restart_counter > 2)){
+  if ((counter_a_b < counter_rpi_reboot/100) and (restart_counter > 2)){
     restart_counter = restart_counter/2;
   }
   
