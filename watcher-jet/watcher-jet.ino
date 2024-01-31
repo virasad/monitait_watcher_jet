@@ -4,9 +4,9 @@ const byte input_a = 2;
 const byte input_b = 3;
 const byte piPin = 11;
 const byte a_or_b = 18;
-const byte Warning = 12;
+const byte Warning = 13;
 const byte DataCapture = 10;
-const byte rpi_off = 13;
+const byte rpi_off = 12;
 const byte a_identifier = 8;
 const byte b_identifier = 9;
 
