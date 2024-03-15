@@ -4,11 +4,37 @@ Watcher Jet is a set of an Arduino, a RaspberryPi Zero W and some Electorinc com
 
 ![watcher-jet-v2.2.png](watcher-jet-v2.2.png)
 
-## Getting started
+# Getting started
 
-What hardwares needed to run the watcher
+## How to initaite the RPI
+
+
+
+- Install the [Raspberry Pi Imager](https://www.raspberrypi.com/software)
+- Download and extract the [lite image](https://downloads.raspberrypi.com/raspios_lite_armhf/images/raspios_lite_armhf-2024-03-13/2024-03-12-raspios-bookworm-armhf-lite.img.xz)
+
+- in the OS customisation Config page,set the name like `2024031501`(time + cronical number); set the user and password of rpi, the default user is `pi` and the default password is `raspberry`; the ssid and the password of the wireless network (i.e. `monitait` and `p@assword`) and in the SERVICES tab, enable the `SSH`
+![RPI-imager-setting](RPI-imager-setting.png)
+
+- Put the SD card in the RPI and wait for the RPI finish the setup
+- Extend the RPI filesystem with `sudo raspi-config` 5th option
+- ssh into rpi
+
+`ssh pi@2024031501`
+
+```
+sudo apt-get install git -y
+cd ~
+sudo git clone http://gitlab.virasad.ir/monitait/Shoga_monitait_watcher_jet.git
+bash /home/pi/Shoga_monitait_watcher_jet/aux-python/init.sh
+sudo reboot now
+```
+
+What hardwares needed to run on the watcher
+
+- An SD card 
 - An external 12.6v 2A for `PS` (to recharfe the internal battries, a regulated power is needed)
-- An Access Point with SSID: `monitait` and password: `1qaz!QAZ`
+- An Access Point with a SSID like: `monitait` and a password like: `p@ssword`
 - a 12-24V digital signal for `OK`
 - a 12-24V digital signal for `NG`
 - a 4-20mA analog signal for `C`
