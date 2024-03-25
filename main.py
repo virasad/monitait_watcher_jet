@@ -5,7 +5,60 @@ import sys
 import requests
 import json
 import socket
+import datetime
+import pygame
+import pygame.camera
+
+pygame.camera.init()
+
 hostname = str(socket.gethostname())
+
+def watcher_update_image(register_id, quantity, defect_quantity, send_img, product_id=0, lot_info=0, extra_info=None, *args, **kwargs):
+    quantity = quantity
+    defect_quantity = defect_quantity
+    product_id = product_id
+    lot_info = lot_info
+    extra_info = extra_info
+    timestamp = kwargs.pop("timestamp", datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f'))
+    product_info = kwargs.pop("product_info", None)
+
+    # try:
+    DATA = {
+        "register_id" : register_id,
+        "quantity" : quantity,
+        "defect_quantity": defect_quantity,
+        "product_id": product_id, 
+        "extra_info": extra_info,
+        "lot_info": lot_info,
+        "timestamp":timestamp, 
+        "product_info":product_info
+    }
+    session = requests.Session()
+    URL_DATA = "https://app.monitait.com/api/factory/image-update-watcher-data/"
+    URL_IMAGE = "https://app.monitait.com/api/factory/image-update-watcher/"
+    
+    try:
+        response = session.post(URL_DATA, data=json.dumps(DATA), headers={"content-type": "application/json"}, timeout=150)
+        result = response.json()
+        _id = result.get('_id', None)
+        time.sleep(1)
+        if _id and send_img:
+            DATA = {
+                'register_id':result['register_id'],
+                'elastic_id':_id
+            }
+            print(DATA)
+
+            response = session.post(URL_IMAGE, files={"image": open("scene_image.jpg", "rb")}, data=DATA, timeout=250)
+            session.close()
+            return response.status_code
+        session.close
+        return response.status_code
+    except Exception as e:
+        print(e)
+        session.close()
+        return requests.codes.bad 
+
 
 def watcher_update(register_id, quantity, defect_quantity, product_id=0, lot_info=0, extra_info=None):
     DATA = {
@@ -147,10 +200,16 @@ while flag:
       i=i+1
       if i > 1200:
         try:
-          r_c, resp = watcher_update(
+          cam = pygame.camera.Camera("/dev/video0", (1280,720))
+          cam.start()
+          img = cam.get_image()
+          pygame.image.save(img,"scene_image.jpg")
+          cam.stop()
+          r_c = watcher_update_image(
             register_id=hostname,
             quantity=temp_a,
             defect_quantity=temp_b,
+            send_img=True,
             product_id=0,
             lot_info=0,
             extra_info= {"adc" : c, "battery" : d})
@@ -162,8 +221,24 @@ while flag:
           else:
             internet_access = False    
         except:
-          time.sleep(1)
-          pass
+          try:
+            r_c, resp = watcher_update(
+              register_id=hostname,
+              quantity=temp_a,
+              defect_quantity=temp_b,
+              product_id=0,
+              lot_info=0,
+              extra_info= {"adc" : c, "battery" : d})
+            if r_c == requests.codes.ok:
+              temp_a = 0
+              temp_b = 0
+              i=0
+              internet_access = True
+            else:
+              internet_access = False    
+          except:
+            time.sleep(1)
+            pass
     time.sleep(0.01)
 
   except Exception as e:
