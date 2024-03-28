@@ -1,27 +1,29 @@
 #include <avr/wdt.h>
 
-const byte input_a = 2;
-const byte input_b = 3;
-const byte piPin = 11;
-const byte a_or_b = 18;
-const byte Warning = 13;
-const byte DataCapture = 10;
-const byte rpi_off = 12;
-const byte a_identifier = 8;
-const byte b_identifier = 9;
+const byte input_a = 2; // OK
+const byte input_b = 3; // NG
+const byte piPin = 11; // RPI Signal to Arduino
+const byte a_or_b = 18; // RPI Address to Arduino
+const byte Warning = 13; // Warning LED Panel
+const byte DataCapture = 10; // Link LED Panel
+const byte rpi_off = 12; // To force restart RPI by Arduino
+const byte a_identifier = 8; // RPI Address to Arduino
+const byte b_identifier = 9; // RPI Address to Arduino
 
 byte input_pins[4] = {
   14, 15, 16, 17
-};
+}; // RPI data pins to Arduino
 
 byte output_pins[4] = {
   4, 5, 6, 7
-};
+}; // Arduino data pins to RPI
 
 long counter_a = 0;
 long counter_b = 0;
 unsigned int battery;
-unsigned int c = 0;
+unsigned int c = 0; 
+unsigned int e = 0; // extra analog read on A7
+unsigned int i = 0; // counter for serial print
 unsigned int counter_rpi_reboot = 100;
 unsigned int restart_counter = 1;
 long counter_a_b = 0;
@@ -62,9 +64,14 @@ void loop() {
   // get analog data
   c = analogRead(A5);
   battery = analogRead(A6);  
+  e = analogRead(A7);
   digitalWrite(DataCapture, LOW);
-  Serial.print("a: "); Serial.print(counter_a); Serial.print(",b: "); Serial.print(counter_b); Serial.print(",c: "); Serial.print(c); Serial.print(",battery: "); Serial.print(battery/10); Serial.print("%");Serial.print(" ,restart threshold: "); Serial.print(counter_rpi_reboot); Serial.print(" Counter for restart: ");Serial.println(restart_counter);;
-  // check if rpi informed the arduino
+  i++;
+  if ( i > 500){
+    Serial.println(String(counter_a) + "," + String(counter_b) + "," + String(c) + "," + String(e) + "," + String(battery/10) + "," + String(elapsed_speed) + "," + String(counter_rpi_reboot) + "," + String(restart_counter));
+    i = 0;
+  }
+  // check if RPI is signaling the ARDUINO
   if (digitalRead(piPin)==LOW){
     digitalWrite(DataCapture, HIGH);
     get_byte = 0;
@@ -81,7 +88,6 @@ void loop() {
     else{
       counter_a = counter_a - get_byte;
     }
-    Serial.println("waiting for RPI signal");
     while (digitalRead(piPin)==LOW){
       digitalWrite(a_identifier, LOW);
       digitalWrite(b_identifier, LOW);
@@ -148,13 +154,11 @@ void loop() {
     if (restart_counter < 500){
         restart_counter = restart_counter * 2;
         counter_rpi_reboot = (elapsed_speed+100)*restart_counter;
-        Serial.print("Counter for restart: ");Serial.println(restart_counter);
       }
     else{
         restart_counter = 500;
         resetFunc();
         }
-//    counter_a += 15; // on reboot input pins are high by default, this is for compensentation
     delay(1000);
   }
   

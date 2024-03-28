@@ -7,3 +7,6 @@ echo "@reboot sleep 60; /usr/bin/python3 /home/pi/Shoga_monitait_watcher_jet/mai
 #install new cron file
 crontab mycron
 rm mycron
+sudo raspi-config nonint do_serial_cons 1
+sudo raspi-config nonint do_serial_hw 0
+sudo raspi-config nonint do_expand_rootfs
