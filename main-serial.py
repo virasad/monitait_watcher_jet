@@ -100,7 +100,7 @@ while True:
       time.sleep(0.2)
       ser.open()
 
-    if (j > 10000):
+    if (j > 2500):
       r_c = watcher_update_image(
         register_id=hostname,
         quantity=0,
