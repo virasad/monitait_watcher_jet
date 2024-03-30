@@ -65,6 +65,8 @@ j = 0
 buffer = b''
 last_received = ''
 ser.flushInput()
+image_captured = False
+
 while True:
   try:
     i=i+1
@@ -75,12 +77,16 @@ while True:
       print (last_received)
       serial_list = last_received.split(",")
       i = 0
-      cam = pygame.camera.Camera("/dev/video0", (1280,720))
-      cam.start()
-      img = cam.get_image()
-      pygame.image.save(img,"scene_image.jpg")
-      cam.stop()
-
+      try:
+        cam = pygame.camera.Camera("/dev/video0", (1280,720))
+        cam.start()
+        img = cam.get_image()
+        pygame.image.save(img,"scene_image.jpg")
+        cam.stop()
+        image_captured = True
+      except:
+        image_captured = False
+        pass
     if i > 1000:
       buffer = b''
       ser.flushInput()
@@ -96,7 +102,7 @@ while True:
         register_id=hostname,
         quantity=0,
         defect_quantity=0,
-        send_img=True,
+        send_img=image_captured,
         product_id=0,
         lot_info=0,
         extra_info= {"serial" : str(last_received), "c" : serial_list[2], "d" : serial_list[3], "batt" : serial_list[4]})
@@ -104,7 +110,8 @@ while True:
         j=0
         internet_access = True
       else:
-        internet_access = False    
+        internet_access = False   
+        time.sleep(2) 
 
     time.sleep(0.001)
   except:
