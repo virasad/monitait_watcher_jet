@@ -72,6 +72,7 @@ while True:
   try:
     i=i+1
     j=j+1
+
     buffer += ser.read()
     if (b'\r\n' in buffer):
       last_received, buffer = buffer.split(b'\r\n')[-2:]
@@ -88,6 +89,7 @@ while True:
       except:
         image_captured = False
         pass
+
     if i > 1000:
       buffer = b''
       ser.flushInput()
@@ -98,7 +100,7 @@ while True:
       time.sleep(0.2)
       ser.open()
 
-    if (j > 2 and i < 100):
+    if (j > 30):
       r_c = watcher_update_image(
         register_id=hostname,
         quantity=0,
@@ -106,7 +108,7 @@ while True:
         send_img=image_captured,
         product_id=0,
         lot_info=0,
-        extra_info= {"serial" : str(last_received), "c" : serial_list[2], "d" : serial_list[3], "batt" : serial_list[4]})
+        extra_info= {"serial" : str(last_received), "c" : serial_list[2], "d" : serial_list[3], "batt" : serial_list[4], "speed" : serial_list[5]})
       if r_c == requests.codes.ok:
         j=0
         internet_access = True
