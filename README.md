@@ -14,7 +14,7 @@ Watcher Jet is a set of an Arduino, a RaspberryPi Zero W and some Electorinc com
 - Download and extract the [lite image](https://downloads.raspberrypi.com/raspios_lite_armhf/images/raspios_lite_armhf-2024-03-13/2024-03-12-raspios-bookworm-armhf-lite.img.xz)
 
 - in the OS customisation Config page,set the name like `2024031501`(time + cronical number); set the user and password of rpi, the default user is `pi` and the default password is `raspberry`; the ssid and the password of the wireless network (i.e. `monitait` and `p@assword`) and in the SERVICES tab, enable the `SSH`
-![RPI-imager-setting](docs/RPI-imager-setting.png)
+![RPI-imager-setting](docs/RPI-imager-setting-general.png)
 
 - Put the SD card in the RPI and wait for the RPI finish the setup
 - Extend the RPI filesystem with `sudo raspi-config` 5th option
@@ -25,8 +25,8 @@ Watcher Jet is a set of an Arduino, a RaspberryPi Zero W and some Electorinc com
 ```
 sudo apt-get install git -y
 cd ~
-sudo git clone http://gitlab.virasad.ir/monitait/Shoga_monitait_watcher_jet.git
-bash /home/pi/Shoga_monitait_watcher_jet/aux-python/init.sh
+sudo git clone https://github.com/virasad/monitait_watcher_jet.git
+bash /home/pi/monitait_watcher_jet/init/init.sh
 sudo reboot now
 ```
 
