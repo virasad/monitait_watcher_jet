@@ -1,7 +1,6 @@
 from periphery import GPIO
 import time
 import signal
-import sys
 import requests
 import json
 import socket
