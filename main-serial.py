@@ -5,6 +5,7 @@ import json
 import socket
 import pygame
 import pygame.camera
+import datetime
 
 pygame.camera.init()
 
@@ -59,7 +60,7 @@ def watcher_update_image(register_id, quantity, defect_quantity, send_img, produ
 ser = serial.Serial(
         port='/dev/serial0', baudrate = 9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=1
 )
-
+serial_list = [0,0,0,0,0,0,0,0]
 i = 0
 j = 0
 buffer = b''
@@ -75,7 +76,7 @@ while True:
     if (b'\r\n' in buffer):
       last_received, buffer = buffer.split(b'\r\n')[-2:]
       print (last_received)
-      serial_list = last_received.split(",")
+      serial_list = str(last_received).split(',')
       i = 0
       try:
         cam = pygame.camera.Camera("/dev/video0", (1280,720))
@@ -97,7 +98,7 @@ while True:
       time.sleep(0.2)
       ser.open()
 
-    if j > 120000:
+    if (j > 2 and i < 100):
       r_c = watcher_update_image(
         register_id=hostname,
         quantity=0,
