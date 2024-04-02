@@ -1,4 +1,5 @@
 sudo apt-get install python3-pip -y
+sudo apt-get install git curl libsdl2-mixer-2.0-0 libsdl2-image-2.0-0 libsdl2-2.0-0 -y
 python3 -m pip install -r requirements.txt --break-system-packages
 #write out current crontab
 crontab -l > mycron
