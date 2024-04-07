@@ -6,7 +6,7 @@ crontab -l > mycron
 #echo new cron into cron file
 echo "@reboot sleep 60; /usr/bin/python3 /home/pi/monitait_watcher_jet/main.py &" >> mycron
 echo "@reboot sleep 90; /usr/bin/python3 /home/pi/monitait_watcher_jet/main-serial.py &" >> mycron
-#install new cron file
+#install new cron file 
 crontab mycron
 rm mycron
 sudo raspi-config nonint do_serial_cons 1 # disable shell over serial
