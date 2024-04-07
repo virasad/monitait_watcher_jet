@@ -6,6 +6,9 @@ Watcher Jet is a set of an Arduino, a RaspberryPi Zero W and some Electorinc com
 
 ## How to initaite the RPI
 
+- Wathcer jet heart is to make collabration between Arduino and RPI to have better data consitency
+![monitait-watcher-jet-data-flow](monitait-watcher-jet.png)
+
 - Order the PCB and the BOM of Watcher and solder all components on the board
 
 - USE [Arduino IDE](https://www.arduino.cc/en/software) to upload the [jet-arduino](../jet-arduino/jet-arduino.ino) into the arduino board
