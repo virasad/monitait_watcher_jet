@@ -8,7 +8,7 @@ tidelift: # Replace with a single Tidelift platform-name/package-name e.g., npm/
 community_bridge: # Replace with a single Community Bridge project-name e.g., cloud-foundry
 liberapay: # Replace with a single Liberapay username
 issuehunt: # Replace with a single IssueHunt username
-lfx_crowdfunding: MONITAIT-WATCHER-JET
+lfx_crowdfunding: #MONITAIT-WATCHER-JET
 polar: # Replace with a single Polar username
 buy_me_a_coffee: monitait
 custom: "https://www.paypal.com/ncp/payment/6MCGMVECJRWGE"

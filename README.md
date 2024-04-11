@@ -27,6 +27,6 @@ there is a register id for each watcher, add the register id in monitait console
 
 ## Test and Deploy
 
-- by sending Signals you should see blue indicators blink
-- if the counting reached half of acceptable threshold, the warning red indicator will be turn on (in case of low battery as well)
-- if the link between watcher and the server established, the red chain inidactor blinks
+- by Getting Digital Signals you should see blue indicators blink
+- if the counting reached half of acceptable threshold, the warning red indicator will be turned on (in case of low battery as well)
+- if the link between watcher and the server established, the red chain (link) inidactor blinks
