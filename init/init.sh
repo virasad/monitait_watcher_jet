@@ -2,6 +2,7 @@ sudo apt-get install python3-pip -y
 sudo apt-get install sqlite3 curl libsdl2-mixer-2.0-0 libsdl2-image-2.0-0 libsdl2-2.0-0 -y
 python3 -m pip install -r /home/pi/monitait_watcher_jet/init/requirements.txt --break-system-packages
 #write out current crontab
+crontab -r # remove old crontab
 crontab -l > mycron
 #echo new cron into cron file
 echo "@reboot sleep 60; /usr/bin/python3 /home/pi/monitait_watcher_jet/main.py &" >> mycron
