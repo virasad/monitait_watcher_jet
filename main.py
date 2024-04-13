@@ -1,10 +1,18 @@
 from periphery import GPIO
+import sqlite3
 import time
+import datetime
 import signal
 import requests
 import json
 import socket
 hostname = str(socket.gethostname())
+try:
+  dbconnect = sqlite3.connect("monitait.db")
+  dbconnect.row_factory = sqlite3.Row
+  cursor = dbconnect.cursor()
+except:
+  pass
 
 def watcher_update(register_id, quantity, defect_quantity, product_id=0, lot_info=0, extra_info=None):
     DATA = {
@@ -21,7 +29,6 @@ def watcher_update(register_id, quantity, defect_quantity, product_id=0, lot_inf
     URL = "https://app.monitait.com/api/factory/update-watcher/"
     r = requests.post(URL, data=json.dumps(DATA), headers=HEADER)
     return r.status_code, r #.json()
-
 
 flag = True
 
@@ -87,7 +94,7 @@ while flag:
 
     if in_bit_a and not(in_bit_b):
       a = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
-      if (a > 0 and internet_access):
+      if (a > 0):
         set_gpio_value(a)
         gpio26_d.write(False)
         while (gpio21_a.read() != gpio23_b.read()):
@@ -100,7 +107,7 @@ while flag:
 
     elif not(in_bit_a) and in_bit_b:
       b = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
-      if (b > 0 and internet_access):
+      if (b > 0):
         set_gpio_value(b)
         gpio37_c.write(False) # identify it is b
         gpio26_d.write(False)
@@ -121,26 +128,47 @@ while flag:
       
 
     if(temp_a + temp_b >= get_ts):
-      try:
-        r_c, resp = watcher_update(
-          register_id=hostname,
-          quantity=temp_a,
-          defect_quantity=temp_b,
-          product_id=0,
-          lot_info=0,
-          extra_info= {})
-        time.sleep(1)
-        if r_c == requests.codes.ok:
-          temp_a = 0
-          temp_b = 0
-          i=0
-          internet_access = True
-        else:
-          internet_access = False
-      except:
-        time.sleep(1)
-        pass
+      if internet_access:
+        try:
+          r_c, resp = watcher_update(
+            register_id=hostname,
+            quantity=temp_a,
+            defect_quantity=temp_b,
+            product_id=0,
+            lot_info=0,
+            extra_info= {})
+          time.sleep(1)
+          if r_c == requests.codes.ok:
+            temp_a = 0
+            temp_b = 0
+            i=0
+            internet_access = True
+          else:
+            internet_access = False
+          
+          cursor.execute('SELECT * FROM monitait_table')
+          if len(cursor) > 0:
+            for row in cursor:
+              r_c = watcher_update(
+                register_id=hostname,
+                quantity=row["temp_a"],
+                defect_quantity=row["temp_b"],
+                timestamp=row["ts"],
+                product_id=0,
+                lot_info=0,
+                extra_info= {"adc" : row[c], "battery" : row[d]})
+              if r_c == requests.codes.ok:
+                sql_delete_query = """DELETE from monitait_table where id = {}""".format(row["id"])
+                cursor.execute(sql_delete_query)
+              else:
+                time.sleep(2) 
 
+        except:
+          time.sleep(1)
+          pass
+      else:
+        cursor.execute('''insert into monitait_table values (ts, temp_a, temp_b, c, d)''', (datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f'), temp_a, temp_b, c, d))
+        dbconnect.commit()
     else:
       time.sleep(0.1)
       i=i+1
