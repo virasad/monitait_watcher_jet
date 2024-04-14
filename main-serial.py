@@ -45,7 +45,7 @@ def watcher_update_image(register_id, quantity, defect_quantity, send_img, produ
                 'register_id':result['register_id'],
                 'elastic_id':_id
             }
-            print(DATA)
+            # print(DATA)
 
             response = session.post(URL_IMAGE, files={"image": open("scene_image.jpg", "rb")}, data=DATA, timeout=250)
             session.close()
@@ -53,7 +53,7 @@ def watcher_update_image(register_id, quantity, defect_quantity, send_img, produ
         session.close
         return response.status_code
     except Exception as e:
-        print(e)
+        # print(e)
         session.close()
         return requests.codes.bad 
 
@@ -77,7 +77,7 @@ while True:
     buffer += ser.read()
     if (b'\r\n' in buffer):
       last_received, buffer = buffer.split(b'\r\n')[-2:]
-      print (last_received)
+      # print (last_received)
       serial_list = str(last_received).split("'")[1].split(',')
       i = 0
       try:

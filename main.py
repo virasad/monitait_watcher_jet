@@ -145,30 +145,30 @@ while flag:
             internet_access = True
           else:
             internet_access = False
-          
-          cursor.execute('SELECT * FROM monitait_table')
-          if len(cursor) > 0:
-            for row in cursor:
-              r_c = watcher_update(
-                register_id=hostname,
-                quantity=row["temp_a"],
-                defect_quantity=row["temp_b"],
-                timestamp=row["ts"],
-                product_id=0,
-                lot_info=0,
-                extra_info= {"adc" : row[c], "battery" : row[d]})
-              if r_c == requests.codes.ok:
-                sql_delete_query = """DELETE from monitait_table where id = {}""".format(row["id"])
-                cursor.execute(sql_delete_query)
-              else:
-                time.sleep(2) 
+          try:
+            cursor.execute('SELECT * FROM monitait_table')
+            if len(cursor) > 0:
+              for row in cursor:
+                r_c = watcher_update(
+                  register_id=hostname,
+                  quantity=int(row["temp_a"]),
+                  defect_quantity=int(row["temp_b"]),
+                  timestamp=row["ts"].strftime('%Y-%m-%dT%H:%M:%S.%f'),
+                  product_id=0,
+                  lot_info=0,
+                  extra_info= {"adc" : int(row[c]), "battery" : int(row[d])})
+                if r_c == requests.codes.ok:
+                  sql_delete_query = """DELETE from monitait_table where id = {}""".format(row["id"])
+                  cursor.execute(sql_delete_query)
+                else:
+                  time.sleep(2) 
+          except:
+            pass
 
         except:
           time.sleep(1)
           pass
-      else:
-        cursor.execute('''insert into monitait_table values (ts, temp_a, temp_b, c, d)''', (datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f'), temp_a, temp_b, c, d))
-        dbconnect.commit()
+      
     else:
       time.sleep(0.1)
       i=i+1
@@ -182,12 +182,15 @@ while flag:
             lot_info=0,
             extra_info= {"adc" : c, "battery" : d})
           if r_c == requests.codes.ok:
-            temp_a = 0
-            temp_b = 0
-            i=0
             internet_access = True
           else:
             internet_access = False    
+            cursor.execute('''insert into monitait_table ( temp_a, temp_b, c, d) values ({},{},{},{})'''.format(temp_a, temp_b, c, d))
+            dbconnect.commit()
+
+          temp_a = 0
+          temp_b = 0
+          i=0
         except:
           time.sleep(1)
           pass
@@ -196,8 +199,8 @@ while flag:
   except Exception as e:
     try:      
       print("error: {}".format(str(e)))
-      import os
-      os.system("sudo shutdown -r now")
+      # import os
+      # os.system("sudo shutdown -r now")
       
     except:
       pass    
