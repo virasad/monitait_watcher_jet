@@ -60,8 +60,8 @@ def watcher_update_image(register_id, quantity, defect_quantity, send_img, produ
 ser = serial.Serial(
         port='/dev/serial0', baudrate = 9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=1
 )
-serial_list = [0,0,0,0,0,0,0,0]
-extra_info = { 'd0' : 0 ,'d1' : 0, 'd2' : 0, 'd3' : 0 ,'d4' : 0 , 'd5' : 0 , 'd6' : 0 , 'd7' : 0}
+serial_list = []
+extra_info = {}
 i = 0
 j = 0
 buffer = b''
@@ -78,7 +78,7 @@ while True:
     if (b'\r\n' in buffer):
       last_received, buffer = buffer.split(b'\r\n')[-2:]
       print (last_received)
-      serial_list = str(last_received).split(',')
+      serial_list = str(last_received).split("'")[1].split(',')
       i = 0
       try:
         cam = pygame.camera.Camera("/dev/video0", (1280,720))
@@ -103,7 +103,7 @@ while True:
 
     if (j > 2500):
       for i in range(len(serial_list)):
-        extra_info["d{}".format(i)] = serial_list[i]
+        extra_info.update({"d{}".format(i) : int(serial_list[i])})
       r_c = watcher_update_image(
         register_id=hostname,
         quantity=0,
