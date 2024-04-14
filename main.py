@@ -183,13 +183,17 @@ while flag:
             extra_info= {"adc" : c, "battery" : d})
           if r_c == requests.codes.ok:
             internet_access = True
+            temp_a = 0
+            temp_b = 0
           else:
             internet_access = False    
-            cursor.execute('''insert into monitait_table ( temp_a, temp_b, c, d) values ({},{},{},{})'''.format(temp_a, temp_b, c, d))
-            dbconnect.commit()
-
-          temp_a = 0
-          temp_b = 0
+            try:
+              cursor.execute('''insert into monitait_table ( temp_a, temp_b, c, d) values ({},{},{},{})'''.format(temp_a, temp_b, c, d))
+              dbconnect.commit()
+              temp_a = 0
+              temp_b = 0
+            except:
+              pass
           i=0
         except:
           time.sleep(1)
