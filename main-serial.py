@@ -61,6 +61,7 @@ ser = serial.Serial(
         port='/dev/serial0', baudrate = 9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=1
 )
 serial_list = [0,0,0,0,0,0,0,0]
+extra_info = { 'd0' : 0 ,'d1' : 0, 'd2' : 0, 'd3' : 0 ,'d4' : 0 , 'd5' : 0 , 'd6' : 0 , 'd7' : 0}
 i = 0
 j = 0
 buffer = b''
@@ -101,6 +102,8 @@ while True:
       ser.open()
 
     if (j > 2500):
+      for i in range(len(serial_list)):
+        extra_info["d{}".format(i)] = serial_list[i]
       r_c = watcher_update_image(
         register_id=hostname,
         quantity=0,
@@ -108,7 +111,7 @@ while True:
         send_img=image_captured,
         product_id=0,
         lot_info=0,
-        extra_info= {"serial" : str(last_received), "c" : serial_list[2], "d" : serial_list[3], "batt" : serial_list[4], "speed" : serial_list[5]})
+        extra_info= extra_info)
       if r_c == requests.codes.ok:
         j=0
         internet_access = True
