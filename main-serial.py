@@ -68,11 +68,16 @@ buffer = b''
 last_received = ''
 ser.flushInput()
 image_captured = False
+restart_counter = 0
 
 while True:
   try:
     i=i+1
     j=j+1
+    
+    if (restart_counter > 500):
+      import os
+      os.system("sudo shutdown -r now")
 
     buffer += ser.read()
     if (b'\r\n' in buffer):
@@ -116,7 +121,8 @@ while True:
         j=0
         internet_access = True
       else:
-        internet_access = False   
+        internet_access = False
+        restart_counter = restart_counter + 1
         time.sleep(2) 
 
     time.sleep(0.001)

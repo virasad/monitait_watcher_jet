@@ -38,6 +38,7 @@ def handler(signal, frame):
   flag = False
 
 i = 0 # iterator for send a dummy 0 request
+restart_counter = 1
 
 signal.signal(signal.SIGINT, handler)
 gpio07_0 = GPIO(4, "in")
@@ -142,6 +143,7 @@ while flag:
             temp_a = 0
             temp_b = 0
             i=0
+            restart_counter = 0
             internet_access = True
           else:
             internet_access = False
@@ -185,14 +187,17 @@ while flag:
             internet_access = True
             temp_a = 0
             temp_b = 0
+            restart_counter = 0
           else:
-            internet_access = False    
+            internet_access = False
+            restart_counter  = restart_counter + 1
             try:
               cursor.execute('''insert into monitait_table ( temp_a, temp_b, c, d) values ({},{},{},{})'''.format(temp_a, temp_b, c, d))
               dbconnect.commit()
               temp_a = 0
               temp_b = 0
             except:
+              restart_counter = restart_counter + 1
               pass
           i=0
         except:
