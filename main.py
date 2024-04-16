@@ -203,7 +203,8 @@ while flag:
             cursor.execute(sql_delete_query)
           else:
             time.sleep(2) 
-    except:
+    except Exception as f:
+      print(str(f))
       pass
 
     time.sleep(0.01)
