@@ -187,8 +187,9 @@ while flag:
     
     try:
       cursor.execute('SELECT * FROM monitait_table')
-      if len(cursor) > 0:
-        for row in cursor:
+      output = cursor.fetchall() 
+      if len(output) > 0:
+        for row in output:
           r_c = watcher_update(
             register_id=hostname,
             quantity=int(row["temp_a"]),
