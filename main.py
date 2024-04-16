@@ -9,26 +9,28 @@ import socket
 hostname = str(socket.gethostname())
 try:
   dbconnect = sqlite3.connect("monitait.db")
-  # dbconnect.row_factory = sqlite3.Row
   cursor = dbconnect.cursor()
 except:
+  err_msg = "db"
   pass
 
-def watcher_update(register_id, quantity, defect_quantity, product_id=0, lot_info=0, extra_info=None):
+def watcher_update(register_id, quantity, defect_quantity, product_id=0, lot_info=0, extra_info=None, *args, **kwargs):
     DATA = {
         "register_id" : register_id,
         "quantity" : quantity,
         "defect_quantity": defect_quantity,
-        "product_id": product_id, 
+        "product_id": product_id,
         "extra_info": extra_info,
-        "lot_info": lot_info
+        "lot_info": lot_info,
+        "timestamp": kwargs.pop("timestamp", datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f'))
     }
     HEADER = {
         "content-type": "application/json"
     }
-    URL = "https://app.monitait.com/api/factory/update-watcher/"
+    URL = "https://develop-app.monitait.com/api/factory/update-watcher/"
     r = requests.post(URL, data=json.dumps(DATA), headers=HEADER)
-    return r.status_code, r #.json()
+    print(r.status_code, r)
+    return r.status_code, r
 
 flag = True
 
@@ -126,7 +128,7 @@ while flag:
       d = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
     else:
       c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
-      
+
 
     if(temp_a + temp_b >= get_ts):
       if internet_access:
@@ -147,11 +149,11 @@ while flag:
             internet_access = True
           else:
             internet_access = False
-        
+
         except:
           time.sleep(1)
           pass
-      
+
     else:
       time.sleep(0.1)
       i=i+1
@@ -190,17 +192,19 @@ while flag:
       output = cursor.fetchall() 
       if len(output) > 0:
         for row in output:
-          r_c = watcher_update(
+          print(row)
+          r_c, r = watcher_update(
             register_id=hostname,
-            quantity=int(row["temp_a"]),
-            defect_quantity=int(row["temp_b"]),
-            timestamp=row["ts"].strftime('%Y-%m-%dT%H:%M:%S.%f'),
+            quantity=int(row[1]),
+            defect_quantity=int(row[2]),
+            timestamp=datetime.datetime.strptime(row[5], '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%S.%f'),
             product_id=0,
             lot_info=0,
-            extra_info= {"adc" : int(row[c]), "battery" : int(row[d])})
+            extra_info= {"adc" : int(row[3]), "battery" : int(row[4])})
           if r_c == requests.codes.ok:
-            sql_delete_query = """DELETE from monitait_table where id = {}""".format(row["id"])
+            sql_delete_query = """DELETE from monitait_table where id = {}""".format(row[0])
             cursor.execute(sql_delete_query)
+            dbconnect.commit()
           else:
             time.sleep(2) 
     except Exception as f:
