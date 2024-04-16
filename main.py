@@ -9,7 +9,7 @@ import socket
 hostname = str(socket.gethostname())
 try:
   dbconnect = sqlite3.connect("monitait.db")
-  dbconnect.row_factory = sqlite3.Row
+  # dbconnect.row_factory = sqlite3.Row
   cursor = dbconnect.cursor()
 except:
   pass
