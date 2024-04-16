@@ -74,7 +74,7 @@ while True:
   try:
     i=i+1
     j=j+1
-    
+
     if (restart_counter > 500):
       import os
       os.system("sudo shutdown -r now")
@@ -120,6 +120,7 @@ while True:
       if r_c == requests.codes.ok:
         j=0
         internet_access = True
+        restart_counter = 0
       else:
         internet_access = False
         restart_counter = restart_counter + 1

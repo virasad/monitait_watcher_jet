@@ -147,26 +147,7 @@ while flag:
             internet_access = True
           else:
             internet_access = False
-          try:
-            cursor.execute('SELECT * FROM monitait_table')
-            if len(cursor) > 0:
-              for row in cursor:
-                r_c = watcher_update(
-                  register_id=hostname,
-                  quantity=int(row["temp_a"]),
-                  defect_quantity=int(row["temp_b"]),
-                  timestamp=row["ts"].strftime('%Y-%m-%dT%H:%M:%S.%f'),
-                  product_id=0,
-                  lot_info=0,
-                  extra_info= {"adc" : int(row[c]), "battery" : int(row[d])})
-                if r_c == requests.codes.ok:
-                  sql_delete_query = """DELETE from monitait_table where id = {}""".format(row["id"])
-                  cursor.execute(sql_delete_query)
-                else:
-                  time.sleep(2) 
-          except:
-            pass
-
+        
         except:
           time.sleep(1)
           pass
@@ -203,6 +184,27 @@ while flag:
         except:
           time.sleep(1)
           pass
+    
+    try:
+      cursor.execute('SELECT * FROM monitait_table')
+      if len(cursor) > 0:
+        for row in cursor:
+          r_c = watcher_update(
+            register_id=hostname,
+            quantity=int(row["temp_a"]),
+            defect_quantity=int(row["temp_b"]),
+            timestamp=row["ts"].strftime('%Y-%m-%dT%H:%M:%S.%f'),
+            product_id=0,
+            lot_info=0,
+            extra_info= {"adc" : int(row[c]), "battery" : int(row[d])})
+          if r_c == requests.codes.ok:
+            sql_delete_query = """DELETE from monitait_table where id = {}""".format(row["id"])
+            cursor.execute(sql_delete_query)
+          else:
+            time.sleep(2) 
+    except:
+      pass
+
     time.sleep(0.01)
 
   except Exception as e:
