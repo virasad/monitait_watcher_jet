@@ -10,7 +10,7 @@ echo "@reboot sleep 90; /usr/bin/python3 /home/pi/monitait_watcher_jet/main-seri
 #install new cron file 
 crontab mycron
 rm mycron
-sqlite3 ../monitait.db "create table monitait_table(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, temp_a INTEGER, temp_b INTEGER, c INTEGER, d INTEGER, ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL);"
+sqlite3 /home/pi/monitait_watcher_jet/monitait.db "create table monitait_table(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, temp_a INTEGER, temp_b INTEGER, c INTEGER, d INTEGER, ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL);"
 sudo raspi-config nonint do_serial_cons 1 # disable shell over serial
 sudo raspi-config nonint do_serial_hw 0 # enable /dev/serial0
 sudo raspi-config nonint do_expand_rootfs # expand file system to use all SD card volume
