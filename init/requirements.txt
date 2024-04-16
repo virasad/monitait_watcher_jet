@@ -1,4 +1,4 @@
 python-periphery
 pyserial
 pygame
-sqlite3
+pysqlite
