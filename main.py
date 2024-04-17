@@ -11,7 +11,7 @@ import glob
 import os
 
 err_msg = ""
-
+image_path = ""
 hostname = str(socket.gethostname())
 
 try:
@@ -197,9 +197,7 @@ while flag:
 
     try:
       k = k + 1
-      for x in range(10):
-        buffer += ser.read()
-        time.sleep(0.001)
+      buffer += ser.read(20)
       if (b'\r\n' in buffer):
         last_received, buffer = buffer.split(b'\r\n')[-2:]
         serial_list = str(last_received).split("'")[1].split(',')
@@ -262,6 +260,7 @@ while flag:
         start_ts = time.time()
         get_ts = 10/(start_ts - old_start_ts)+0.9*get_ts
         old_start_ts = start_ts
+        
     elif not(in_bit_a) and in_bit_b:
       b = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
       if (b > 0):
