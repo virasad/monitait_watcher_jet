@@ -282,6 +282,7 @@ while flag:
 
 
     if(temp_a + temp_b >= get_ts or i > 50):
+      i = 0 
       r_c = watcher_update(
         register_id=hostname,
         quantity=temp_a,
