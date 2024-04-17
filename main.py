@@ -298,6 +298,8 @@ while flag:
         temp_b = 0
         internet_access = True
         restart_counter = 0
+        if image_captured:
+          os.system("sudo rm -rf {}".format(image_path))
         image_captured = False
       else:
         internet_connection = False
