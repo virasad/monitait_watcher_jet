@@ -8,6 +8,7 @@ import json
 import socket
 import serial
 import glob
+import os
 
 err_msg = ""
 
@@ -28,8 +29,6 @@ try:
   serial_connection = True
   serial_list = []
   extra_info = {}
-  i = 0
-  j = 0
   buffer = b''
   last_received = ''
   ser.flushInput()
@@ -64,25 +63,7 @@ except:
       pass
   pass
 
-
-def watcher_update(register_id, quantity, defect_quantity, product_id=0, lot_info=0, extra_info=None, *args, **kwargs):
-    DATA = {
-        "register_id" : register_id,
-        "quantity" : quantity,
-        "defect_quantity": defect_quantity,
-        "product_id": product_id,
-        "extra_info": extra_info,
-        "lot_info": lot_info,
-        "timestamp": kwargs.pop("timestamp", datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f'))
-    }
-    HEADER = {
-        "content-type": "application/json"
-    }
-    URL = "https://develop-app.monitait.com/api/factory/update-watcher/" #!!!!!!! take care of this develop or main API
-    r = requests.post(URL, data=json.dumps(DATA), headers=HEADER)
-    return r.status_code, r
-
-def watcher_update_image(register_id, quantity, defect_quantity, send_img, product_id=0, lot_info=0, extra_info=None, *args, **kwargs):
+def watcher_update(register_id, quantity, defect_quantity, send_img, image_path="scene_image.jpg", product_id=0, lot_info=0, extra_info=None, *args, **kwargs):
   quantity = quantity
   defect_quantity = defect_quantity
   product_id = product_id
@@ -103,24 +84,30 @@ def watcher_update_image(register_id, quantity, defect_quantity, send_img, produ
       "product_info":product_info
   }
   session = requests.Session()
-  URL_DATA = "https://app.monitait.com/api/factory/image-update-watcher-data/"
-  URL_IMAGE = "https://app.monitait.com/api/factory/image-update-watcher/"
-      
+   #!!!!!!! take care of this develop or main API 
+  URL = "https://develop-app.monitait.com/api/factory/update-watcher/" # send data without waiting for elastic id
+  URL_DATA = "https://app.monitait.com/api/factory/image-update-watcher-data/" # send data and get elastic id
+  URL_IMAGE = "https://app.monitait.com/api/factory/image-update-watcher/" # send image based on elastic id
+  
   try:
+    if send_img:
       response = session.post(URL_DATA, data=json.dumps(DATA), headers={"content-type": "application/json"}, timeout=150)
       result = response.json()
       _id = result.get('_id', None)
       time.sleep(1)
-      if _id and send_img:
+      if _id:
           DATA = {
               'register_id':result['register_id'],
               'elastic_id':_id
           }
 
-          response = session.post(URL_IMAGE, files={"image": open("scene_image.jpg", "rb")}, data=DATA, timeout=250)
+          response = session.post(URL_IMAGE, files={"image": open(image_path, "rb")}, data=DATA, timeout=250)
           session.close()
           return response.status_code
       session.close
+      return response.status_code
+    else:
+      response = requests.post(URL, data=json.dumps(DATA), headers={"content-type": "application/json"})
       return response.status_code
   except Exception as e:
       session.close()
@@ -184,9 +171,17 @@ old_start_ts = time.time()
 internet_connection = True
 while flag:
   try:
-    j = j + 1
-    k = k + 1
-    if (restart_counter > 500):
+    if (restart_counter == 500):
+      try:
+        os.system("sudo ifconfig wlan0 down")
+        time.sleep(10)
+        os.system("sudo ifconfig wlan0 up")
+        time.sleep(20)
+      except:
+        err_msg = err_msg + "-wlan"
+        pass
+
+    if (restart_counter > 1000):
       try:
         if db_connection:
           dbconnect.close()
@@ -196,18 +191,20 @@ while flag:
           camera.cam.stop()
         if serial_rs485_connection:
           ser_rs485.close()
+        os.system("sudo shutdown -r now")        
       except:
         pass
 
-      import os
-      os.system("sudo shutdown -r now")
-
     try:
-      buffer += ser.read()
+      k = k + 1
+      for x in range(10):
+        buffer += ser.read()
+        time.sleep(0.001)
       if (b'\r\n' in buffer):
         last_received, buffer = buffer.split(b'\r\n')[-2:]
         serial_list = str(last_received).split("'")[1].split(',')
         k = 0
+        i = i + 1
 
       if k > 1000:
         buffer = b''
@@ -218,38 +215,33 @@ while flag:
         ser.close()
         time.sleep(0.2)
         ser.open()
-
     except:
+      err_msg = err_msg + "-ser_read"
       pass
 
+    j = j + 1
     if (j > 2500):
       try:
         cam.start()
         img = cam.get_image()
-        pygame.image.save(img,"scene_image.jpg")
+        image_path = str(int(time.time()))+".jpg"
+        pygame.image.save(img,image_path)
         cam.stop()
         image_captured = True
       except:
         image_captured = False
+        err_msg = err_msg + "-cam_read"
         pass
+      j=0
+      i = i + 1
+
       for z in range(len(serial_list)):
-        extra_info.update({"d{}".format(z) : int(serial_list[z])})
-      r_c = watcher_update_image(
-        register_id=hostname,
-        quantity=0,
-        defect_quantity=0,
-        send_img=image_captured,
-        product_id=0,
-        lot_info=0,
-        extra_info= extra_info)
-      if r_c == requests.codes.ok:
-        j=0
-        internet_connection = True
-        restart_counter = 0
-      else:
-        internet_connection = False
-        restart_counter = restart_counter + 1
-        time.sleep(2) 
+        extra_info.update({"d{}".format(z) : int(serial_list[z])})        
+      if err_msg:
+        extra_info.update({"err" : err_msg})
+        err_msg = ""
+    
+
 
     in_bit_a = gpio21_a.read()
     in_bit_b = gpio23_b.read()
@@ -270,7 +262,6 @@ while flag:
         start_ts = time.time()
         get_ts = 10/(start_ts - old_start_ts)+0.9*get_ts
         old_start_ts = start_ts
-
     elif not(in_bit_a) and in_bit_b:
       b = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
       if (b > 0):
@@ -285,107 +276,81 @@ while flag:
         start_ts = time.time()
         get_ts = 10/(start_ts - old_start_ts)+0.9*get_ts
         old_start_ts = start_ts
-
-
     elif in_bit_a and in_bit_b:
       d = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
     else:
       c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
 
 
-    if(temp_a + temp_b >= get_ts):
-      if internet_connection:
+    if(temp_a + temp_b >= get_ts or i > 50):
+      r_c = watcher_update(
+        register_id=hostname,
+        quantity=temp_a,
+        defect_quantity=temp_b,
+        send_img=image_captured,
+        image_path=image_path,
+        product_id=0,
+        lot_info=0,
+        extra_info= extra_info)
+      if r_c == requests.codes.ok:
+        j=0
+        temp_a = 0
+        temp_b = 0
+        internet_access = True
+        restart_counter = 0
+        image_captured = False
+      else:
+        internet_connection = False
+        restart_counter = restart_counter + 1
         try:
-          r_c, resp = watcher_update(
-            register_id=hostname,
-            quantity=temp_a,
-            defect_quantity=temp_b,
-            product_id=0,
-            lot_info=0,
-            extra_info= {})
-          time.sleep(1)
-          if r_c == requests.codes.ok:
+          if db_connection:
+            if (image_captured == False):
+              image_path = None
+            cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, image_path, extra_info) values ({},{},{},{},{})'''.format(hostname, temp_a, temp_b, image_path, str(extra_info)))
+            dbconnect.commit()
             temp_a = 0
             temp_b = 0
-            i=0
-            restart_counter = 0
-            internet_connection = True
-          else:
-
-            internet_connection = False
-
+            image_captured = False
         except:
-          time.sleep(1)
+          err_msg = err_msg + "-db_insrt"
           pass
 
-    else:
-      time.sleep(0.1)
-      i=i+1
-      if i > 1200:
-        try:
-          r_c, resp = watcher_update(
-            register_id=hostname,
-            quantity=temp_a,
-            defect_quantity=temp_b,
-            product_id=0,
-            lot_info=0,
-            extra_info= {"adc" : c, "battery" : d})
-          if r_c == requests.codes.ok:
-            internet_connection = True
-            temp_a = 0
-            temp_b = 0
-            restart_counter = 0
-          else:
-            internet_connection = False
-            restart_counter  = restart_counter + 1
-            try:
-              if db_connection:
-                cursor.execute('''insert into monitait_table ( temp_a, temp_b, c, d) values ({},{},{},{})'''.format(temp_a, temp_b, c, d))
-                dbconnect.commit()
-                temp_a = 0
-                temp_b = 0
-            except:
-              restart_counter = restart_counter + 1
-              pass
-          i=0
-        except:
-          time.sleep(1)
-          pass
-    
-    if db_connection:
+
+    if db_connection and internet_connection:
       try:
-        cursor.execute('SELECT * FROM monitait_table')
+        cursor.execute('SELECT * FROM monitait_table LIMIT 5')
         output = cursor.fetchall() 
         if len(output) > 0:
           for row in output:
-            print(row)
+            if row[4]:
+              image_captured_db = True
+            else:
+              image_captured_db = False
             r_c, r = watcher_update(
-              register_id=hostname,
-              quantity=int(row[1]),
-              defect_quantity=int(row[2]),
-              timestamp=datetime.datetime.strptime(row[5], '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%S.%f'),
+              register_id=row[1],
+              quantity=int(row[2]),
+              defect_quantity=int(row[3]),
+              send_img=image_captured_db,
+              image_path=row[4],
+              timestamp=datetime.datetime.strptime(row[6], '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%S.%f'),
               product_id=0,
               lot_info=0,
-              extra_info= {"adc" : int(row[3]), "battery" : int(row[4])})
+              extra_info= row[5])
             if r_c == requests.codes.ok:
-              sql_delete_query = """DELETE from monitait_table where id = {}""".format(row[0])
+              sql_delete_query = """DELETE from monitait_table where id = {}""".format(row[0])      
               cursor.execute(sql_delete_query)
               dbconnect.commit()
+              if image_captured_db:
+                os.system("sudo rm -rf {}".format(row[4]))
             else:
               time.sleep(2) 
-      except Exception as f:
-        print(str(f))
+
+      except:
+        err_msg = err_msg + "-db_slct"
         pass
 
     time.sleep(0.01)
 
-  except Exception as e:
-    try:      
-      print("error: {}".format(str(e)))
-      # import os
-      # os.system("sudo shutdown -r now")
-      
-    except:
-      pass    
-    time.sleep(2)
+  except:
+    err_msg = err_msg + "-ftl"
     pass
