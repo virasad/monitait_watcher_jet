@@ -197,9 +197,10 @@ while flag:
 
     try:
       k = k + 1
-      for x in range(10):
+      for x in range(100):
+        if (x%30 = 0)
         buffer += ser.read(2000)
-        time.sleep(0.1)
+        time.sleep(0.01)
         if (b'\r\n' in buffer):
           last_received, buffer = buffer.split(b'\r\n')[-2:]
           serial_list = str(last_received).split("'")[1].split(',')
@@ -258,7 +259,7 @@ while flag:
         time.sleep(0.2)
         ser.open()
     except:
-      err_msg = err_msg + "-ser_read"
+      err_msg = err_msg + "-sergpio_read"
       pass
 
     j = j + 1
@@ -276,12 +277,13 @@ while flag:
         pass
       j=0
       i = i + 1
-      
-      if err_msg:
-        extra_info.update({"err" : err_msg})
-        err_msg = ""
+    
     
     if(temp_a + temp_b >= get_ts or i > 50 or image_captured):
+      if err_msg:
+        extra_info.update({"err_msg" : err_msg})
+        err_msg = ""
+
       i = 0 
       r_c = watcher_update(
         register_id=hostname,
@@ -343,10 +345,12 @@ while flag:
               sql_delete_query = """DELETE from monitait_table where id = {}""".format(row[0])      
               cursor.execute(sql_delete_query)
               dbconnect.commit()
+              restart_counter = 0
               if image_captured_db:
                 os.system("sudo rm -rf {}".format(row[4]))
             else:
-              time.sleep(2) 
+              internet_connection = False
+              restart_counter = restart_counter + 1
 
       except:
         err_msg = err_msg + "-db_slct"
