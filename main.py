@@ -197,14 +197,56 @@ while flag:
 
     try:
       k = k + 1
-      buffer += ser.read(20)
-      if (b'\r\n' in buffer):
-        last_received, buffer = buffer.split(b'\r\n')[-2:]
-        serial_list = str(last_received).split("'")[1].split(',')
-        for z in range(len(serial_list)):
-          extra_info.update({"d{}".format(z) : int(serial_list[z])})  
-        k = 0
-        i = i + 1
+      for x in range(10):
+        buffer += ser.read(2000)
+        time.sleep(0.1)
+        if (b'\r\n' in buffer):
+          last_received, buffer = buffer.split(b'\r\n')[-2:]
+          serial_list = str(last_received).split("'")[1].split(',')
+          for z in range(len(serial_list)):
+            extra_info.update({"d{}".format(z) : int(serial_list[z])})
+          print(extra_info)
+          k = 0
+          i = i + 1
+        in_bit_a = gpio21_a.read()
+        in_bit_b = gpio23_b.read()
+        in_bit_0 = gpio07_0.read()
+        in_bit_1 = gpio16_1.read()
+        in_bit_2 = gpio18_2.read()
+        in_bit_3 = gpio19_3.read()
+
+        if in_bit_a and not(in_bit_b):
+          a = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
+          if (a > 0):
+            set_gpio_value(a)
+            gpio26_d.write(False)
+            while (gpio21_a.read() != gpio23_b.read()):
+              time.sleep(0.001)
+            gpio26_d.write(True)
+            temp_a = temp_a + a
+            start_ts = time.time()
+            get_ts = 10/(start_ts - old_start_ts)+0.9*get_ts
+            old_start_ts = start_ts
+
+        elif not(in_bit_a) and in_bit_b:
+          b = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
+          if (b > 0):
+            set_gpio_value(b)
+            gpio37_c.write(False) # identify it is b
+            gpio26_d.write(False)
+            while (gpio21_a.read() != gpio23_b.read()):
+              time.sleep(0.001)
+            gpio37_c.write(True) # identify default is a
+            gpio26_d.write(True)
+            temp_b = temp_b + b
+            start_ts = time.time()
+            get_ts = 10/(start_ts - old_start_ts)+0.9*get_ts
+            old_start_ts = start_ts
+        elif in_bit_a and in_bit_b:
+          d = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
+        else:
+          c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
+
 
       if k > 1000:
         buffer = b''
@@ -239,49 +281,7 @@ while flag:
         extra_info.update({"err" : err_msg})
         err_msg = ""
     
-
-
-    in_bit_a = gpio21_a.read()
-    in_bit_b = gpio23_b.read()
-    in_bit_0 = gpio07_0.read()
-    in_bit_1 = gpio16_1.read()
-    in_bit_2 = gpio18_2.read()
-    in_bit_3 = gpio19_3.read()
-
-    if in_bit_a and not(in_bit_b):
-      a = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
-      if (a > 0):
-        set_gpio_value(a)
-        gpio26_d.write(False)
-        while (gpio21_a.read() != gpio23_b.read()):
-          time.sleep(0.001)
-        gpio26_d.write(True)
-        temp_a = temp_a + a
-        start_ts = time.time()
-        get_ts = 10/(start_ts - old_start_ts)+0.9*get_ts
-        old_start_ts = start_ts
-
-    elif not(in_bit_a) and in_bit_b:
-      b = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
-      if (b > 0):
-        set_gpio_value(b)
-        gpio37_c.write(False) # identify it is b
-        gpio26_d.write(False)
-        while (gpio21_a.read() != gpio23_b.read()):
-          time.sleep(0.001)
-        gpio37_c.write(True) # identify default is a
-        gpio26_d.write(True)
-        temp_b = temp_b + b
-        start_ts = time.time()
-        get_ts = 10/(start_ts - old_start_ts)+0.9*get_ts
-        old_start_ts = start_ts
-    elif in_bit_a and in_bit_b:
-      d = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
-    else:
-      c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
-
-
-    if(temp_a + temp_b >= get_ts or i > 50):
+    if(temp_a + temp_b >= get_ts or i > 50 or image_captured):
       i = 0 
       r_c = watcher_update(
         register_id=hostname,
@@ -296,7 +296,7 @@ while flag:
         j=0
         temp_a = 0
         temp_b = 0
-        internet_access = True
+        internet_connection = True
         restart_counter = 0
         if image_captured:
           os.system("sudo rm -rf {}".format(image_path))
@@ -316,7 +316,8 @@ while flag:
         except:
           err_msg = err_msg + "-db_insrt"
           pass
-
+      if image_captured:
+        os.system("sudo rm -rf {}".format(image_path))
 
     if db_connection and internet_connection:
       try:
