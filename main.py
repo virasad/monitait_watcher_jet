@@ -175,15 +175,17 @@ old_start_ts = time.time()
 internet_connection = True
 while flag:
   try:
-    if (restart_counter == 500):
+    if (restart_counter > 500 and restart_counter < 506):
       try:
         os.system("sudo ifconfig wlan0 down")
         time.sleep(10)
         os.system("sudo ifconfig wlan0 up")
         time.sleep(20)
       except:
-        err_msg = err_msg + "-wlan"
+        if not("-wlan" in err_msg):
+          err_msg = err_msg + "-wlan"
         pass
+      restart_counter = 510
 
     if (restart_counter > 1000):
       try:
@@ -262,12 +264,14 @@ while flag:
         time.sleep(0.2)
         ser.open()
     except:
-      if not "-sergpio_read" in err_msg:
+      if not("-sergpio_read" in err_msg):
         err_msg = err_msg + "-sergpio_read"
       pass
 
-    j = j + 1
-    if (j > 20 and camera_connection): # capture image every 300sec
+    if camera_connection:
+      j = j + 1
+
+    if (j > 20): # capture image every 300sec
       try:
         cam.start()
         img = cam.get_image()
@@ -277,14 +281,12 @@ while flag:
         image_captured = True
       except:
         image_captured = False
-        if not "-cam_read" in err_msg:
+        if not("-cam_read" in err_msg):
           err_msg = err_msg + "-cam_read"
         pass
       j=0
-      i = i + 1
-    
-    
-    if(temp_a + temp_b >= get_ts or i > 20 or ( image_captured and i > 10)):
+
+    if(temp_a + temp_b >= get_ts or i > 20 or image_captured):
       if err_msg:
         extra_info.update({"err_msg" : err_msg})
         err_msg = ""
@@ -313,7 +315,7 @@ while flag:
         restart_counter = restart_counter + 1
         try:
           if db_connection:
-            if (image_captured == False):
+            if not(image_captured):
               image_path = None
             cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, image_path, extra_info) values ({},{},{},{},{})'''.format(hostname, temp_a, temp_b, image_path, str(extra_info)))
             dbconnect.commit()
@@ -324,10 +326,11 @@ while flag:
               os.system("sudo rm -rf {}".format(image_path))
               image_captured = False
         except:
-          if not "-db-insrt" in err_msg:
+          if not("-db-insrt" in err_msg):
             err_msg = err_msg + "-db_insrt"
           if image_captured:
             os.system("sudo rm -rf {}".format(image_path))
+            image_captured
           pass
 
 
@@ -364,11 +367,13 @@ while flag:
               restart_counter = restart_counter + 1
 
       except:
-        err_msg = err_msg + "-db_slct"
+        if not("-db-slct" in err_msg):
+          err_msg = err_msg + "-db_slct"
         pass
 
     time.sleep(0.001)
 
   except:
-    err_msg = err_msg + "-ftl"
+    if not("-ftl" in err_msg):
+      err_msg = err_msg + "-ftl"
     pass
