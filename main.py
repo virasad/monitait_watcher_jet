@@ -206,7 +206,6 @@ while flag:
             serial_list = str(last_received).split("'")[1].split(',')
             for z in range(len(serial_list)):
               extra_info.update({"d{}".format(z) : int(serial_list[z])})
-            print(extra_info)
             k = 0
             i = i + 1
         in_bit_a = gpio21_a.read()
@@ -328,14 +327,13 @@ while flag:
       try:
         cursor.execute('SELECT * FROM monitait_table LIMIT 5')
         output = cursor.fetchall() 
-        print(output)
         if len(output) > 0:
           for row in output:
             if row[4]:
               image_captured_db = True
             else:
               image_captured_db = False
-            r_c, r = watcher_update(
+            r_c= watcher_update(
               register_id=row[1],
               quantity=int(row[2]),
               defect_quantity=int(row[3]),
@@ -345,6 +343,7 @@ while flag:
               product_id=0,
               lot_info=0,
               extra_info= row[5])
+
             if r_c == requests.codes.ok:
               sql_delete_query = """DELETE from monitait_table where id = {}""".format(row[0])      
               cursor.execute(sql_delete_query)
