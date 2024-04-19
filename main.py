@@ -259,7 +259,8 @@ while flag:
         time.sleep(0.2)
         ser.open()
     except:
-      err_msg = err_msg + "-sergpio_read"
+      if not "-sergpio_read" in err_msg:
+        err_msg = err_msg + "-sergpio_read"
       pass
 
     j = j + 1
@@ -273,7 +274,8 @@ while flag:
         image_captured = True
       except:
         image_captured = False
-        err_msg = err_msg + "-cam_read"
+        if not "-cam_read" in err_msg:
+          err_msg = err_msg + "-cam_read"
         pass
       j=0
       i = i + 1
@@ -316,7 +318,8 @@ while flag:
             temp_b = 0
             image_captured = False
         except:
-          err_msg = err_msg + "-db_insrt"
+          if not "-db-insrt" in err_msg:
+            err_msg = err_msg + "-db_insrt"
           pass
       if image_captured:
         os.system("sudo rm -rf {}".format(image_path))
@@ -325,6 +328,7 @@ while flag:
       try:
         cursor.execute('SELECT * FROM monitait_table LIMIT 5')
         output = cursor.fetchall() 
+        print(output)
         if len(output) > 0:
           for row in output:
             if row[4]:
