@@ -15,7 +15,7 @@ image_path = ""
 hostname = str(socket.gethostname())
 
 try:
-  dbconnect = sqlite3.connect("monitait.db")
+  dbconnect = sqlite3.connect("/home/pi/monitait_watcher_jet/monitait.db")
   cursor = dbconnect.cursor()
   db_connection = True
 except:
