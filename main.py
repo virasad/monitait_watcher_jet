@@ -263,7 +263,7 @@ while flag:
       pass
 
     j = j + 1
-    if (j > 300 and camera_connection): # capture image every 300sec
+    if (j > 20 and camera_connection): # capture image every 300sec
       try:
         cam.start()
         img = cam.get_image()
