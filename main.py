@@ -229,7 +229,7 @@ while flag:
             gpio26_d.write(True)
             temp_a = temp_a + a
             start_ts = time.time()
-            get_ts = 10/(start_ts - old_start_ts)+0.9*get_ts
+            get_ts = 1/(start_ts - old_start_ts)+0.9*get_ts
             old_start_ts = start_ts
 
         elif not(in_bit_a) and in_bit_b:
@@ -244,7 +244,7 @@ while flag:
             gpio26_d.write(True)
             temp_b = temp_b + b
             start_ts = time.time()
-            get_ts = 10/(start_ts - old_start_ts)+0.9*get_ts
+            get_ts = 1/(start_ts - old_start_ts)+0.9*get_ts
             old_start_ts = start_ts
         elif in_bit_a and in_bit_b:
           d = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
@@ -284,7 +284,7 @@ while flag:
       i = i + 1
     
     
-    if(temp_a + temp_b >= get_ts or i > 60 or ( image_captured and i > 30)):
+    if(temp_a + temp_b >= get_ts or i > 20 or ( image_captured and i > 10)):
       if err_msg:
         extra_info.update({"err_msg" : err_msg})
         err_msg = ""
