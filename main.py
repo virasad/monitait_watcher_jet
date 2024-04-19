@@ -15,8 +15,9 @@ image_path = ""
 hostname = str(socket.gethostname())
 db_connection = False
 serial_connection = False
-image_captured = False
 serial_rs485_connection = False
+camera_connection = False
+image_captured = False
 
 try:
   dbconnect = sqlite3.connect("/home/pi/monitait_watcher_jet/monitait.db")
@@ -270,7 +271,7 @@ while flag:
       try:
         cam.start()
         img = cam.get_image()
-        image_path = str(int(time.time()))+".jpg"
+        image_path = "/home/pi/monitait_watcher_jet/"+str(int(time.time()))+".jpg"
         pygame.image.save(img,image_path)
         cam.stop()
         image_captured = True
@@ -306,7 +307,7 @@ while flag:
         restart_counter = 0
         if image_captured:
           os.system("sudo rm -rf {}".format(image_path))
-        image_captured = False
+          image_captured = False
       else:
         internet_connection = False
         restart_counter = restart_counter + 1
@@ -318,10 +319,10 @@ while flag:
             dbconnect.commit()
             temp_a = 0
             temp_b = 0
-            image_captured = False
           else:
             if image_captured:
               os.system("sudo rm -rf {}".format(image_path))
+              image_captured = False
         except:
           if not "-db-insrt" in err_msg:
             err_msg = err_msg + "-db_insrt"
