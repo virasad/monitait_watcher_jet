@@ -13,6 +13,10 @@ import os
 err_msg = ""
 image_path = ""
 hostname = str(socket.gethostname())
+db_connection = False
+serial_connection = False
+image_captured = False
+serial_rs485_connection = False
 
 try:
   dbconnect = sqlite3.connect("/home/pi/monitait_watcher_jet/monitait.db")
@@ -38,7 +42,6 @@ except:
   serial_connection = False
   pass
 
-image_captured = False
 try:
   if len(glob.glob("/dev/video?")) > 0:
     import pygame
@@ -59,7 +62,7 @@ except:
       # ser_rs485.write('a test'.encode('utf-8'))
     except:
       err_msg = err_msg + "-rs485_init"
-      serial_connection = False
+      serial_rs485_connection = False
       pass
   pass
 
@@ -198,7 +201,7 @@ while flag:
     try:
       k = k + 1
       for x in range(100):
-        if ( x % 30 == 0):
+        if ( x % 30 == 0 and serial_connection):
           buffer += ser.read(2000)
           time.sleep(0.01)
           if (b'\r\n' in buffer):
@@ -248,7 +251,7 @@ while flag:
           c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
 
 
-      if k > 1000:
+      if ( k > 1000 and serial_connection) :
         buffer = b''
         ser.flushInput()
         k = 0
