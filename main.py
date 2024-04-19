@@ -38,6 +38,7 @@ except:
   serial_connection = False
   pass
 
+image_captured = False
 try:
   if len(glob.glob("/dev/video?")) > 0:
     import pygame
@@ -45,7 +46,6 @@ try:
     pygame.camera.init()
     cam = pygame.camera.Camera("/dev/video0", (1280,720))
     camera_connection = True
-    image_captured = False
 except:
   err_msg = err_msg + "-cam_init"
   camera_connection = False
@@ -263,7 +263,7 @@ while flag:
       pass
 
     j = j + 1
-    if (j > 2500):
+    if (j > 300 and camera_connection): # capture image every 300sec
       try:
         cam.start()
         img = cam.get_image()
