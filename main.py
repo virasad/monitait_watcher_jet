@@ -198,17 +198,17 @@ while flag:
     try:
       k = k + 1
       for x in range(100):
-        if (x%30 = 0)
-        buffer += ser.read(2000)
-        time.sleep(0.01)
-        if (b'\r\n' in buffer):
-          last_received, buffer = buffer.split(b'\r\n')[-2:]
-          serial_list = str(last_received).split("'")[1].split(',')
-          for z in range(len(serial_list)):
-            extra_info.update({"d{}".format(z) : int(serial_list[z])})
-          print(extra_info)
-          k = 0
-          i = i + 1
+        if ( x % 30 == 0):
+          buffer += ser.read(2000)
+          time.sleep(0.01)
+          if (b'\r\n' in buffer):
+            last_received, buffer = buffer.split(b'\r\n')[-2:]
+            serial_list = str(last_received).split("'")[1].split(',')
+            for z in range(len(serial_list)):
+              extra_info.update({"d{}".format(z) : int(serial_list[z])})
+            print(extra_info)
+            k = 0
+            i = i + 1
         in_bit_a = gpio21_a.read()
         in_bit_b = gpio23_b.read()
         in_bit_0 = gpio07_0.read()
