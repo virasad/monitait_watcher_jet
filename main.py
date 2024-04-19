@@ -283,7 +283,7 @@ while flag:
       i = i + 1
     
     
-    if(temp_a + temp_b >= get_ts or i > 50 or image_captured):
+    if(temp_a + temp_b >= get_ts or i > 60 or ( image_captured and i > 30)):
       if err_msg:
         extra_info.update({"err_msg" : err_msg})
         err_msg = ""
@@ -319,12 +319,16 @@ while flag:
             temp_a = 0
             temp_b = 0
             image_captured = False
+          else:
+            if image_captured:
+              os.system("sudo rm -rf {}".format(image_path))
         except:
           if not "-db-insrt" in err_msg:
             err_msg = err_msg + "-db_insrt"
+          if image_captured:
+            os.system("sudo rm -rf {}".format(image_path))
           pass
-      if image_captured:
-        os.system("sudo rm -rf {}".format(image_path))
+
 
     if db_connection and internet_connection:
       try:
@@ -362,7 +366,7 @@ while flag:
         err_msg = err_msg + "-db_slct"
         pass
 
-    time.sleep(0.01)
+    time.sleep(0.001)
 
   except:
     err_msg = err_msg + "-ftl"
