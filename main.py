@@ -89,7 +89,7 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
   }
   session = requests.Session()
    #!!!!!!! take care of this develop or main API 
-  URL = "https://develop-app.monitait.com/api/factory/update-watcher/" # send data without waiting for elastic id
+  URL = "https://app.monitait.com/api/factory/update-watcher/" # send data without waiting for elastic id
   URL_DATA = "https://app.monitait.com/api/factory/image-update-watcher-data/" # send data and get elastic id
   URL_IMAGE = "https://app.monitait.com/api/factory/image-update-watcher/" # send image based on elastic id
   
