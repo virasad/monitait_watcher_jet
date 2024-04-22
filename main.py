@@ -181,9 +181,9 @@ while flag:
         time.sleep(10)
         os.system("sudo ifconfig wlan0 up")
         time.sleep(20)
-      except:
+      except Exception as e:
         if not("-wlan" in err_msg):
-          err_msg = err_msg + "-wlan"
+          err_msg = err_msg + "-wlan-" + str(e)
         pass
       restart_counter = 510
 
@@ -263,9 +263,9 @@ while flag:
         ser.close()
         time.sleep(0.2)
         ser.open()
-    except:
+    except Exception as e:
       if not("-sergpio_read" in err_msg):
-        err_msg = err_msg + "-sergpio_read"
+        err_msg = err_msg + "-sergpio_read-" + str(e)
       pass
 
     if camera_connection:
@@ -279,10 +279,10 @@ while flag:
         pygame.image.save(img,image_path)
         cam.stop()
         image_captured = True
-      except:
+      except Exception as e:
         image_captured = False
         if not("-cam_read" in err_msg):
-          err_msg = err_msg + "-cam_read"
+          err_msg = err_msg + "-cam_read-" + str(e)
         pass
       j=0
 
@@ -326,9 +326,9 @@ while flag:
             if image_captured:
               os.system("sudo rm -rf {}".format(image_path))
               image_captured = False
-        except:
+        except Exception as e:
           if not("-db-insrt" in err_msg):
-            err_msg = err_msg + "-db_insrt"
+            err_msg = err_msg + "-db_insrt-" + str(e)
           if image_captured:
             os.system("sudo rm -rf {}".format(image_path))
             image_captured
@@ -367,14 +367,14 @@ while flag:
               internet_connection = False
               restart_counter = restart_counter + 1
 
-      except:
+      except Exception as e:
         if not("-db-slct" in err_msg):
-          err_msg = err_msg + "-db_slct"
+          err_msg = err_msg + "-db_slct-" + str(e)
         pass
 
     time.sleep(0.001)
 
-  except:
+  except Exception as e:
     if not("-ftl" in err_msg):
-      err_msg = err_msg + "-ftl"
+      err_msg = err_msg + "-ftl-" + str(e)
     pass
