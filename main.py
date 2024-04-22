@@ -315,9 +315,10 @@ while flag:
         restart_counter = restart_counter + 1
         try:
           if db_connection:
-            if not(image_captured):
-              image_path = None
-            cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, image_path, extra_info) values ({},{},{},{},{})'''.format(hostname, temp_a, temp_b, image_path, str(extra_info)))
+            if image_captured:
+              cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, image_path, extra_info) values ({},{},{},{},{})'''.format(hostname, temp_a, temp_b, image_path, str(extra_info)))
+            else:
+              cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, extra_info) values ({},{},{},{})'''.format(hostname, temp_a, temp_b, str(extra_info)))
             dbconnect.commit()
             temp_a = 0
             temp_b = 0
