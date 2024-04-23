@@ -1,7 +1,7 @@
 # Monitait Watcher Jet
 
-Watcher Jet is an industrial Hardware to capture images and signals to use for monitoring and inspection manners, there are lots of applications which can be deployed by this without any concern about power, UPS, freeze, hand, shocks and etc.
-we have been working on it whithin 4 years and try to make it as reliable as possible beside having security issues
+Watcher Jet is an industrial Hardware to capture images and signals to use for monitoring and inspection manners, there are lots of applications which can be deployed by this without any concern about the power, UPS, freeze, hang, shocks and etc.
+we have been working on it whithin 4 years and try to make it as reliable as possible beside having fixed security issues [Powered by Raspberry Pi](https://www.raspberrypi.com/for-industry/powered-by/product-catalogue/?category=SBCs&industry=Industrial+control%2Fapplications)
 
 ![watcher-jet-v2.2.png](docs/watcher-jet-v2.2.png)
 
@@ -11,7 +11,7 @@ we have been working on it whithin 4 years and try to make it as reliable as pos
 
 - if you want to build watcher by youself follow the instruction in [initilize documentation](docs/README.md)
 
-- An external 12.6v 2A for `PS` (to recharfe the internal battries, a regulated power is needed, polarity is important) 
+- An external 12.6v 2A for `PS` (to recharge the internal battries, a regulated power is needed, polarity is important) 
 - An Access Point with a SSID like: `monitait` and a password like: `p@ssword`
 - Connect the Signals:
 - a bipolar 12-24V digital signal for `OK`
