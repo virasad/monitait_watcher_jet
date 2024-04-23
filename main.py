@@ -53,7 +53,7 @@ try:
 except:
   err_msg = err_msg + "-cam_init"
   camera_connection = False
-  usb_port = glob.glob("/dev/ttyUSB?") 
+  usb_port = glob.glob("/dev/ttyUSB?")
   if len(usb_port) > 0:
     import serial.rs485
     try:
@@ -76,7 +76,6 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
   timestamp = kwargs.pop("timestamp", datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f'))
   product_info = kwargs.pop("product_info", None)
 
-  # try:
   DATA = {
       "register_id" : register_id,
       "quantity" : quantity,
@@ -88,7 +87,7 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
       "product_info":product_info
   }
   session = requests.Session()
-   #!!!!!!! take care of this develop or main API 
+
   URL = "https://app.monitait.com/api/factory/update-watcher/" # send data without waiting for elastic id
   URL_DATA = "https://app.monitait.com/api/factory/image-update-watcher-data/" # send data and get elastic id
   URL_IMAGE = "https://app.monitait.com/api/factory/image-update-watcher/" # send image based on elastic id
