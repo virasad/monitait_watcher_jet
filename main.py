@@ -274,7 +274,8 @@ while flag:
       try:
         cam.start()
         img = cam.get_image()
-        image_path = "/home/pi/monitait_watcher_jet/"+str(int(time.time()))+".jpg"
+        image_name = str(int(time.time()))+".jpg"
+        image_path = "/home/pi/monitait_watcher_jet/" + image_name
         pygame.image.save(img,image_path)
         cam.stop()
         image_captured = True
@@ -306,6 +307,7 @@ while flag:
         temp_b = 0
         internet_connection = True
         restart_counter = 0
+        extra_info.pop("err_msg", None)
         if image_captured:
           os.system("sudo rm -rf {}".format(image_path))
           image_captured = False
@@ -315,12 +317,13 @@ while flag:
         try:
           if db_connection:
             if image_captured:
-              cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, image_path, extra_info) values ({},{},{},{},{})'''.format(hostname, temp_a, temp_b, image_path, str(extra_info)))
+              cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, image_name, extra_info) values ({},{},{},{},{})'''.format(hostname, temp_a, temp_b, image_name, str(extra_info)))
             else:
               cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, extra_info) values ({},{},{},{})'''.format(hostname, temp_a, temp_b, str(extra_info)))
             dbconnect.commit()
             temp_a = 0
             temp_b = 0
+            extra_info.pop("err_msg", None)
           else:
             if image_captured:
               os.system("sudo rm -rf {}".format(image_path))
@@ -349,7 +352,7 @@ while flag:
               quantity=int(row[2]),
               defect_quantity=int(row[3]),
               send_img=image_captured_db,
-              image_path=row[4],
+              image_path= "/home/pi/monitait_watcher_jet/" + row[4],
               timestamp=datetime.datetime.strptime(row[6], '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%S.%f'),
               product_id=0,
               lot_info=0,
@@ -361,7 +364,7 @@ while flag:
               dbconnect.commit()
               restart_counter = 0
               if image_captured_db:
-                os.system("sudo rm -rf {}".format(row[4]))
+                os.system("sudo rm -rf {}".format("/home/pi/monitait_watcher_jet/" + row[4]))
             else:
               internet_connection = False
               restart_counter = restart_counter + 1
