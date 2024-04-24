@@ -48,7 +48,7 @@ try:
     import pygame
     import pygame.camera
     pygame.camera.init()
-    cam = pygame.camera.Camera("/dev/video0", (1280,720))
+    cam = pygame.camera.Camera("/dev/video0")
     camera_connection = True
 except:
   err_msg = err_msg + "-cam_init"
@@ -174,7 +174,7 @@ old_start_ts = time.time()
 internet_connection = True
 while flag:
   try:
-    if (restart_counter > 500 and restart_counter < 506):
+    if (restart_counter > 500 and restart_counter < 506): # check if the connection has trouble and try to solve it soft
       try:
         os.system("sudo ifconfig wlan0 down")
         time.sleep(10)
@@ -186,7 +186,7 @@ while flag:
         pass
       restart_counter = 510
 
-    if (restart_counter > 1000):
+    if (restart_counter > 1000): # check if the connection has trouble and try to solve it hard :)
       try:
         if db_connection:
           dbconnect.close()
@@ -203,24 +203,24 @@ while flag:
     try:
       k = k + 1
       for x in range(100):
-        if ( x % 30 == 0 and serial_connection):
+        if ( x % 30 == 0 and serial_connection): # read serial data
           buffer += ser.read(2000)
           time.sleep(0.01)
-          if (b'\r\n' in buffer):
+          if (b'\r\n' in buffer): # find line in serial data
             last_received, buffer = buffer.split(b'\r\n')[-2:]
             serial_list = str(last_received).split("'")[1].split(',')
             for z in range(len(serial_list)):
               extra_info.update({"d{}".format(z) : int(serial_list[z])})
             k = 0
             i = i + 1
-        in_bit_a = gpio21_a.read()
+        in_bit_a = gpio21_a.read() # read arduino data
         in_bit_b = gpio23_b.read()
         in_bit_0 = gpio07_0.read()
         in_bit_1 = gpio16_1.read()
         in_bit_2 = gpio18_2.read()
         in_bit_3 = gpio19_3.read()
 
-        if in_bit_a and not(in_bit_b):
+        if in_bit_a and not(in_bit_b): # read arduino data a (OK)
           a = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
           if (a > 0):
             set_gpio_value(a)
@@ -233,7 +233,7 @@ while flag:
             get_ts = 1/(start_ts - old_start_ts)+0.9*get_ts
             old_start_ts = start_ts
 
-        elif not(in_bit_a) and in_bit_b:
+        elif not(in_bit_a) and in_bit_b: # read arduino data b (NG)
           b = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
           if (b > 0):
             set_gpio_value(b)
@@ -247,13 +247,13 @@ while flag:
             start_ts = time.time()
             get_ts = 1/(start_ts - old_start_ts)+0.9*get_ts
             old_start_ts = start_ts
-        elif in_bit_a and in_bit_b:
+        elif in_bit_a and in_bit_b: # read arduino data d (A7 in 15 levels [0..15])
           d = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
-        else:
+        else:                       # read arduino data c (A5 in 15 levels [0..15])
           c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
 
 
-      if ( k > 1000 and serial_connection) :
+      if ( k > 1000 and serial_connection) : # restart serial input if stuck
         buffer = b''
         ser.flushInput()
         k = 0
@@ -285,7 +285,7 @@ while flag:
         pass
       j=0
 
-    if(temp_a + temp_b >= get_ts or i > 20 or image_captured):
+    if(temp_a + temp_b >= get_ts or i > 20 or image_captured): # send to the server of Monitait
       if err_msg:
         extra_info.update({"err_msg" : err_msg})
         err_msg = ""
@@ -300,7 +300,7 @@ while flag:
         product_id=0,
         lot_info=0,
         extra_info= extra_info)
-      if r_c == requests.codes.ok:
+      if r_c == requests.codes.ok: # erase files and data if it was successful
         j=0
         temp_a = 0
         temp_b = 0
@@ -309,7 +309,7 @@ while flag:
         if image_captured:
           os.system("sudo rm -rf {}".format(image_path))
           image_captured = False
-      else:
+      else:                         # insert files and data if it fails to send data to the server
         internet_connection = False
         restart_counter = restart_counter + 1
         try:
@@ -334,7 +334,7 @@ while flag:
           pass
 
 
-    if db_connection and internet_connection:
+    if db_connection and internet_connection: # resend files and data if it there is any data in database
       try:
         cursor.execute('SELECT * FROM monitait_table LIMIT 5')
         output = cursor.fetchall() 
