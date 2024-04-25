@@ -376,7 +376,7 @@ while flag:
               dbconnect.commit()
               restart_counter = 0
               if image_captured_db:
-                os.system("sudo rm -rf {}".format("/home/pi/monitait_watcher_jet/" + row[4]))
+                os.system("sudo rm -rf {}".format("/home/pi/monitait_watcher_jet/" + row[4] + ".jpg"))
             else:
               internet_connection = False
 
