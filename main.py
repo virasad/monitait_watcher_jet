@@ -275,8 +275,8 @@ while flag:
       try:
         cam.start()
         img = cam.get_image()
-        image_name = str(int(time.time()))+".jpg"
-        image_path = "/home/pi/monitait_watcher_jet/" + image_name
+        image_number = int(time.time())
+        image_path = "/home/pi/monitait_watcher_jet/" + str(image_number) + ".jpg"
         pygame.image.save(img,image_path)
         cam.stop()
         image_captured = True
@@ -316,7 +316,7 @@ while flag:
         try:
           if db_connection:
             if image_captured:
-              cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, image_name, extra_info) values ({},{},{},{},{})'''.format(hostname, temp_a, temp_b, image_name, str(extra_info)))
+              cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, image_number, extra_info) values ({},{},{},{},{})'''.format(hostname, temp_a, temp_b, image_number, str(extra_info)))
             else:
               cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, extra_info) values ({},{},{},{})'''.format(hostname, temp_a, temp_b, str(extra_info)))
             dbconnect.commit()
@@ -356,7 +356,7 @@ while flag:
               quantity=int(row[2]),
               defect_quantity=int(row[3]),
               send_img=image_captured_db,
-              image_path= "/home/pi/monitait_watcher_jet/" + row[4],
+              image_path= "/home/pi/monitait_watcher_jet/" + str(row[4]) + ".jpg",
               timestamp=datetime.datetime.strptime(row[6], '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%S.%f'),
               product_id=0,
               lot_info=0,
