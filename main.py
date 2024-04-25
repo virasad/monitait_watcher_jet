@@ -174,17 +174,8 @@ old_start_ts = time.time()
 internet_connection = True
 while flag:
   try:
-    if (restart_counter > 2000 and restart_counter < 2040): # check if the connection has trouble and try to solve it soft
-      try:
-        os.system("sudo ifconfig wlan0 down")
-        time.sleep(10)
-        os.system("sudo ifconfig wlan0 up")
-        time.sleep(20)
-      except Exception as e:
-        if not("-wlan" in err_msg):
-          err_msg = err_msg + "-wlan-" + str(e)
-        pass
-      restart_counter = 2040
+    if restart_counter > 4010:
+      flag = False
 
     if (restart_counter > 4000): # check if the connection has trouble and try to solve it hard :)
       try:
@@ -199,6 +190,16 @@ while flag:
         os.system("sudo shutdown -r now")        
       except:
         pass
+
+    if (restart_counter > 2000 and restart_counter < 2040): # check if the connection has trouble and try to solve it soft
+      try:
+        os.system("sudo /usr/sbin/ifconfig wlan0 down && sleep 10 && sudo /usr/sbin/ifconfig wlan0 up")
+        time.sleep(20)
+      except Exception as e:
+        if not("-wlan" in err_msg):
+          err_msg = err_msg + "-wlan-" + str(e)
+        pass
+      restart_counter = 2040
 
     try:
       k = k + 1
