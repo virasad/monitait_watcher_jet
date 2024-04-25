@@ -174,7 +174,7 @@ old_start_ts = time.time()
 internet_connection = True
 while flag:
   try:
-    if (restart_counter > 500 and restart_counter < 506): # check if the connection has trouble and try to solve it soft
+    if (restart_counter > 2000 and restart_counter < 2040): # check if the connection has trouble and try to solve it soft
       try:
         os.system("sudo ifconfig wlan0 down")
         time.sleep(10)
@@ -184,16 +184,16 @@ while flag:
         if not("-wlan" in err_msg):
           err_msg = err_msg + "-wlan-" + str(e)
         pass
-      restart_counter = 510
+      restart_counter = 2040
 
-    if (restart_counter > 1000): # check if the connection has trouble and try to solve it hard :)
+    if (restart_counter > 4000): # check if the connection has trouble and try to solve it hard :)
       try:
         if db_connection:
           dbconnect.close()
         if serial_connection:
           ser.close()
         if camera_connection:
-          camera.cam.stop()
+          cam.stop()
         if serial_rs485_connection:
           ser_rs485.close()
         os.system("sudo shutdown -r now")        
@@ -302,7 +302,6 @@ while flag:
         lot_info=0,
         extra_info= extra_info)
       if r_c == requests.codes.ok: # erase files and data if it was successful
-        j=0
         temp_a = 0
         temp_b = 0
         internet_connection = True
@@ -311,9 +310,8 @@ while flag:
         if image_captured:
           os.system("sudo rm -rf {}".format(image_path))
           image_captured = False
-      else:                         # insert files and data if it fails to send data to the server
+      else:                        # insert files and data if it fails to send data to the server
         internet_connection = False
-        restart_counter = restart_counter + 1
         try:
           if db_connection:
             if image_captured:
@@ -324,16 +322,21 @@ while flag:
             temp_a = 0
             temp_b = 0
             extra_info.pop("err_msg", None)
+            restart_counter = restart_counter + 1
+            
           else:
+            restart_counter = restart_counter + 4
             if image_captured:
               os.system("sudo rm -rf {}".format(image_path))
               image_captured = False
+
         except Exception as e:
           if not("-db_insrt" in err_msg):
             err_msg = err_msg + "-db_insrt-" + str(e)
           if image_captured:
             os.system("sudo rm -rf {}".format(image_path))
             image_captured
+          restart_counter = restart_counter + 4
           pass
 
 
@@ -367,7 +370,6 @@ while flag:
                 os.system("sudo rm -rf {}".format("/home/pi/monitait_watcher_jet/" + row[4]))
             else:
               internet_connection = False
-              restart_counter = restart_counter + 1
 
       except Exception as e:
         if not("-db_slct" in err_msg):
