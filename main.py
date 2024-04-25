@@ -329,7 +329,7 @@ while flag:
               os.system("sudo rm -rf {}".format(image_path))
               image_captured = False
         except Exception as e:
-          if not("-db-insrt" in err_msg):
+          if not("-db_insrt" in err_msg):
             err_msg = err_msg + "-db_insrt-" + str(e)
           if image_captured:
             os.system("sudo rm -rf {}".format(image_path))
@@ -370,7 +370,7 @@ while flag:
               restart_counter = restart_counter + 1
 
       except Exception as e:
-        if not("-db-slct" in err_msg):
+        if not("-db_slct" in err_msg):
           err_msg = err_msg + "-db_slct-" + str(e)
         pass
 
