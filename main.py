@@ -284,6 +284,10 @@ while flag:
         image_captured = False
         if not("-cam_read" in err_msg):
           err_msg = err_msg + "-cam_read-" + str(e)
+        if len(glob.glob("/dev/video?")) > 0:
+          pygame.camera.init()
+          cam = pygame.camera.Camera("/dev/video0")
+          camera_connection = True
         pass
       j=0
 
@@ -318,7 +322,7 @@ while flag:
             if image_captured:
               cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, image_number, extra_info) values ({},{},{},{},{})'''.format(hostname, temp_a, temp_b, image_number, str(extra_info)))
             else:
-              cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, extra_info) values ({},{},{},{})'''.format(hostname, temp_a, temp_b, str(extra_info)))
+              cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, extra_info) values ({},{},{},{})'''.format(hostname, temp_a, temp_b, repr(extra_info)))
             dbconnect.commit()
             temp_a = 0
             temp_b = 0
@@ -360,7 +364,7 @@ while flag:
               timestamp=datetime.datetime.strptime(row[6], '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%S.%f'),
               product_id=0,
               lot_info=0,
-              extra_info= row[5])
+              extra_info= eval(row[5]))
 
             if r_c == requests.codes.ok:
               sql_delete_query = """DELETE from monitait_table where id = {}""".format(row[0])      
