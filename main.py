@@ -11,6 +11,7 @@ import glob
 import os
 
 err_msg = ""
+old_err_msg = ""
 image_path = ""
 hostname = str(socket.gethostname())
 db_connection = False
@@ -293,8 +294,11 @@ while flag:
 
     if(temp_a + temp_b >= get_ts or i > 20 or image_captured): # send to the server of Monitait
       if err_msg:
-        extra_info.update({"err_msg" : err_msg})
-        err_msg = ""
+        if (err_msg != old_err_msg):
+          extra_info.update({"err_msg" : err_msg})  
+          old_err_msg = err_msg
+          err_msg = ""
+        
 
       i = 0 
       r_c = watcher_update(
