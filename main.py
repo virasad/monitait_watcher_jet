@@ -193,7 +193,7 @@ while flag:
 
     if (restart_counter > 2000 and restart_counter < 2040): # check if the connection has trouble and try to solve it soft
       try:
-        os.system("sudo /usr/sbin/ifconfig wlan0 down && sleep 10 && sudo /usr/sbin/ifconfig wlan0 up")
+        os.system("sudo /usr/sbin/ifconfig wlan0 down && sleep 10 && sudo /usr/sbin/ifconfig wlan0 up &")
         time.sleep(20)
       except Exception as e:
         if not("-wlan" in err_msg):
@@ -320,7 +320,7 @@ while flag:
         try:
           if db_connection:
             if image_captured:
-              cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, image_number, extra_info) values ({},{},{},{},{})'''.format(hostname, temp_a, temp_b, image_number, str(extra_info)))
+              cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, image_number, extra_info) values ({},{},{},{},{})'''.format(hostname, temp_a, temp_b, image_number, repr(extra_info)))
             else:
               cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, extra_info) values ({},{},{},{})'''.format(hostname, temp_a, temp_b, repr(extra_info)))
             dbconnect.commit()
