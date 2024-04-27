@@ -18,8 +18,11 @@ byte output_pins[4] = {
   4, 5, 6, 7
 }; // Arduino data pins to RPI
 
+boolean old_a;
+boolean old_b;
 long counter_a = 0;
 long counter_b = 0;
+long encoder_counter = 0;
 unsigned int battery;
 unsigned int c = 0; 
 unsigned int e = 0; // extra analog read on A7
@@ -68,7 +71,7 @@ void loop() {
   digitalWrite(DataCapture, LOW);
   i++;
   if ( i > 500){
-    Serial.println(String(counter_a) + "," + String(counter_b) + "," + String(c) + "," + String(e) + "," + String(battery/10) + "," + String(elapsed_speed) + "," + String(counter_rpi_reboot) + "," + String(restart_counter));
+    Serial.println(String(counter_a) + "," + String(counter_b) + "," + String(c) + "," + String(e) + "," + String(battery/10) + "," + String(elapsed_speed) + "," + String(counter_rpi_reboot) + "," + String(restart_counter) + "," + String(encoder_counter));
     i = 0;
   }
   // check if RPI is signaling the ARDUINO
@@ -178,15 +181,23 @@ void put_byte_on_pins(byte in_byte){
 }
 
 void count_up_a(){
+  
   int j = 0;  
   for(int i = 0; i < 6; i++){
     delay(1);
-    if (digitalRead(input_a) == HIGH)
+    if (digitalRead(input_a) == HIGH){
       j++;
+    }
   }
   if (j > 4){
     a_capture_time = millis();
     counter_a++;
+    if (digitalRead(input_b) == HIGH){
+      encoder_counter++;
+    }
+    else{
+      encoder_counter--;
+    }
   }  
   return;
 }
@@ -195,12 +206,19 @@ void count_up_b(){
   int j = 0;  
   for(int i = 0; i < 6; i++){
     delay(1);
-    if (digitalRead(input_b) == HIGH)
+    if (digitalRead(input_b) == HIGH){
       j++;
+    }
   }
   if (j > 4){
     b_capture_time = millis();
     counter_b++;
+    if (digitalRead(input_a) == HIGH){
+      encoder_counter--;
+    }
+    else{
+      encoder_counter++;
+    }
   }  
   return;
 }

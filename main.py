@@ -175,7 +175,7 @@ old_start_ts = time.time()
 internet_connection = True
 while flag:
   try:
-    if restart_counter > 4010:
+    if restart_counter > 6000:
       flag = False
 
     if (restart_counter > 4000): # check if the connection has trouble and try to solve it hard :)
@@ -292,7 +292,7 @@ while flag:
         pass
       j=0
 
-    if(temp_a + temp_b >= get_ts or i > 20 or image_captured): # send to the server of Monitait
+    if(temp_a + temp_b >= get_ts or i > 30 or image_captured): # send to the server of Monitait
       if err_msg:
         if (err_msg != old_err_msg):
           extra_info.update({"err_msg" : err_msg})  
@@ -376,7 +376,7 @@ while flag:
               dbconnect.commit()
               restart_counter = 0
               if image_captured_db:
-                os.system("sudo rm -rf {}".format("/home/pi/monitait_watcher_jet/" + row[4] + ".jpg"))
+                os.system("sudo rm -rf {}".format("/home/pi/monitait_watcher_jet/" + str(row[4]) + ".jpg"))
             else:
               internet_connection = False
 
