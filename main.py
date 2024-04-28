@@ -175,10 +175,7 @@ old_start_ts = time.time()
 internet_connection = True
 while flag:
   try:
-    if restart_counter > 6000:
-      flag = False
-
-    if (restart_counter > 4000): # check if the connection has trouble and try to solve it hard :)
+    if (restart_counter > 10000): # check if the connection has trouble and try to solve it hard :)
       try:
         if db_connection:
           dbconnect.close()
@@ -188,7 +185,7 @@ while flag:
           cam.stop()
         if serial_rs485_connection:
           ser_rs485.close()
-        os.system("sudo shutdown -r now")        
+        flag = False       
       except:
         pass
 

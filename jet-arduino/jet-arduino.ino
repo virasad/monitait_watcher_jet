@@ -22,7 +22,7 @@ boolean old_a;
 boolean old_b;
 long counter_a = 0;
 long counter_b = 0;
-long encoder_counter = 0;
+long encoder_counter = 0; // need 100nf cap instead of 1uf in optocouplers
 unsigned int battery;
 unsigned int c = 0; 
 unsigned int e = 0; // extra analog read on A7
@@ -71,7 +71,7 @@ void loop() {
   digitalWrite(DataCapture, LOW);
   i++;
   if ( i > 500){
-    Serial.println(String(counter_a) + "," + String(counter_b) + "," + String(c) + "," + String(e) + "," + String(battery/10) + "," + String(elapsed_speed) + "," + String(counter_rpi_reboot) + "," + String(restart_counter) + "," + String(encoder_counter));
+    Serial.println(String(encoder_counter) + "," + String(counter_a) + "," + String(counter_b) + "," + String(c) + "," + String(e) + "," + String(battery/10 - 2) + "," + String(elapsed_speed) + "," + String(restart_counter));
     i = 0;
   }
   // check if RPI is signaling the ARDUINO
@@ -141,8 +141,8 @@ void loop() {
   }
   
   now_millis = millis();
-  elapsed_speed =  long(80/(now_millis - a_capture_time) + 20/(now_millis - b_capture_time) + elapsed_speed*999/1000) ;
-  counter_rpi_reboot = (elapsed_speed+100)*restart_counter;
+  elapsed_speed =  long(50/(now_millis - a_capture_time) + 50/(now_millis - b_capture_time) + elapsed_speed*999/1000) ;
+  counter_rpi_reboot = (elapsed_speed+1000)*restart_counter;
   counter_a_b = abs(counter_a + counter_b);
   if (battery < 800 or counter_a_b > counter_rpi_reboot/2)
     digitalWrite(Warning, HIGH);
@@ -156,7 +156,7 @@ void loop() {
     digitalWrite(rpi_off, LOW);
     if (restart_counter < 500){
         restart_counter = restart_counter * 2;
-        counter_rpi_reboot = (elapsed_speed+100)*restart_counter;
+        counter_rpi_reboot = (elapsed_speed+1000)*restart_counter;
       }
     else{
         restart_counter = 500;
@@ -181,44 +181,39 @@ void put_byte_on_pins(byte in_byte){
 }
 
 void count_up_a(){
-  
   int j = 0;  
-  for(int i = 0; i < 6; i++){
-    delay(1);
+  for(int i = 0; i < 3; i++){
+    delayMicroseconds(100);
     if (digitalRead(input_a) == HIGH){
       j++;
     }
   }
-  if (j > 4){
+  if (j > 2){
     a_capture_time = millis();
     counter_a++;
-    if (digitalRead(input_b) == HIGH){
+    if (digitalRead(input_b) == HIGH)
       encoder_counter++;
-    }
-    else{
-      encoder_counter--;
-    }
+    else
+      encoder_counter--;  
   }  
   return;
 }
 
 void count_up_b(){
   int j = 0;  
-  for(int i = 0; i < 6; i++){
-    delay(1);
+  for(int i = 0; i < 3; i++){
+    delayMicroseconds(100);
     if (digitalRead(input_b) == HIGH){
       j++;
     }
   }
-  if (j > 4){
+  if (j > 2){
     b_capture_time = millis();
     counter_b++;
-    if (digitalRead(input_a) == HIGH){
+    if (digitalRead(input_a) == HIGH)
       encoder_counter--;
-    }
-    else{
+    else
       encoder_counter++;
-    }
   }  
   return;
 }
