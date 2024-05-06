@@ -187,6 +187,8 @@ while flag:
           ser_rs485.close()
         flag = False       
       except:
+        if not("-rst" in err_msg):
+          err_msg = err_msg + "-rst-" + str(e)        
         pass
 
     if (restart_counter > 2000 and restart_counter < 2040): # check if the connection has trouble and try to solve it soft
