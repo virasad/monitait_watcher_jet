@@ -1,0 +1,14 @@
+[Unit]
+Description=Monitait Watcher Jet Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=idle
+WorkingDirectory=/home/pi/monitait_watcher_jet
+User=pi
+ExecStart=/usr/bin/python3 /home/pi/monitait_watcher_jet/main.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

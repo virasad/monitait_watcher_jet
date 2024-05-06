@@ -183,7 +183,7 @@ void put_byte_on_pins(byte in_byte){
 void count_up_a(){
   int j = 0;  
   for(int i = 0; i < 3; i++){
-    delayMicroseconds(100);
+    delay(1);
     if (digitalRead(input_a) == HIGH){
       j++;
     }
@@ -202,7 +202,7 @@ void count_up_a(){
 void count_up_b(){
   int j = 0;  
   for(int i = 0; i < 3; i++){
-    delayMicroseconds(100);
+    delay(1);
     if (digitalRead(input_b) == HIGH){
       j++;
     }
