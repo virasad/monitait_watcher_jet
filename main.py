@@ -19,6 +19,7 @@ serial_connection = False
 serial_rs485_connection = False
 camera_connection = False
 image_captured = False
+extra_info = {}
 
 try:
   dbconnect = sqlite3.connect("/home/pi/monitait_watcher_jet/monitait.db")
@@ -34,7 +35,6 @@ try:
         port='/dev/serial0', baudrate = 9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=1)
   serial_connection = True
   serial_list = []
-  extra_info = {}
   buffer = b''
   last_received = ''
   ser.flushInput()
