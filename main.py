@@ -19,7 +19,7 @@ serial_connection = False
 serial_rs485_connection = False
 camera_connection = False
 image_captured = False
-extra_info = {}
+
 
 try:
   dbconnect = sqlite3.connect("/home/pi/monitait_watcher_jet/monitait.db")
@@ -38,6 +38,7 @@ try:
   buffer = b''
   last_received = ''
   ser.flushInput()
+  extra_info = {}
 
 except:
   err_msg = err_msg + "-ser_init"
@@ -210,6 +211,7 @@ while flag:
           if (b'\r\n' in buffer): # find line in serial data
             last_received, buffer = buffer.split(b'\r\n')[-2:]
             serial_list = str(last_received).split("'")[1].split(',')
+            
             for z in range(len(serial_list)):
               extra_info.update({"d{}".format(z) : int(serial_list[z])})
             k = 0
