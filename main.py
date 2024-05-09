@@ -175,7 +175,7 @@ old_start_ts = time.time()
 internet_connection = True
 while flag:
   try:
-    if (restart_counter > 10000): # check if the connection has trouble and try to solve it hard :)
+    if (restart_counter > 1000): # check if the connection has trouble and try to solve it hard :)
       try:
         if db_connection:
           dbconnect.close()
@@ -191,7 +191,7 @@ while flag:
           err_msg = err_msg + "-rst-" + str(e)        
         pass
 
-    if (restart_counter > 2000 and restart_counter < 2040): # check if the connection has trouble and try to solve it soft
+    if (restart_counter > 200 and restart_counter < 204): # check if the connection has trouble and try to solve it soft
       try:
         os.system("sudo /usr/sbin/ifconfig wlan0 down && sleep 10 && sudo /usr/sbin/ifconfig wlan0 up &")
         time.sleep(20)
@@ -199,7 +199,7 @@ while flag:
         if not("-wlan" in err_msg):
           err_msg = err_msg + "-wlan-" + str(e)
         pass
-      restart_counter = 2040
+      restart_counter = 204
 
     try:
       k = k + 1
@@ -323,9 +323,9 @@ while flag:
         try:
           if db_connection:
             if image_captured:
-              cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, image_number, extra_info) values ({},{},{},{},{})'''.format(hostname, temp_a, temp_b, image_number, repr(extra_info)))
+              cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, image_number, extra_info) values ({},{},{},{},{})'''.format(hostname, temp_a, temp_b, image_number, json.dumps(extra_info)))
             else:
-              cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, extra_info) values ({},{},{},{})'''.format(hostname, temp_a, temp_b, repr(extra_info)))
+              cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, extra_info) values ({},{},{},{})'''.format(hostname, temp_a, temp_b, json.dumps(extra_info)))
             dbconnect.commit()
             temp_a = 0
             temp_b = 0
@@ -367,7 +367,7 @@ while flag:
               timestamp=datetime.datetime.strptime(row[6], '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%S.%f'),
               product_id=0,
               lot_info=0,
-              extra_info= eval(row[5]))
+              extra_info= json.loads(row[5])[0])
 
             if r_c == requests.codes.ok:
               sql_delete_query = """DELETE from monitait_table where id = {}""".format(row[0])      
