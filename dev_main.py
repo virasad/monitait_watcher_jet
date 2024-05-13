@@ -1,0 +1,394 @@
+from periphery import GPIO
+import sqlite3
+import time
+import datetime
+import signal
+import requests
+import json
+import socket
+import serial
+import glob
+import os
+import cv2
+from threading import Thread
+
+def watcher_update(register_id, quantity, defect_quantity, send_img, image_path="scene_image.jpg", product_id=0, lot_info=0, extra_info=None, *args, **kwargs):
+    quantity = quantity
+    defect_quantity = defect_quantity
+    product_id = product_id
+    lot_info = lot_info
+    extra_info = extra_info
+    timestamp = kwargs.pop("timestamp", datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f'))
+    product_info = kwargs.pop("product_info", None)
+
+    DATA = {
+        "register_id" : register_id,
+        "quantity" : quantity,
+        "defect_quantity": defect_quantity,
+        "product_id": product_id, 
+        "extra_info": extra_info,
+        "lot_info": lot_info,
+        "timestamp":timestamp, 
+        "product_info":product_info
+        }
+    session = requests.Session()
+
+    URL = "https://app.monitait.com/api/factory/update-watcher/" # send data without waiting for elastic id
+    URL_DATA = "https://app.monitait.com/api/factory/image-update-watcher-data/" # send data and get elastic id
+    URL_IMAGE = "https://app.monitait.com/api/factory/image-update-watcher/" # send image based on elastic id
+    
+    try:
+        if send_img:
+            response = session.post(URL_DATA, data=json.dumps(DATA), headers={"content-type": "application/json"}, timeout=150)
+            result = response.json()
+            _id = result.get('_id', None)
+            time.sleep(1)
+            if _id:
+                DATA = {
+                    'register_id':result['register_id'],
+                    'elastic_id':_id
+                    }
+
+                response = session.post(URL_IMAGE, files={"image": open(image_path, "rb")}, data=DATA, timeout=250)
+                session.close()
+                return response.status_code
+            session.close
+            return response.status_code
+        else:
+            response = requests.post(URL, data=json.dumps(DATA), headers={"content-type": "application/json"})
+            return response.status_code
+    except Exception as e:
+        session.close()
+        return requests.codes.bad 
+
+class DB:
+    def __init__(self) -> None:
+        try:
+            self.dbconnect = sqlite3.connect("/home/pi/monitait_watcher_jet/monitait.db")
+            self.cursor = self.dbconnect.cursor()
+            self.db_connection = True
+            self.cursor.execute('''create table monitait_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, register_id TEXT, temp_a INTEGER NULL, temp_b INTEGER NULL, image_name TEXT NULL, extra_info JSON, ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)''')
+            self.dbconnect.commit()
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
+    def write(self, register_id, a, b, extra_info, image_name, timestamp):
+        try:
+            self.cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, timestamp, image_name, extra_info) values (?,?,?,?,?,?)''', (register_id, a, b, image_name, json.dumps(extra_info), timestamp))
+            self.dbconnect.commit()
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
+    def read(self):
+        try:
+            self.cursor.execute('SELECT * FROM monitait_table LIMIT 1')
+            rows = self.cursor.fetchall()
+            return rows[0]
+        except Exception as e:
+            print(e)
+            return []
+
+    def delete(self, id):
+        try:
+            self.cursor.execute("""DELETE from monitait_table where id = {}""".format(id))
+            self.dbconnect.commit()
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
+class Ardiuno:
+    def __init__(self) -> None:
+        self.stop_thread = False
+        self.last_a = 0
+        self.last_b = 0
+        def handler(signal, frame):
+            global flag
+            print('handler')
+            flag = False
+
+        self.i = 0 # iterator for send a dummy 0 request
+        self.j = 0
+        self.k = 0
+        self.restart_counter = 0
+        signal.signal(signal.SIGINT, handler)
+        self.gpio07_0 = GPIO(4, "in")
+        self.gpio16_1 = GPIO(23, "in")
+        self.gpio18_2 = GPIO(24, "in")
+        self.gpio19_3 = GPIO(10, "in")
+        self.gpio29_0 = GPIO(5, "out")
+        self.gpio31_1 = GPIO(6, "out")
+        self.gpio33_2 = GPIO(13, "out")
+        self.gpio35_3 = GPIO(19, "out")
+        self.gpio29_0.write(False)
+        self.gpio31_1.write(False)
+        self.gpio33_2.write(False)
+        self.gpio35_3.write(False)
+        self.gpio21_a = GPIO(9, "in")
+        self.gpio23_b = GPIO(11, "in")
+        self.gpio37_c = GPIO(26, "out")
+        self.gpio26_d = GPIO(8, "out")
+        self.gpio37_c.write(True) # identify default is a
+        self.gpio26_d.write(True) # identify the default there is no read from RPI
+        self.get_ts = 1
+
+    def int_to_bool_list(self, num):
+        return [bool(num & (1<<n)) for n in range(4)]
+
+    def set_gpio_value(self, x):
+        b_list = self.int_to_bool_list(x)
+        self.gpio35_3.write(b_list[3])
+        self.gpio33_2.write(b_list[2])
+        self.gpio31_1.write(b_list[1])
+        self.gpio29_0.write(b_list[0])
+
+    def run(self):
+        self.old_start_ts = time.time()
+        while not self.stop_thread:
+            in_bit_a = self.gpio21_a.read() # read arduino data
+            in_bit_b = self.gpio23_b.read()
+            in_bit_0 = self.gpio07_0.read()
+            in_bit_1 = self.gpio16_1.read()
+            in_bit_2 = self.gpio18_2.read()
+            in_bit_3 = self.gpio19_3.read()
+
+            if in_bit_a and not(in_bit_b): # read arduino data a (OK)
+                a = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
+            if (a > 0):
+                self.set_gpio_value(a)
+                self.gpio26_d.write(False)
+                while (self.gpio21_a.read() != self.gpio23_b.read()):
+                    time.sleep(0.001)
+                self.gpio26_d.write(True)
+                self.last_a += a
+                start_ts = time.time()
+                self.get_ts = 1/(start_ts - self.old_start_ts)+0.9*self.get_ts
+                self.old_start_ts = start_ts
+
+            elif not(in_bit_a) and in_bit_b: # read arduino data b (NG)
+                b = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
+            if (b > 0):
+                self.set_gpio_value(b)
+                self.gpio37_c.write(False) # identify it is b
+                self.gpio26_d.write(False)
+                while (self.gpio21_a.read() != self.gpio23_b.read()):
+                    time.sleep(0.001)
+                self.gpio37_c.write(True) # identify default is a
+                self.gpio26_d.write(True)
+                self.last_b += b
+                start_ts = time.time()
+                self.get_ts = 1/(start_ts - self.old_start_ts)+0.9*self.get_ts
+                self.old_start_ts = start_ts
+            elif in_bit_a and in_bit_b: # read arduino data d (A7 in 15 levels [0..15])
+                self.d = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
+            else:                       # read arduino data c (A5 in 15 levels [0..15])
+                self.c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
+
+    def read(self):
+        return self.last_a, self.last_b, self.c, self.get_ts
+
+    def minus(self, a, b):
+        self.last_a -= a
+        self.last_b -= b
+
+class Camera:
+    def __init__(self, arduino, fps=30, exposure=100, gain=1, gamma=1, contrast=3, roi=[0,0,1920,1080], temperature=5000, brightness=1, step=10, auto_exposure=3) -> None:
+        self.arduino = arduino
+        self.camera_id = 0
+        self.fps = fps
+        self.fourcc = 0x47504A4D
+        self.frame_width = abs(roi[2] - roi[0])
+        self.frame_height = abs(roi[3] - roi[1])
+        self.exposure = exposure
+        self.gain = gain
+        self.contrast = contrast
+        self.gamma = gamma
+        self.roi = roi
+        self.auto_exposure = auto_exposure
+        self.temperature = temperature
+        self.brightness = brightness
+        self.video_cap = self.camera_setup()
+        self.frames = 0
+        self.stop_thread = False
+        self.success = False
+        self.step = step
+        success, frame = self.video_cap.read()
+        if success:
+            self.frame = frame[self.roi[1]:self.roi[3], self.roi[0]:self.roi[2]]
+            print([self.roi[1], self.roi[3], self.roi[0], self.roi[2]])
+        else:
+            self.frame = frame
+        self.success = success
+        Thread(target=self._reader).start()
+        self.crop_list = [0, self.roi[3] - self.roi[1], 0, self.roi[2] - self.roi[0]]
+
+    def _reader(self):
+        while not self.stop_thread:
+            try:
+                success, frame = self.video_cap.read()
+                if success:
+                    self.frame = frame[self.roi[1]:self.roi[3], self.roi[0]:self.roi[2]]
+                    self.success = success
+                else:
+                    self.video_cap = self.camera_setup()
+                    success, frame = self.video_cap.read()
+                    self.frame = frame[self.roi[1]:self.roi[3], self.roi[0]:self.roi[2]]
+                    self.success = success
+                time.sleep(0.01)
+            except:
+                time.sleep(0.01)
+                pass
+
+    def read(self):
+        return self.frame
+
+    def camera_setup(self):
+        video_cap = cv2.VideoCapture(os.path.realpath(f"/dev/video{self.camera_id}"))
+        video_cap.set(cv2.CAP_PROP_FPS, self.fps)
+        video_cap.set(cv2.CAP_PROP_FOURCC, self.fourcc)
+        video_cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        video_cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        video_cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, self.auto_exposure)
+        video_cap.set(cv2.CAP_PROP_AUTO_WB, 0.0)
+        video_cap.set(cv2.CAP_PROP_WB_TEMPERATURE, self.temperature)
+        video_cap.set(cv2.CAP_PROP_BRIGHTNESS, self.brightness)
+        video_cap.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
+        video_cap.set(cv2.CAP_PROP_GAIN, self.gain)
+        video_cap.set(cv2.CAP_PROP_CONTRAST, self.contrast)
+        print('setuped')
+        return video_cap
+
+
+    def capture_and_save(self):
+
+        if self.success:
+            im = self.read()
+            date = datetime.datetime.utcnow()
+            saving_date = f"{date.year}-{date.month}-{date.day}-{date.hour}-{date.minute}-{date.second}-{date.microsecond}"
+            os.makedirs("images", exist_ok=True)
+            image_name = f"images/{saving_date}.jpg"
+
+            cv2.imwrite(image_name, im)
+            return True, image_name
+        return False, ""
+
+    def release_camera(self):
+        self.video_cap.release()
+
+class Counter:
+    def __init__(self, arduino:Ardiuno, db:DB, camera:Camera) -> None:
+        self.arduino = arduino
+        self.stop_thread = False
+        self.db = db
+        self.camera = camera
+        self.watcher_live_signal = 60 * 5
+        self.take_picture_interval = 60 * 5
+
+    def db_checker(self):
+        while not self.stop_thread:
+            try:
+                data = self.db.read()
+                if len(data):
+                    ...
+
+            except:
+                pass
+
+    def run(self):
+        self.start_ts = time.time()
+        while not self.stop_thread:
+            try:
+                send_image = False
+                ts = time.time()
+                a ,b ,c ,dps = self.arduino.read()
+                if a + b > dps or ts - self.start_ts > self.watcher_live_signal:
+                    if ts - self.start_ts > self.take_picture_interval:
+                        captured, image_name = self.camera.capture_and_save()
+                        if captured:
+                            send_image = True
+                            self.take_picture_interval = ts
+                        else:
+                            send_image = False
+                    timestamp = datetime.datetime.utcnow()
+
+                time.sleep(1)
+            except Exception as e:
+                time.sleep(1)
+                print(e)
+
+
+class Manager:
+    def __init__(self) -> None:
+        self.err_msg = ""
+        self.old_err_msg = ""
+        self.image_path = ""
+        self.hostname = str(socket.gethostname())
+        self.db_connection = False
+        self.serial_connection = False
+        self.serial_rs485_connection = False
+        self.camera_connection = False
+        self.image_captured = False
+        self.local_server_connection = False
+        self.extra_info = {}
+
+    def check_serial_connection(self):
+        try:
+            ser = serial.Serial(
+                    port='/dev/serial0', baudrate = 9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=1)
+            ser.flushInput()
+        except:
+            err_msg = err_msg + "-ser_init"
+            pass
+
+    def image_capture_runner(self):
+        try:
+            camera_config = self.request_handler.get_flag()
+            if camera_config:
+                if camera_config['task']["status"] == "ON":
+                    if not self.capturing:
+                        camera_config = camera_config['task']['camera']
+                        try:
+                            self.camera.stop_thread = True
+                        except Exception as e:
+                            print(e)
+                        roi = [camera_config["roi_x_min"], camera_config["roi_y_min"], camera_config["roi_x_max"], camera_config["roi_y_max"]]
+                        cam = Camera(arduino=Ardiuno,fps=camera_config["fps"], exposure=camera_config["exposure"], gain=camera_config["gain"], 
+                                        gamma=camera_config["gamma"], contrast=camera_config["contrast"], roi=roi,
+                                        temperature=camera_config["temperature"], brightness=camera_config["brightness"], step=camera_config['step'])
+                        self.camera = cam
+                        Thread(target=cam.run, args=()).start()
+                        print("run")
+                        self.capturing = True
+                else:
+                    try:
+                        if self.capturing:
+                            self.camera.stop_thread = True
+                            self.capturing = False
+                    except Exception as e:
+                        print(e)
+            else:
+                try:
+                    if self.capturing:
+                        self.camera.stop_thread = True
+                        self.capturing = False
+                except Exception as e:
+                    print(e)
+            time.sleep(1)
+        except Exception as e:
+            try:
+                self.capturing = False
+            except Exception as e:
+                print(e)
+            try:
+                self.camera.stop_thread = True
+            except Exception as e:
+                print(e)
+            time.sleep(1)
+            print(e)
+
+    def run(self):
+        ...
