@@ -20,7 +20,7 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
     product_id = product_id
     lot_info = lot_info
     extra_info = extra_info
-    timestamp = timestamp
+    timestamp = timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f')
     product_info = kwargs.pop("product_info", None)
 
     DATA = {
@@ -88,7 +88,7 @@ class DB:
 
     def write(self, register_id=hostname, a=0, b=0, extra_info={}, image_name="", timestamp=datetime.datetime.utcnow()):
         try:
-            self.cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, timestamp, image_name, extra_info) values (?,?,?,?,?,?)''', (register_id, a, b, image_name, json.dumps(extra_info), timestamp))
+            self.cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, image_name, extra_info, ts) values (?,?,?,?,?,?)''', (register_id, a, b, image_name, json.dumps(extra_info), timestamp))
             self.dbconnect.commit()
             return True
         except Exception as e:
@@ -147,6 +147,9 @@ class Ardiuno:
         self.gpio37_c.write(True) # identify default is a
         self.gpio26_d.write(True) # identify the default there is no read from RPI
         self.get_ts = 1
+        self.open_serial()
+        Thread(target=self.read_GPIO).start()
+        Thread(target=self.run_serial).start()
 
     def open_serial(self):
         try:
@@ -363,7 +366,7 @@ class Counter:
             try:
                 data = self.db.read()
                 if len(data):
-                    if watcher_update(register_id=data[1], quantity=data[2], defect_quantity=data[3], send_img=len(data[4]) > 0, image_path=data[4], extra_info=json.loads(data[5]), timestamp=data[6]):
+                    if watcher_update(register_id=data[1], quantity=data[2], defect_quantity=data[3], send_img=len(data[4]) > 0, image_path=data[4], extra_info=json.loads(data[5]), timestamp=datetime.datetime.strptime(data[6], '%Y-%m-%d %H:%M:%S.%f')):
                         self.db.delete(data[0])
                 time.sleep(1)
             except:
