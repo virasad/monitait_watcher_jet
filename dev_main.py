@@ -268,8 +268,7 @@ class Ardiuno:
         return self.serial_data
 
 class Camera:
-    def __init__(self, arduino, fps=30, exposure=100, gain=1, gamma=1, contrast=3, roi=[0,0,1920,1080], temperature=5000, brightness=1, step=10, auto_exposure=3) -> None:
-        self.arduino = arduino
+    def __init__(self, fps=30, exposure=100, gain=1, gamma=1, contrast=3, roi=[0,0,1920,1080], temperature=5000, brightness=1, step=10, auto_exposure=3) -> None:
         self.camera_id = 0
         self.fps = fps
         self.fourcc = 0x47504A4D
@@ -401,75 +400,10 @@ class Counter:
                 time.sleep(1)
                 print(e)
 
-
-class Manager:
-    def __init__(self) -> None:
-        self.err_msg = ""
-        self.old_err_msg = ""
-        self.image_path = ""
-        self.hostname = str(socket.gethostname())
-        self.db_connection = False
-        self.serial_connection = False
-        self.serial_rs485_connection = False
-        self.camera_connection = False
-        self.image_captured = False
-        self.local_server_connection = False
-        self.extra_info = {}
-
-    def check_serial_connection(self):
-        try:
-            ser = serial.Serial(
-                    port='/dev/serial0', baudrate = 9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=1)
-            ser.flushInput()
-        except:
-            err_msg = err_msg + "-ser_init"
-            pass
-
-    def image_capture_runner(self):
-        try:
-            camera_config = self.request_handler.get_flag()
-            if camera_config:
-                if camera_config['task']["status"] == "ON":
-                    if not self.capturing:
-                        camera_config = camera_config['task']['camera']
-                        try:
-                            self.camera.stop_thread = True
-                        except Exception as e:
-                            print(e)
-                        roi = [camera_config["roi_x_min"], camera_config["roi_y_min"], camera_config["roi_x_max"], camera_config["roi_y_max"]]
-                        cam = Camera(arduino=Ardiuno,fps=camera_config["fps"], exposure=camera_config["exposure"], gain=camera_config["gain"], 
-                                        gamma=camera_config["gamma"], contrast=camera_config["contrast"], roi=roi,
-                                        temperature=camera_config["temperature"], brightness=camera_config["brightness"], step=camera_config['step'])
-                        self.camera = cam
-                        Thread(target=cam.run, args=()).start()
-                        print("run")
-                        self.capturing = True
-                else:
-                    try:
-                        if self.capturing:
-                            self.camera.stop_thread = True
-                            self.capturing = False
-                    except Exception as e:
-                        print(e)
-            else:
-                try:
-                    if self.capturing:
-                        self.camera.stop_thread = True
-                        self.capturing = False
-                except Exception as e:
-                    print(e)
-            time.sleep(1)
-        except Exception as e:
-            try:
-                self.capturing = False
-            except Exception as e:
-                print(e)
-            try:
-                self.camera.stop_thread = True
-            except Exception as e:
-                print(e)
-            time.sleep(1)
-            print(e)
-
-    def run(self):
-        ...
+arduino = Ardiuno()
+camera = Camera()
+db = DB
+counter = Counter(arduino=arduino, db=db, camera=camera)
+Thread(target=counter.run).start()
+time.sleep(10)
+Thread(target=counter.db_checker).start()
