@@ -325,9 +325,9 @@ while flag:
         try:
           if db_connection:
             if image_captured:
-              cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, image_number, extra_info) values ({},{},{},{},{})'''.format(hostname, temp_a, temp_b, image_number, json.dumps(extra_info) if len(extra_info) > 0 else ""))
+              cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, image_number, extra_info) values ({},{},{},{},{})'''.format(hostname, temp_a, temp_b, image_number, json.dumps(str(extra_info)) if len(extra_info) > 0 else ""))
             else:
-              cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, extra_info) values ({},{},{},{})'''.format(hostname, temp_a, temp_b, json.dumps(extra_info) if len(extra_info) > 0 else ""))
+              cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, extra_info) values ({},{},{},{})'''.format(hostname, temp_a, temp_b, json.dumps(str(extra_info)) if len(extra_info) > 0 else ""))
             dbconnect.commit()
             temp_a = 0
             temp_b = 0
@@ -365,11 +365,11 @@ while flag:
               quantity=int(row[2]),
               defect_quantity=int(row[3]),
               send_img=image_captured_db,
-              image_path= "/home/pi/monitait_watcher_jet/" + str(row[4]) + ".jpg",
+              image_path= "/home/pi/monitait_watcher_jet/" + str(row[4] if row[4] else 0) + ".jpg",
               timestamp=datetime.datetime.strptime(row[6], '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%S.%f'),
               product_id=0,
               lot_info=0,
-              extra_info= json.loads(row[5])[0]) if len(row[5][0]) > 0 else None
+              extra_info= json.loads(row[5].replace("'", "\"")) if len(row[5]) > 0 else None )
 
             if r_c == requests.codes.ok:
               sql_delete_query = """DELETE from monitait_table where id = {}""".format(row[0])      
