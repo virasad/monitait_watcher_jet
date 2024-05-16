@@ -310,19 +310,24 @@ class Camera:
 
     def _reader(self):
         while not self.stop_thread:
+            health_count = 0
             try:
                 success, frame = self.video_cap.read()
                 if success:
                     self.frame = frame[self.roi[1]:self.roi[3], self.roi[0]:self.roi[2]]
                     self.success = success
+                    health_count = 0
                 else:
-                    self.video_cap = self.camera_setup()
-                    success, frame = self.video_cap.read()
-                    self.frame = frame[self.roi[1]:self.roi[3], self.roi[0]:self.roi[2]]
-                    self.success = success
-                time.sleep(0.01)
+                    health_count += 1
+                    if health_count > 100:
+                        self.video_cap = self.camera_setup()
+                        success, frame = self.video_cap.read()
+                        self.frame = frame[self.roi[1]:self.roi[3], self.roi[0]:self.roi[2]]
+                        self.success = success
+                        health_count = 0
+                time.sleep(0.1)
             except:
-                time.sleep(0.01)
+                time.sleep(0.1)
                 pass
 
     def read(self):
