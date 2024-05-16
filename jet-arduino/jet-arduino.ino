@@ -22,18 +22,24 @@ boolean old_a;
 boolean old_b;
 long counter_a = 0;
 long counter_b = 0;
+long timeout_counter = 0; // number of signals recieved to the arduino OK, NG
 long encoder_counter = 0; // need 100nf cap instead of 1uf in optocouplers
+
 unsigned int battery;
 unsigned int c = 0; 
 unsigned int e = 0; // extra analog read on A7
 unsigned int i = 0; // counter for serial print
+
+
 unsigned int counter_rpi_reboot = 100;
 unsigned int restart_counter = 1;
-long counter_a_b = 0;
+
 unsigned long elapsed_speed=100;
 volatile long a_capture_time=millis();
 volatile long b_capture_time=millis();
 unsigned long now_millis;
+unsigned long counter_a_acc = 0; // accumlative counter for OK signal
+unsigned long counter_b_acc = 0; // accumlative counter for NG signal
 
 byte get_byte;
 byte out_pins_number;
@@ -61,6 +67,8 @@ void setup() {
   
   attachInterrupt(digitalPinToInterrupt(input_a), count_up_a, RISING);
   attachInterrupt(digitalPinToInterrupt(input_b), count_up_b, RISING);
+  counter_a_acc = 0;
+  counter_b_acc = 0;
 }
 
 void loop() {
@@ -71,12 +79,13 @@ void loop() {
   digitalWrite(DataCapture, LOW);
   i++;
   if ( i > 500){
-    Serial.println(String(encoder_counter) + "," + String(counter_a) + "," + String(counter_b) + "," + String(c) + "," + String(e) + "," + String(battery/10 - 2) + "," + String(elapsed_speed) + "," + String(restart_counter));
+    Serial.println(String(encoder_counter)+ "," + String(e-23) + "," + String(counter_a_acc) + "," + String(counter_b_acc) + "," + String(c) + "," + String(battery/10 - 2) + "," + String(elapsed_speed) + "," + String(restart_counter));
     i = 0;
   }
   // check if RPI is signaling the ARDUINO
   if (digitalRead(piPin)==LOW){
-    digitalWrite(DataCapture, HIGH);
+    digitalWrite(Warning, !Warning);
+    timeout_counter = 0;
     get_byte = 0;
     for(int i = 0; i < 4; i++){
       if(digitalRead(input_pins[i]) == 1)
@@ -143,14 +152,13 @@ void loop() {
   now_millis = millis();
   elapsed_speed =  long(50/(now_millis - a_capture_time) + 50/(now_millis - b_capture_time) + elapsed_speed*999/1000) ;
   counter_rpi_reboot = (elapsed_speed+1000)*restart_counter;
-  counter_a_b = abs(counter_a + counter_b);
-  if (battery < 800 or counter_a_b > counter_rpi_reboot/2)
+  if (battery < 800 or timeout_counter > counter_rpi_reboot/2)
     digitalWrite(Warning, HIGH);
   else
     digitalWrite(Warning, LOW);
 
       
-  if (counter_a_b > counter_rpi_reboot){
+  if (timeout_counter > counter_rpi_reboot){
     digitalWrite(rpi_off, HIGH);
     delay(1000);
     digitalWrite(rpi_off, LOW);
@@ -165,7 +173,7 @@ void loop() {
     delay(1000);
   }
   
-  if ((counter_a_b < counter_rpi_reboot/100) and (restart_counter > 2)){
+  if ((timeout_counter < counter_rpi_reboot/100) and (restart_counter > 2)){
     restart_counter = restart_counter/2;
   }
   
@@ -191,6 +199,8 @@ void count_up_a(){
   if (j > 2){
     a_capture_time = millis();
     counter_a++;
+    counter_a_acc++;
+    timeout_counter++;
     if (digitalRead(input_b) == HIGH)
       encoder_counter++;
     else
@@ -210,6 +220,8 @@ void count_up_b(){
   if (j > 2){
     b_capture_time = millis();
     counter_b++;
+    counter_b_acc++;
+    timeout_counter++;
     if (digitalRead(input_a) == HIGH)
       encoder_counter--;
     else
