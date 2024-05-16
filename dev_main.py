@@ -393,11 +393,10 @@ class Counter:
                 if a + b > dps or ts - self.last_server_signal > self.watcher_live_signal:
                     self.last_server_signal = ts
                     if ts - self.last_image > self.take_picture_interval:
-                        self.last_image = ts
                         captured, image_name = self.camera.capture_and_save()
                         if captured:
                             send_image = True
-                            self.take_picture_interval = ts
+                            self.last_image = ts
                         else:
                             send_image = False
                     extra_info = self.arduino.read_serial()
