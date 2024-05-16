@@ -60,14 +60,14 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
                 session.close
                 return True
             except Exception as e:
-                print(e)
+                print(f"watcher update image {e}")
                 return False
         else:
             try:
                 response = requests.post(URL, data=json.dumps(DATA), headers={"content-type": "application/json"})
                 return True
             except Exception as e:
-                print(e)
+                print(f"watcher update no image {e}")
                 return False
     except Exception as e:
         session.close()
@@ -76,7 +76,7 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
 class DB:
     def __init__(self) -> None:
         try:
-            self.dbconnect = sqlite3.connect("/home/pi/monitait_watcher_jet/monitait.db")
+            self.dbconnect = sqlite3.connect("/home/pi/monitait_watcher_jet/monitait.db", check_same_thread=False)
             self.cursor = self.dbconnect.cursor()
             self.db_connection = True
             self.cursor.execute('''create table monitait_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, register_id TEXT, temp_a INTEGER NULL, temp_b INTEGER NULL, image_name TEXT NULL, extra_info JSON, ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)''')
