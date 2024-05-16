@@ -81,10 +81,9 @@ class DB:
             self.db_connection = True
             self.cursor.execute('''create table monitait_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, register_id TEXT, temp_a INTEGER NULL, temp_b INTEGER NULL, image_name TEXT NULL, extra_info JSON, ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)''')
             self.dbconnect.commit()
-            return True
         except Exception as e:
             print(f"DB > init {e}")
-            return False
+
 
     def write(self, register_id=hostname, a=0, b=0, extra_info={}, image_name="", timestamp=datetime.datetime.utcnow()):
         try:
