@@ -408,7 +408,7 @@ class Counter:
 
 arduino = Ardiuno()
 camera = Camera()
-db = DB
+db = DB()
 counter = Counter(arduino=arduino, db=db, camera=camera)
 Thread(target=counter.run).start()
 time.sleep(10)
