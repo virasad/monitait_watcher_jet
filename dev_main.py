@@ -83,7 +83,7 @@ class DB:
             self.dbconnect.commit()
             return True
         except Exception as e:
-            print(e)
+            print(f"DB > init {e}")
             return False
 
     def write(self, register_id=hostname, a=0, b=0, extra_info={}, image_name="", timestamp=datetime.datetime.utcnow()):
@@ -92,7 +92,7 @@ class DB:
             self.dbconnect.commit()
             return True
         except Exception as e:
-            print(e)
+            print(f"DB > write {e}")
             return False
 
     def read(self):
@@ -101,7 +101,7 @@ class DB:
             rows = self.cursor.fetchall()
             return rows[0]
         except Exception as e:
-            print(e)
+            print(f"DB > read {e}")
             return []
 
     def delete(self, id):
@@ -110,7 +110,7 @@ class DB:
             self.dbconnect.commit()
             return True
         except Exception as e:
-            print(e)
+            print(f"DB > delete {e}")
             return False
 
 class Ardiuno:
