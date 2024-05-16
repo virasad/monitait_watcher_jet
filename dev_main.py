@@ -383,7 +383,7 @@ class Counter:
                 send_image = False
                 extra_info = {}
                 ts = time.time()
-                a ,b ,c ,dps = self.arduino.read()
+                a ,b ,c ,dps = self.arduino.read_GPIO()
                 if a + b > dps or ts - self.start_ts > self.watcher_live_signal:
                     if ts - self.start_ts > self.take_picture_interval:
                         captured, image_name = self.camera.capture_and_save()
@@ -392,7 +392,7 @@ class Counter:
                             self.take_picture_interval = ts
                         else:
                             send_image = False
-                    extra_info = {}
+                    extra_info = self.arduino.read_serial()
                     timestamp = datetime.datetime.utcnow()
                     if watcher_update(hostname, quantity=a, defect_quantity=b, send_img=send_image, image_path=image_name, extra_info=extra_info, timestamp=timestamp):
                         data_saved = True
