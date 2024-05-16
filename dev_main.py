@@ -118,6 +118,8 @@ class Ardiuno:
         self.stop_thread = False
         self.last_a = 0
         self.last_b = 0
+        self.c = 0
+        self.d = 0
         def handler(signal, frame):
             global flag
             print('handler')
@@ -147,6 +149,7 @@ class Ardiuno:
         self.gpio37_c.write(True) # identify default is a
         self.gpio26_d.write(True) # identify the default there is no read from RPI
         self.get_ts = 1
+        self.buffer = b''
         self.open_serial()
         Thread(target=self.read_GPIO).start()
         Thread(target=self.run_serial).start()
