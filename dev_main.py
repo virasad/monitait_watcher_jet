@@ -259,6 +259,7 @@ class Ardiuno:
                 else:                       # read arduino data c (A5 in 15 levels [0..15])
                     self.c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
                 time.sleep(0.001)
+                print(f"{self.last_a}, {self.last_b}, {self.c}, {self.get_ts}")
             except Exception as e:
                 print(f"arduino GPIO reader {e}")
 
