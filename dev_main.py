@@ -150,7 +150,7 @@ class Ardiuno:
         self.get_ts = 1
         self.buffer = b''
         self.open_serial()
-        Thread(target=self.read_GPIO).start()
+        Thread(target=self.run_GPIO).start()
         Thread(target=self.run_serial).start()
 
     def open_serial(self):
