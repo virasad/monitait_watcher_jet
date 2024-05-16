@@ -28,7 +28,7 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
         "quantity" : quantity,
         "defect_quantity": defect_quantity,
         "product_id": product_id, 
-        "extra_info": extra_info,
+        "extra_info": extra_info if extra_info else {},
         "lot_info": lot_info,
         "timestamp":timestamp, 
         "product_info":product_info
