@@ -215,7 +215,7 @@ class Ardiuno:
                         self.open_serial()
                     except Exception as ers:
                         print(ers)
-                print(e)
+                print(f"arduino Serial reader {e}")
 
     def run_GPIO(self):
         self.old_start_ts = time.time()
@@ -261,7 +261,8 @@ class Ardiuno:
                     self.c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
                 time.sleep(0.001)
             except Exception as e:
-                print(e)
+                print(f"arduino GPIO reader {e}")
+
 
     def read_GPIO(self):
         return self.last_a, self.last_b, self.c, self.get_ts
@@ -361,8 +362,8 @@ class Counter:
         self.stop_thread = False
         self.db = db
         self.camera = camera
-        self.watcher_live_signal = 60 * 5
-        self.take_picture_interval = 60 * 5
+        self.watcher_live_signal = 10
+        self.take_picture_interval = 10
 
     def db_checker(self):
         while not self.stop_thread:
@@ -372,8 +373,8 @@ class Counter:
                     if watcher_update(register_id=data[1], quantity=data[2], defect_quantity=data[3], send_img=len(data[4]) > 0, image_path=data[4], extra_info=json.loads(data[5]), timestamp=datetime.datetime.strptime(data[6], '%Y-%m-%d %H:%M:%S.%f')):
                         self.db.delete(data[0])
                 time.sleep(1)
-            except:
-                pass
+            except Exception as e:
+                print(f"counter > db_checker {e}")
 
     def run(self):
         self.start_ts = time.time()
@@ -384,6 +385,7 @@ class Counter:
                 extra_info = {}
                 ts = time.time()
                 a ,b ,c ,dps = self.arduino.read_GPIO()
+                print(f"counter > run {a} ,{b} ,{c} ,{dps}" )
                 if a + b > dps or ts - self.start_ts > self.watcher_live_signal:
                     if ts - self.start_ts > self.take_picture_interval:
                         captured, image_name = self.camera.capture_and_save()
@@ -404,7 +406,7 @@ class Counter:
                 time.sleep(1)
             except Exception as e:
                 time.sleep(1)
-                print(e)
+                print(f"counter > run {e}")
 
 arduino = Ardiuno()
 camera = Camera()
