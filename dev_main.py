@@ -44,6 +44,7 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
         if send_img:
             try:
                 response = session.post(URL_DATA, data=json.dumps(DATA), headers={"content-type": "application/json"}, timeout=150)
+                print(response.text)
                 result = response.json()
                 _id = result.get('_id', None)
                 time.sleep(1)
@@ -67,6 +68,7 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
         else:
             try:
                 response = requests.post(URL, data=json.dumps(DATA), headers={"content-type": "application/json"})
+                print(response.text)
                 return True
             except Exception as e:
                 print(f"watcher update no image {e}")
