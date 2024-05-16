@@ -86,6 +86,7 @@ class DB:
             self.cursor.execute('''create table monitait_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, register_id TEXT, temp_a INTEGER NULL, temp_b INTEGER NULL, image_name TEXT NULL, extra_info JSON, ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)''')
             self.dbconnect.commit()
         except Exception as e:
+            pass
             print(f"DB > init {e}")
 
 
@@ -95,7 +96,7 @@ class DB:
             self.dbconnect.commit()
             return True
         except Exception as e:
-            print(f"DB > write {e}")
+            # print(f"DB > write {e}")
             return False
 
     def read(self):
@@ -104,7 +105,7 @@ class DB:
             rows = self.cursor.fetchall()
             return rows[0]
         except Exception as e:
-            print(f"DB > read {e}")
+            # print(f"DB > read {e}")
             return []
 
     def delete(self, id):
@@ -113,7 +114,7 @@ class DB:
             self.dbconnect.commit()
             return True
         except Exception as e:
-            print(f"DB > delete {e}")
+            # print(f"DB > delete {e}")
             return False
 
 class Ardiuno:
@@ -313,6 +314,7 @@ class Camera:
             health_count = 0
             try:
                 success, frame = self.video_cap.read()
+                print(f"camera {success}")
                 if success:
                     self.frame = frame[self.roi[1]:self.roi[3], self.roi[0]:self.roi[2]]
                     self.success = success
@@ -394,11 +396,12 @@ class Counter:
                 extra_info = {}
                 ts = time.time()
                 a ,b ,c ,dps = self.arduino.read_GPIO()
-                print(f"counter > run {a} ,{b} ,{c} ,{dps}" )
+                # print(f"counter > run {a} ,{b} ,{c} ,{dps}" )
                 if a + b > dps or ts - self.last_server_signal > self.watcher_live_signal:
                     self.last_server_signal = ts
                     if ts - self.last_image > self.take_picture_interval:
                         captured, image_name = self.camera.capture_and_save()
+                        print(captured, image_name)
                         if captured:
                             send_image = True
                             self.last_image = ts
