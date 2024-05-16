@@ -376,7 +376,8 @@ class Counter:
                 print(f"counter > db_checker {e}")
 
     def run(self):
-        self.start_ts = time.time()
+        self.last_server_signal = time.time()
+        self.last_image = time.time()
         while not self.stop_thread:
             try:
                 data_saved = False
@@ -385,8 +386,10 @@ class Counter:
                 ts = time.time()
                 a ,b ,c ,dps = self.arduino.read_GPIO()
                 print(f"counter > run {a} ,{b} ,{c} ,{dps}" )
-                if a + b > dps or ts - self.start_ts > self.watcher_live_signal:
-                    if ts - self.start_ts > self.take_picture_interval:
+                if a + b > dps or ts - self.last_server_signal > self.watcher_live_signal:
+                    self.last_server_signal = ts
+                    if ts - self.last_image > self.take_picture_interval:
+                        self.last_image = ts
                         captured, image_name = self.camera.capture_and_save()
                         if captured:
                             send_image = True
