@@ -33,6 +33,7 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
         "timestamp":timestamp, 
         "product_info":product_info
         }
+    print(DATA)
     session = requests.Session()
 
     URL = "https://app.monitait.com/api/factory/update-watcher/" # send data without waiting for elastic id
@@ -54,6 +55,7 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
                     try:
                         response = session.post(URL_IMAGE, files={"image": open(image_path, "rb")}, data=DATA, timeout=250)
                         session.close()
+                        os.remove(image_path)
                         return True
                     except Exception as e:
                         return True
@@ -259,8 +261,7 @@ class Ardiuno:
                     self.d = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
                 else:                       # read arduino data c (A5 in 15 levels [0..15])
                     self.c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
-                time.sleep(0.001)
-                print(f"{self.last_a}, {self.last_b}, {self.c}, {self.get_ts}")
+                time.sleep(0.01)
             except Exception as e:
                 print(f"arduino GPIO reader {e}")
 
