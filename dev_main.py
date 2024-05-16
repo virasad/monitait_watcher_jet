@@ -336,7 +336,6 @@ class Camera:
         video_cap.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
         video_cap.set(cv2.CAP_PROP_GAIN, self.gain)
         video_cap.set(cv2.CAP_PROP_CONTRAST, self.contrast)
-        print('setuped')
         return video_cap
 
     def capture_and_save(self):
