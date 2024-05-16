@@ -189,10 +189,10 @@ class Ardiuno:
         while not self.stop_thread:
             try:
                 tmp_seial_data = {}
-                buffer += self.ser.read(2000)
+                self.buffer += self.ser.read(2000)
                 time.sleep(0.01)
-                if (b'\r\n' in buffer): # find line in serial data
-                    last_received, buffer = buffer.split(b'\r\n')[-2:]
+                if (b'\r\n' in self.buffer): # find line in serial data
+                    last_received, self.buffer = self.buffer.split(b'\r\n')[-2:]
                     serial_list = str(last_received).split("'")[1].split(',')
                     for z in range(len(serial_list)):
                         tmp_seial_data.update({"d{}".format(z) : int(serial_list[z])})
