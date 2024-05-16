@@ -226,7 +226,8 @@ class Ardiuno:
                 in_bit_1 = self.gpio16_1.read()
                 in_bit_2 = self.gpio18_2.read()
                 in_bit_3 = self.gpio19_3.read()
-
+                b = 0
+                a = 0
                 if in_bit_a and not(in_bit_b): # read arduino data a (OK)
                     a = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
                 if (a > 0):
