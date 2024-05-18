@@ -323,6 +323,10 @@ class Camera:
                 else:
                     health_count += 1
                     if health_count > 100:
+                        try:
+                            self.release_camera()
+                        except:
+                            pass 
                         self.video_cap = self.camera_setup()
                         success, frame = self.video_cap.read()
                         self.frame = frame[self.roi[1]:self.roi[3], self.roi[0]:self.roi[2]]
