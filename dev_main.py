@@ -167,7 +167,7 @@ class Ardiuno:
             self.buffer = b''
             self.last_received = ''
             self.ser.flushInput()
-            self.serial_data = ""
+            self.serial_data = {}
             return True
         except Exception as e:
             self.serial_connection = False
@@ -372,8 +372,8 @@ class Counter:
         self.stop_thread = False
         self.db = db
         self.camera = camera
-        self.watcher_live_signal = 10
-        self.take_picture_interval = 10
+        self.watcher_live_signal = 60 * 5
+        self.take_picture_interval = 60 * 5
 
     def db_checker(self):
         while not self.stop_thread:
