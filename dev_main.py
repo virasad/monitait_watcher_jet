@@ -394,6 +394,7 @@ class Counter:
             try:
                 data_saved = False
                 send_image = False
+                image_name = ""
                 extra_info = {}
                 ts = time.time()
                 a ,b ,c ,dps = self.arduino.read_GPIO()
