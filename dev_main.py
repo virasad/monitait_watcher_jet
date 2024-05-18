@@ -14,6 +14,13 @@ from threading import Thread
 
 hostname = str(socket.gethostname())
 
+def handler(signal, frame):
+    global flag
+    print('handler')
+    flag = False
+
+signal.signal(signal.SIGINT, handler)
+
 def watcher_update(register_id, quantity, defect_quantity, send_img, image_path="scene_image.jpg", product_id=0, lot_info=0, extra_info=None, timestamp=datetime.datetime.utcnow(), *args, **kwargs):
     quantity = quantity
     defect_quantity = defect_quantity
@@ -124,16 +131,10 @@ class Ardiuno:
         self.last_b = 0
         self.c = 0
         self.d = 0
-        def handler(signal, frame):
-            global flag
-            print('handler')
-            flag = False
-
         self.i = 0 # iterator for send a dummy 0 request
         self.j = 0
         self.k = 0
         self.restart_counter = 0
-        signal.signal(signal.SIGINT, handler)
         self.gpio07_0 = GPIO(4, "in")
         self.gpio16_1 = GPIO(23, "in")
         self.gpio18_2 = GPIO(24, "in")
