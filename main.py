@@ -296,7 +296,7 @@ while flag:
     if camera_connection:
       j = j + 1
 
-    if (j > 20): # capture image every 300sec
+    if (j > 5): # capture image every 300sec
           
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
@@ -382,8 +382,9 @@ while flag:
       #     camera_connection = True
       #   pass
       j=0
-    print(image_captured, "image captured flag")
+    
     if(temp_a + temp_b >= get_ts or i > 30 or image_captured): # send to the server of Monitait
+      print("Going to send data to server!!")
       if err_msg:
         if (err_msg != old_err_msg):
           extra_info.update({"err_msg" : err_msg})  
@@ -400,6 +401,7 @@ while flag:
         product_id=0,
         lot_info=0,
         extra_info= extra_info)
+      print(requests.codes.ok, "Requests response")
       if r_c == requests.codes.ok: # erase files and data if it was successful
         temp_a = 0
         temp_b = 0
