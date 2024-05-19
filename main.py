@@ -10,6 +10,7 @@ import serial
 import glob
 import os
 import cv2
+import numpy as np
 
 err_msg = ""
 old_err_msg = ""
@@ -358,6 +359,7 @@ while flag:
           extra_info.update({"tank_volume" : estimated_volume})  
           cv2.imwrite(image_path, src)
       except Exception as e:
+        print("Error in image capturing", e)
         image_captured = False
         err_msg = err_msg + "-cam_read-" + str(e)
         pass
