@@ -388,13 +388,13 @@ while flag:
       gauge_number = 5
       file_type='jpg'
       # name the calibration image of your gauge 'gauge-#.jpg', for example 'gauge-5.jpg'.  It's written this way so you can easily try multiple images
-      min_angle, max_angle, min_value, max_value, units, x, y, r = gauge-functions.calibrate_gauge(gauge_number, file_type)
+      min_angle, max_angle, min_value, max_value, units, x, y, r = gauge_functions.calibrate_gauge(gauge_number, file_type)
       
       image_path_2 = f"/home/pi/monitait_watcher_jet/gauge-{gauge_number}-calibration" + ".jpg"
 
       #feed an image (or frame) to get the current value, based on the calibration, by default uses same image as calibration
       img = cv2.imread('gauge-%s.%s' % (gauge_number, file_type))
-      estimated_psi = gauge-functions.get_current_value(img, min_angle, max_angle, min_value, max_value, x, y, r, gauge_number, file_type)
+      estimated_psi = gauge_functions.get_current_value(img, min_angle, max_angle, min_value, max_value, x, y, r, gauge_number, file_type)
       print("Current reading: %s %s" %(estimated_psi, units))
       initial_psi = estimated_psi
       
