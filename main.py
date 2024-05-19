@@ -11,7 +11,7 @@ import glob
 import os
 import cv2
 import numpy as np
-import gauge-functions
+import gauge_functions
 
 err_msg = ""
 old_err_msg = ""
