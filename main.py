@@ -27,8 +27,10 @@ ip_camera_pass = "1qaz!QAZ"
 ip_camera = "192.168.100.120"
 tank_diameter = 2
 snapshot_url = f"rtsp://{ip_camera_username}:{ip_camera_pass}@{ip_camera}:554/cam/realmonitor?channel=1&subtype=0" 
- 
 
+initial_tank_volume = 0
+estimated_tank_volume = -1
+tank_volume_thresholds = 20
 
 try:
   dbconnect = sqlite3.connect("/home/pi/monitait_watcher_jet/monitait.db")
@@ -296,7 +298,7 @@ while flag:
     if camera_connection:
       j = j + 1
 
-    if (j > 5): # capture image every 300sec
+    if ((abs(initial_tank_volume - estimated_tank_volume) > tank_volume_thresholds) or (j > 5)): # capture image every 300sec
           
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
@@ -304,7 +306,6 @@ while flag:
         video_cap = cv2.VideoCapture(snapshot_url)
         
         if video_cap.isOpened():
-          print("Start image capturing")
           ret, src = video_cap.read()
           video_cap.release()
           
@@ -345,23 +346,33 @@ while flag:
               # Estimation the tank height
               estimated_height = (radius + 63.3) / 33.3
               
-              estimated_volume = 3.14 * (tank_diameter**2) * estimated_height
+              estimated_tank_volume = 3.14 * (tank_diameter**2) * estimated_height
               
             
-            cv2.putText(src, f'Radius, {radius}, Estimated volume, {estimated_volume}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2, cv2.LINE_4) 
+            cv2.putText(src, f'Radius, {radius}, Estimated volume, {estimated_tank_volume}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2, cv2.LINE_4) 
           else:
-            estimated_volume = -1
-            print("The circles not founded in the image!")
+            estimated_tank_volume = -1
           
           # Writing the output image
-          print(f'Radius, {radius}',f' Estimated volume, {estimated_volume}', image_path)
-          extra_info.update({"tank_volume" : estimated_volume})  
+          extra_info.update({"tank_volume" : estimated_tank_volume})  
           cv2.imwrite(image_path, src)
-          image_captured = True
+          initial_tank_volume = estimated_tank_volume
+          
+          r_c_1 = watcher_update(
+            register_id=hostname,
+            quantity=0,
+            defect_quantity=0,
+            send_img=True ,
+            image_path=image_path,
+            product_id=0,
+            lot_info=0,
+            extra_info= extra_info)
+          if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
+            internet_connection = True
+          else:
+            internet_connection = False
       except Exception as e:
-        print("Error in image capturing", e)
-        image_captured = False
-        err_msg = err_msg + "-cam_read-" + str(e)
+        err_msg = err_msg + "-cam_read_1-" + str(e)
         pass
           
       # try:
@@ -382,9 +393,8 @@ while flag:
       #     camera_connection = True
       #   pass
       j=0
-    
-    if(temp_a + temp_b >= get_ts or i > 30 or image_captured): # send to the server of Monitait
-      print("Going to send data to server!!")
+  
+    if(temp_a + temp_b >= get_ts or i > 30): # send to the server of Monitait
       if err_msg:
         if (err_msg != old_err_msg):
           extra_info.update({"err_msg" : err_msg})  
@@ -396,12 +406,11 @@ while flag:
         register_id=hostname,
         quantity=temp_a,
         defect_quantity=temp_b,
-        send_img=image_captured,
+        send_img=False ,
         image_path=image_path,
         product_id=0,
         lot_info=0,
         extra_info= extra_info)
-      print(requests.codes.ok, "Requests response")
       if r_c == requests.codes.ok: # erase files and data if it was successful
         temp_a = 0
         temp_b = 0
