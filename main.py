@@ -296,7 +296,7 @@ while flag:
     if camera_connection:
       j = j + 1
 
-    if (j > 10): # capture image every 300sec
+    if (j > 20): # capture image every 300sec
           
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
@@ -389,8 +389,6 @@ while flag:
           extra_info.update({"err_msg" : err_msg})  
           old_err_msg = err_msg
           err_msg = ""
-      
-      estimated_volume
 
       i = 0 
       r_c = watcher_update(
