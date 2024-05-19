@@ -296,8 +296,7 @@ while flag:
     if camera_connection:
       j = j + 1
 
-    print(j, j>20, 'Before capturing')
-    if (j > 20): # capture image every 300sec
+    if (j > 10): # capture image every 300sec
           
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
@@ -358,6 +357,7 @@ while flag:
           print(f'Radius, {radius}',f' Estimated volume, {estimated_volume}', image_path)
           extra_info.update({"tank_volume" : estimated_volume})  
           cv2.imwrite(image_path, src)
+          image_captured = True
       except Exception as e:
         print("Error in image capturing", e)
         image_captured = False
@@ -382,7 +382,7 @@ while flag:
       #     camera_connection = True
       #   pass
       j=0
-
+    print(image_captured, "image captured flag")
     if(temp_a + temp_b >= get_ts or i > 30 or image_captured): # send to the server of Monitait
       if err_msg:
         if (err_msg != old_err_msg):
