@@ -53,29 +53,42 @@ except:
   serial_connection = False
   pass
 
+
 try:
-  if len(glob.glob("/dev/video?")) > 0:
-    import pygame
-    import pygame.camera
-    pygame.camera.init()
-    cam = pygame.camera.Camera("/dev/video0")
+  video_cap = cv2.VideoCapture(snapshot_url)
+        
+  if video_cap.isOpened():
+    video_cap.release()
+    print("The camera is ready")
     camera_connection = True
+    video_cap.release()
 except:
   err_msg = err_msg + "-cam_init"
   camera_connection = False
-  usb_port = glob.glob("/dev/ttyUSB?")
-  if len(usb_port) > 0:
-    import serial.rs485
-    try:
-      ser_rs485=serial.rs485.RS485(port=usb_port[0],baudrate=9600)
-      ser_rs485.rs485_mode = serial.rs485.RS485Settings(False,True)
-      serial_rs485_connection = True
-      # ser_rs485.write('a test'.encode('utf-8'))
-    except:
-      err_msg = err_msg + "-rs485_init"
-      serial_rs485_connection = False
-      pass
   pass
+# try:
+#   if len(glob.glob("/dev/video?")) > 0:
+#     import pygame
+#     import pygame.camera
+#     pygame.camera.init()
+#     cam = pygame.camera.Camera("/dev/video0")
+#     camera_connection = True
+# except:
+#   err_msg = err_msg + "-cam_init"
+#   camera_connection = False
+#   usb_port = glob.glob("/dev/ttyUSB?")
+#   if len(usb_port) > 0:
+#     import serial.rs485
+#     try:
+#       ser_rs485=serial.rs485.RS485(port=usb_port[0],baudrate=9600)
+#       ser_rs485.rs485_mode = serial.rs485.RS485Settings(False,True)
+#       serial_rs485_connection = True
+#       # ser_rs485.write('a test'.encode('utf-8'))
+#     except:
+#       err_msg = err_msg + "-rs485_init"
+#       serial_rs485_connection = False
+#       pass
+#   pass
 
 def watcher_update(register_id, quantity, defect_quantity, send_img, image_path="scene_image.jpg", product_id=0, lot_info=0, extra_info=None, *args, **kwargs):
   quantity = quantity
