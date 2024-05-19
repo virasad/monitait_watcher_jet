@@ -9,6 +9,7 @@ import socket
 import serial
 import glob
 import os
+import cv2
 
 err_msg = ""
 old_err_msg = ""
@@ -19,6 +20,13 @@ serial_connection = False
 serial_rs485_connection = False
 camera_connection = False
 image_captured = False
+
+ip_camera_username = "admin"
+ip_camera_pass = "1qaz!QAZ"
+ip_camera = "192.168.100.120"
+tank_diameter = 2
+snapshot_url = f"rtsp://{ip_camera_username}:{ip_camera_pass}@{ip_camera}:554/cam/realmonitor?channel=1&subtype=0" 
+ 
 
 
 try:
@@ -274,23 +282,87 @@ while flag:
       j = j + 1
 
     if (j > 20): # capture image every 300sec
+          
+      # Capturing image from the IP camera
+      # Create the VideoCapture object with the authenticated URL
       try:
-        cam.start()
-        img = cam.get_image()
-        image_number = int(time.time())
-        image_path = "/home/pi/monitait_watcher_jet/" + str(image_number) + ".jpg"
-        pygame.image.save(img,image_path)
-        cam.stop()
-        image_captured = True
+        video_cap = cv2.VideoCapture(snapshot_url)
+        
+        if video_cap.isOpened():
+          print("Start image capturing")
+          ret, src = video_cap.read()
+          video_cap.release()
+          
+          image_number = int(time.time())
+          image_path = "/home/pi/monitait_watcher_jet/" + str(image_number) + ".jpg"
+          
+          # Get the original image dimensions to crop the captured image 
+          height, width, channels = src.shape
+          new_height = height - 200  
+          new_width = width
+
+          # Crop 200 pixels from top and bottom the image
+          src = src[100:100+new_height, :, :]
+          
+          # Convert it to gray
+          gray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
+
+          # Reduce the noise to avoid false circle detection
+          gray = cv2.medianBlur(gray, 5)
+
+          # Applynig the hough circles transform 
+          param2=10
+          rows = gray.shape[0]
+          circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 2 * rows,
+                                        param1=100, param2=param2, minRadius=10, maxRadius=100)
+
+          # Drawing the detected circles 
+          if circles is not None:
+            circles = np.uint16(np.around(circles))
+            for i in circles[0, :]:
+              center = (i[0], i[1])
+              # circle center
+              cv2.circle(src, center, 1, (0, 100, 100), 3)
+              # circle outline
+              radius = i[2]
+              cv2.circle(src, center, radius, (255, 0, 255), 3)
+                                
+              # Estimation the tank height
+              estimated_height = (radius + 63.3) / 33.3
+              
+              estimated_volume = 3.14 * (tank_diameter**2) * estimated_height
+              
+            
+            cv2.putText(src, f'Radius, {radius}, Estimated volume, {estimated_volume}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2, cv2.LINE_4) 
+          else:
+            estimated_volume = -1
+            print("The circles not founded in the image!")
+          
+          # Writing the output image
+          extra_info.update({"tank_volume" : estimated_volume})  
+          cv2.imwrite(image_path, src)
       except Exception as e:
         image_captured = False
-        if not("-cam_read" in err_msg):
-          err_msg = err_msg + "-cam_read-" + str(e)
-        if len(glob.glob("/dev/video?")) > 0:
-          pygame.camera.init()
-          cam = pygame.camera.Camera("/dev/video0")
-          camera_connection = True
+        err_msg = err_msg + "-cam_read-" + str(e)
         pass
+          
+      # try:
+      #   cam.start()
+      #   img = cam.get_image()
+      #   image_number = int(time.time())
+      #   image_path = "/home/pi/monitait_watcher_jet/" + str(image_number) + ".jpg"
+      #   pygame.image.save(img,image_path)
+      #   cam.stop()
+      #   image_captured = True
+      # except Exception as e:
+      #   image_captured = False
+      #   if not("-cam_read" in err_msg):
+      #     err_msg = err_msg + "-cam_read-" + str(e)
+      #   if len(glob.glob("/dev/video?")) > 0:
+      #     pygame.camera.init()
+      #     cam = pygame.camera.Camera("/dev/video0")
+      #     camera_connection = True
+      #   pass
       j=0
 
     if(temp_a + temp_b >= get_ts or i > 30 or image_captured): # send to the server of Monitait
@@ -299,7 +371,8 @@ while flag:
           extra_info.update({"err_msg" : err_msg})  
           old_err_msg = err_msg
           err_msg = ""
-        
+      
+      estimated_volume
 
       i = 0 
       r_c = watcher_update(
