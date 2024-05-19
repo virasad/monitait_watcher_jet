@@ -371,6 +371,8 @@ while flag:
             internet_connection = True
           else:
             internet_connection = False
+          
+          os.remove(image_path)
       except Exception as e:
         err_msg = err_msg + "-cam_read_1-" + str(e)
         pass
