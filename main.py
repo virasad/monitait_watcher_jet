@@ -195,6 +195,7 @@ d = 0
 get_ts = 1
 old_start_ts = time.time()
 internet_connection = True
+print("Main flag", flag)
 while flag:
   try:
     if (restart_counter > 1000): # check if the connection has trouble and try to solve it hard :)
@@ -203,8 +204,8 @@ while flag:
           dbconnect.close()
         if serial_connection:
           ser.close()
-        if camera_connection:
-          cam.stop()
+        # if camera_connection:
+        #   cam.stop()
         if serial_rs485_connection:
           ser_rs485.close()
         flag = False       
@@ -294,6 +295,7 @@ while flag:
     if camera_connection:
       j = j + 1
 
+    print(j, j>20, 'Before capturing')
     if (j > 20): # capture image every 300sec
           
       # Capturing image from the IP camera
@@ -352,6 +354,7 @@ while flag:
             print("The circles not founded in the image!")
           
           # Writing the output image
+          print(f'Radius, {radius}',f' Estimated volume, {estimated_volume}', image_path)
           extra_info.update({"tank_volume" : estimated_volume})  
           cv2.imwrite(image_path, src)
       except Exception as e:
