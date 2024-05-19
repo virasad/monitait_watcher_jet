@@ -67,7 +67,7 @@ try:
         
   if video_cap.isOpened():
     video_cap.release()
-    print("The camera is ready")
+    # print("The camera is ready")
     camera_connection = True
     video_cap.release()
 except:
@@ -203,7 +203,7 @@ d = 0
 get_ts = 1
 old_start_ts = time.time()
 internet_connection = True
-print("Main flag", flag)
+# print("Main flag", flag)
 while flag:
   try:
     if (restart_counter > 1000): # check if the connection has trouble and try to solve it hard :)
@@ -303,7 +303,7 @@ while flag:
     if camera_connection:
       j = j + 1
 
-    if ((abs(initial_tank_volume - estimated_tank_volume) > tank_volume_thresholds) or (j > 5)): # capture image every 300sec
+    if ((abs(initial_tank_volume - estimated_tank_volume) > tank_volume_thresholds) or (j > 120)): # capture image every 300sec
           
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
@@ -382,9 +382,9 @@ while flag:
         err_msg = err_msg + "-cam_read_1-" + str(e)
         pass
       
-      time.sleep(0.2)
+      time.sleep(2)
 
-    if ((abs(initial_psi - estimated_psi) > psi_thresholds) or (j > 5)): # capture image every 300sec
+    if ((abs(initial_psi - estimated_psi) > psi_thresholds) or (j > 120)): # capture image every 300sec
       gauge_number = 5
       file_type='jpg'
       # name the calibration image of your gauge 'gauge-#.jpg', for example 'gauge-5.jpg'.  It's written this way so you can easily try multiple images
@@ -395,7 +395,7 @@ while flag:
       #feed an image (or frame) to get the current value, based on the calibration, by default uses same image as calibration
       img = cv2.imread('gauge-%s.%s' % (gauge_number, file_type))
       estimated_psi = gauge_functions.get_current_value(img, min_angle, max_angle, min_value, max_value, x, y, r, gauge_number, file_type)
-      print("Current reading: %s %s" %(estimated_psi, units))
+      # print("Current reading: %s %s" %(estimated_psi, units))
       initial_psi = estimated_psi
       
       initial_tank_volume = estimated_tank_volume
