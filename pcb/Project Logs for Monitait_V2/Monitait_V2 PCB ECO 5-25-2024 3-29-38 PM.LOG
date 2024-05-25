@@ -1,0 +1,4 @@
+Removed Pin From Net: NetName=12V_IN_D2 Pin=P1-1
+Removed Pin From Net: NetName=A5 Pin=P1-2
+Removed Pin From Net: NetName=GND Pin=P1-3
+Removed Member From Class: ClassName=Monitait_V2 Member=P1

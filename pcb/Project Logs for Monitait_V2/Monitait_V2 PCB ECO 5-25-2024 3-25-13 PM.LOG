@@ -1,0 +1,11 @@
+Removed Pin From Net: NetName=Adc2 Pin=D4-4
+Removed Pin From Net: NetName=Adc1 Pin=L2-1
+Removed Pin From Net: NetName=A5 Pin=R1-2
+Removed Pin From Net: NetName=Adc2 Pin=R5-2
+Removed Pin From Net: NetName=GND Pin=R20-2
+Removed Member From Class: ClassName=Monitait_V2 Member=D4
+Removed Member From Class: ClassName=Monitait_V2 Member=L2
+Removed Member From Class: ClassName=Monitait_V2 Member=R1
+Removed Member From Class: ClassName=Monitait_V2 Member=R5
+Removed Member From Class: ClassName=Monitait_V2 Member=R20
+Removed Member From Class: ClassName=Monitait_V2 Member=R38

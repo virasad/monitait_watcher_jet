@@ -1,0 +1,7 @@
+Removed Pin From Net: NetName=A5 Pin=D13-1
+Removed Pin From Net: NetName=GND Pin=D13-2
+Removed Pin From Net: NetName=A5 Pin=R25-1
+Removed Pin From Net: NetName=GND Pin=R25-2
+Removed Member From Class: ClassName=Monitait_V2 Member=D13
+Removed Member From Class: ClassName=Monitait_V2 Member=R25
+Added Room: Name=Monitait_V2
