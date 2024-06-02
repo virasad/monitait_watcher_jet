@@ -89,7 +89,7 @@ GenerateClassCluster=0
 DocumentUniqueId=LDYBPFTT
 
 [Document4]
-DocumentPath=battry.SchLib
+DocumentPath=Monitait_V2.IntLib
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -103,26 +103,13 @@ ClassGenCCAutoRoomEnabled=1
 ClassGenNCAutoScope=None
 DItemRevisionGUID=
 GenerateClassCluster=0
-DocumentUniqueId=JYXOFMEF
-
-[Document5]
-DocumentPath=battry.PcbLib
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=-1
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=1
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=NNFRKNDM
+DocumentUniqueId=
 
 [SearchPath1]
+Path=*.*
+IncludeSubFolders=1
+
+[SearchPath2]
 Path=*.*
 IncludeSubFolders=1
 
