@@ -27,7 +27,7 @@ def dist_2_pts(x1, y1, x2, y2):
     #print np.sqrt((x2-x1)^2+(y2-y1)^2)
     return np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
 
-def calibrate_gauge(gauge_number, file_type):
+def calibrate_gauge(img, gauge_number, file_type):
     '''
         This function should be run using a test image in order to calibrate the range available to the dial as well as the
         units.  It works by first finding the center point and radius of the gauge.  Then it draws lines at hard coded intervals
@@ -39,7 +39,7 @@ def calibrate_gauge(gauge_number, file_type):
         and the units (as a string).
     '''
 
-    img = cv2.imread('gauge-%s.%s' %(gauge_number, file_type))
+    # img = cv2.imread('gauge-%s.%s' %(gauge_number, file_type))
     height, width = img.shape[:2]
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  #convert to gray
     #gray = cv2.GaussianBlur(gray, (5, 5), 0)
@@ -106,9 +106,9 @@ def calibrate_gauge(gauge_number, file_type):
     #get user input on min, max, values, and units
     print('gauge number: %s' %gauge_number)
     min_angle = 60 #the lowest possible angle
-    max_angle = 330 #highest possible angle
+    max_angle = 370 #highest possible angle
     min_value = 0 #usually zero
-    max_value = 600 #maximum reading of the gauge
+    max_value = 40 #maximum reading of the gauge
     units = 'psi'
     
     # min_angle = input('Min angle (lowest possible angle of dial) - in degrees: ') #the lowest possible angle
@@ -198,9 +198,9 @@ def get_current_value(img, min_angle, max_angle, min_value, max_value, x, y, r, 
     final_line_list = []
     #print "radius: %s" %r
 
-    diff1LowerBound = 0.05 # 0.05 0.15 diff1LowerBound and diff1UpperBound determine how close the line should be from the center
-    diff1UpperBound = 0.45 # 0.45 0.25
-    diff2LowerBound = 0.05 # 0.05 0.5 diff2LowerBound and diff2UpperBound determine how close the other point of the line should be to the outside of the gauge
+    diff1LowerBound = 0.1 # 0.05 0.15 diff1LowerBound and diff1UpperBound determine how close the line should be from the center
+    diff1UpperBound = 0.5 # 0.45 0.25
+    diff2LowerBound = 0.5 # 0.05 0.5 diff2LowerBound and diff2UpperBound determine how close the other point of the line should be to the outside of the gauge
     diff2UpperBound = 1.0 # 1.0
     for i in range(0, len(lines)):
         for x1, y1, x2, y2 in lines[i]:
@@ -236,7 +236,7 @@ def get_current_value(img, min_angle, max_angle, min_value, max_value, x, y, r, 
 
     #for testing purposes, show the line overlayed on the original image
     #cv2.imwrite('gauge-1-test.jpg', img)
-    # cv2.imwrite('gauge-%s-lines-2.%s' % (gauge_number, file_type), img)
+    cv2.imwrite('gauge-%s-lines-2.%s' % (gauge_number, file_type), img)
 
     #find the farthest point from the center to be what is used to determine the angle
     dist_pt_0 = dist_2_pts(x, y, x1, y1)
