@@ -101,7 +101,7 @@ def calibrate_gauge(img, gauge_number, file_type):
         cv2.line(img, (int(p1[i][0]), int(p1[i][1])), (int(p2[i][0]), int(p2[i][1])),(0, 255, 0), 2)
         cv2.putText(img, '%s' %(int(i*separation)), (int(p_text[i][0]), int(p_text[i][1])), cv2.FONT_HERSHEY_SIMPLEX, 0.3,(0,0,0),1,cv2.LINE_AA)
 
-    cv2.imwrite('gauge-%s-calibration.%s' % (gauge_number, file_type), img)
+    # cv2.imwrite('gauge-%s-calibration.%s' % (gauge_number, file_type), img)
 
     #get user input on min, max, values, and units
     print('gauge number: %s' %gauge_number)
@@ -236,7 +236,7 @@ def get_current_value(img, min_angle, max_angle, min_value, max_value, x, y, r, 
 
     #for testing purposes, show the line overlayed on the original image
     #cv2.imwrite('gauge-1-test.jpg', img)
-    cv2.imwrite('gauge-%s-lines-2.%s' % (gauge_number, file_type), img)
+    # cv2.imwrite('gauge-%s-lines-2.%s' % (gauge_number, file_type), img)
 
     #find the farthest point from the center to be what is used to determine the angle
     dist_pt_0 = dist_2_pts(x, y, x1, y1)
