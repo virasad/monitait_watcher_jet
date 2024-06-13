@@ -68,14 +68,15 @@ except:
 
 try:
   video_cap = cv2.VideoCapture(snapshot_url)
+  video_cap_1 = cv2.VideoCapture(snapshot_url)
         
-  if video_cap.isOpened():
+  if video_cap.isOpened() and video_cap_1.isOpened():
     video_cap.release()
+    video_cap_1.release()   
     # print("The camera is ready")
     camera_connection = True
-    video_cap.release()
-except:
-  err_msg = err_msg + "-cam_init"
+except Exception as e:
+  err_msg = err_msg + "-cam_init" + str(e)
   camera_connection = False
   pass
 # try:
@@ -318,7 +319,7 @@ while flag:
           ret, src = video_cap.read()
           video_cap.release()
           
-          image_number = int(time.time())
+          image_number = f"{int(time.time())}_t"
           image_path = "/home/pi/monitait_watcher_jet/" + str(image_number) + ".jpg"
           
           # Get the original image dimensions to crop the captured image 
@@ -376,6 +377,7 @@ while flag:
             product_id=0,
             lot_info=0,
             extra_info= extra_info)
+          print("Tank image uploading response: ", requests.codes.ok)
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
@@ -396,7 +398,7 @@ while flag:
           ret, src = video_cap.read()
           video_cap.release()
           
-          image_number = int(time.time())
+          image_number = f"{int(time.time())}_g"
           image_path_2 = "/home/pi/monitait_watcher_jet/" + str(image_number) + ".jpg"
           # Get the original image dimensions to crop the captured image 
           height, width, channels = src.shape
@@ -419,7 +421,6 @@ while flag:
           #feed an image (or frame) to get the current value, based on the calibration, by default uses same image as calibration
           # img = cv2.imread('gauge-%s.%s' % (gauge_number, file_type))
           estimated_psi = gauge_functions.get_current_value(src, min_angle, max_angle, min_value, max_value, x, y, r, gauge_number, file_type)
-          # print("Current reading: %s %s" %(estimated_psi, units))
           initial_psi = estimated_psi
           
           print("estimated_psi", estimated_psi)
@@ -433,6 +434,7 @@ while flag:
             product_id=0,
             lot_info=0,
             extra_info= extra_info)
+          print("Gauge image uploading response: ", requests.codes.ok)
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
