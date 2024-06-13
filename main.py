@@ -23,6 +23,7 @@ serial_rs485_connection = False
 camera_connection = False
 image_captured = False
 
+# The IP camera's addresses
 ip_camera_username = "admin"
 ip_camera_pass = "1qaz!QAZ"
 ip_camera = "192.168.101.116"
