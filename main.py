@@ -25,9 +25,12 @@ image_captured = False
 
 ip_camera_username = "admin"
 ip_camera_pass = "1qaz!QAZ"
-ip_camera = "192.168.100.120"
+ip_camera = "192.168.101.116"
 tank_diameter = 2
 snapshot_url = f"rtsp://{ip_camera_username}:{ip_camera_pass}@{ip_camera}:554/cam/realmonitor?channel=1&subtype=0" 
+
+gauge_ip_camera = "192.168.101.117"
+gauge_snapshot_url = f"rtsp://{ip_camera_username}:{ip_camera_pass}@{gauge_ip_camera}:554/cam/realmonitor?channel=1&subtype=0" 
 
 initial_tank_volume = 0
 estimated_tank_volume = -1
