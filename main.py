@@ -303,7 +303,7 @@ while flag:
     if camera_connection:
       j = j + 1
 
-    if ((abs(initial_tank_volume - estimated_tank_volume) > tank_volume_thresholds) or (j > 120)): # capture image every 300sec
+    if j > 10: # capture image every 300sec
           
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
@@ -353,7 +353,7 @@ while flag:
               
               estimated_tank_volume = 3.14 * (tank_diameter**2) * estimated_height
               
-            
+            print("estimated_tank_volume", estimated_tank_volume)
             cv2.putText(src, f'Radius, {radius}, Estimated volume, {estimated_tank_volume}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2, cv2.LINE_4) 
           else:
             estimated_tank_volume = -1
@@ -384,56 +384,62 @@ while flag:
       
       time.sleep(2)
 
-    if ((abs(initial_psi - estimated_psi) > psi_thresholds) or (j > 120)): # capture image every 300sec
-      gauge_number = 5
-      file_type='jpg'
-      # name the calibration image of your gauge 'gauge-#.jpg', for example 'gauge-5.jpg'.  It's written this way so you can easily try multiple images
-      min_angle, max_angle, min_value, max_value, units, x, y, r = gauge_functions.calibrate_gauge(gauge_number, file_type)
-      
-      image_path_2 = f"/home/pi/monitait_watcher_jet/gauge-{gauge_number}-calibration" + ".jpg"
-
-      #feed an image (or frame) to get the current value, based on the calibration, by default uses same image as calibration
-      img = cv2.imread('gauge-%s.%s' % (gauge_number, file_type))
-      estimated_psi = gauge_functions.get_current_value(img, min_angle, max_angle, min_value, max_value, x, y, r, gauge_number, file_type)
-      # print("Current reading: %s %s" %(estimated_psi, units))
-      initial_psi = estimated_psi
-      
-      initial_tank_volume = estimated_tank_volume
+      # Start to capture image from the Gauge
+      try:
+        video_cap = cv2.VideoCapture(gauge_snapshot_url)
+        
+        if video_cap.isOpened():
+          ret, src = video_cap.read()
+          video_cap.release()
           
-      r_c_1 = watcher_update(
-        register_id=hostname,
-        quantity=0,
-        defect_quantity=0,
-        send_img=True ,
-        image_path=image_path_2,
-        product_id=0,
-        lot_info=0,
-        extra_info= extra_info)
-      if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
-        internet_connection = True
-      else:
-        internet_connection = False
+          image_number = int(time.time())
+          image_path_2 = "/home/pi/monitait_watcher_jet/" + str(image_number) + ".jpg"
+          # Get the original image dimensions to crop the captured image 
+          height, width, channels = src.shape
+          
+          # Specify the number of pixels to crop from the left and right sides
+          left_crop = 660
+          right_crop = 242
+          bottom_crop = 1
+          
+          # Crop 200 pixels from top and bottom the image
+          src = src[:height-bottom_crop, left_crop:width-right_crop]
+          # src = src[100:100+new_height, :, :]
+          cv2.imwrite(f"{image_path}", src)
+          gauge_number = 5
+          file_type='jpg'
+          # name the calibration image of your gauge 'gauge-#.jpg', for example 'gauge-5.jpg'.  It's written this way so you can easily try multiple images
+          min_angle, max_angle, min_value, max_value, units, x, y, r = gauge_functions.calibrate_gauge(src, gauge_number, file_type)
+                
+
+          #feed an image (or frame) to get the current value, based on the calibration, by default uses same image as calibration
+          # img = cv2.imread('gauge-%s.%s' % (gauge_number, file_type))
+          estimated_psi = gauge_functions.get_current_value(src, min_angle, max_angle, min_value, max_value, x, y, r, gauge_number, file_type)
+          # print("Current reading: %s %s" %(estimated_psi, units))
+          initial_psi = estimated_psi
+          
+          print("estimated_psi", estimated_psi)
+          
+          r_c_1 = watcher_update(
+            register_id=hostname,
+            quantity=0,
+            defect_quantity=0,
+            send_img=True ,
+            image_path=image_path_2,
+            product_id=0,
+            lot_info=0,
+            extra_info= extra_info)
+          if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
+            internet_connection = True
+          else:
+            internet_connection = False
       
-      os.remove(image_path_2)
+        os.remove(image_path_2)
       
-      # try:
-      #   cam.start()
-      #   img = cam.get_image()
-      #   image_number = int(time.time())
-      #   image_path = "/home/pi/monitait_watcher_jet/" + str(image_number) + ".jpg"
-      #   pygame.image.save(img,image_path)
-      #   cam.stop()
-      #   image_captured = True
-      # except Exception as e:
-      #   image_captured = False
-      #   if not("-cam_read" in err_msg):
-      #     err_msg = err_msg + "-cam_read-" + str(e)
-      #   if len(glob.glob("/dev/video?")) > 0:
-      #     pygame.camera.init()
-      #     cam = pygame.camera.Camera("/dev/video0")
-      #     camera_connection = True
-      #   pass
-      j=0
+       j=0
+      except Exception as e:
+        err_msg = err_msg + "-cam_read_2-" + str(e)
+        pass
   
     if(temp_a + temp_b >= get_ts or i > 30): # send to the server of Monitait
       if err_msg:
