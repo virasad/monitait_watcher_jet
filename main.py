@@ -358,7 +358,6 @@ while flag:
               
               estimated_tank_volume = 3.14 * (tank_diameter**2) * estimated_height
               
-            print("estimated_tank_volume", estimated_tank_volume)
             cv2.putText(src, f'Radius, {radius}, Estimated volume, {estimated_tank_volume}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2, cv2.LINE_4) 
           else:
             estimated_tank_volume = -1
@@ -377,7 +376,6 @@ while flag:
             product_id=0,
             lot_info=0,
             extra_info= extra_info)
-          print("Tank image uploading response: ", requests.codes.ok)
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
@@ -423,7 +421,6 @@ while flag:
           estimated_psi = gauge_functions.get_current_value(src, min_angle, max_angle, min_value, max_value, x, y, r, gauge_number, file_type)
           initial_psi = estimated_psi
           
-          print("estimated_psi", estimated_psi)
           
           r_c_1 = watcher_update(
             register_id=hostname,
@@ -434,7 +431,6 @@ while flag:
             product_id=0,
             lot_info=0,
             extra_info= extra_info)
-          print("Gauge image uploading response: ", requests.codes.ok)
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
