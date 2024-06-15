@@ -404,7 +404,7 @@ while flag:
           video_cap.release()
           
           image_number = f"{int(time.time())}_g"
-          image_path_2 = "/home/pi/monitait_watcher_jet/" + str(image_number) + ".jpg"
+          image_path_2 = "/home/pi/monitait_watcher_jet/" + str(image_number)
           # Get the original image dimensions to crop the captured image 
           height, width, channels = src.shape
           
@@ -416,7 +416,7 @@ while flag:
           # Crop 200 pixels from top and bottom the image
           src = src[:height-bottom_crop, left_crop:width-right_crop]
           # src = src[100:100+new_height, :, :]
-          cv2.imwrite(f"{image_path}", src)
+          cv2.imwrite(f"{image_path_2}.jpg", src)
           gauge_number = 5
           file_type='jpg'
           
