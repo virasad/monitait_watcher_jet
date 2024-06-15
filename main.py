@@ -59,7 +59,7 @@ try:
   last_received = ''
   ser.flushInput()
   extra_info = {}
-
+  extra_info_1 = {}
 except:
   err_msg = err_msg + "-ser_init"
   serial_connection = False
@@ -363,7 +363,7 @@ while flag:
             estimated_tank_volume = -1
           
           # Writing the output image
-          extra_info.update({"tank_volume" : estimated_tank_volume})  
+          extra_info_1.update({"tank_volume" : estimated_tank_volume})  
           cv2.imwrite(image_path, src)
           initial_tank_volume = estimated_tank_volume
           
@@ -375,7 +375,7 @@ while flag:
             image_path=image_path,
             product_id=0,
             lot_info=0,
-            extra_info= extra_info)
+            extra_info= {})
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
@@ -419,6 +419,7 @@ while flag:
           #feed an image (or frame) to get the current value, based on the calibration, by default uses same image as calibration
           # img = cv2.imread('gauge-%s.%s' % (gauge_number, file_type))
           estimated_psi = gauge_functions.get_current_value(src, min_angle, max_angle, min_value, max_value, x, y, r, gauge_number, file_type)
+          extra_info_1.update({"estimated_psi" : estimated_psi})  
           initial_psi = estimated_psi
           
           
@@ -430,7 +431,7 @@ while flag:
             image_path=image_path_2,
             product_id=0,
             lot_info=0,
-            extra_info= extra_info)
+            extra_info= extra_info_1)
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
