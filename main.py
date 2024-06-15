@@ -280,8 +280,7 @@ while flag:
 
     if camera_connection:
       j = j + 1
-    print(j)
-    if j > 2:
+    if j > 10:
       # Start capturing image
       # Start to capture image from the Gauge
       try:
@@ -321,7 +320,6 @@ while flag:
             estimated_psi = 0
             initial_psi = abs(estimated_psi)
           extra_info.update({"estimated_psi" : abs(estimated_psi)}) 
-          
           r_c_1 = watcher_update(
             register_id=hostname+"-1",
             quantity=0,
@@ -340,7 +338,6 @@ while flag:
       except Exception as e:
         err_msg = err_msg + "-cam_read_2-" + str(e)
         pass
-    print(err_msg)
     if(temp_a + temp_b >= get_ts or i > 30): # send to the server of Monitait
       if err_msg:
         if (err_msg != old_err_msg):
