@@ -433,14 +433,14 @@ while flag:
             estimated_psi = 0
             initial_psi = abs(estimated_psi)
           print("estimated_psi", estimated_psi)
-          extra_info.update({"estimated_psi" : estimated_psi}) 
+          extra_info.update({"estimated_psi" : abs(estimated_psi)}) 
           
           r_c_1 = watcher_update(
             register_id=hostname,
             quantity=0,
             defect_quantity=0,
             send_img=True ,
-            image_path=image_path_2,
+            image_path=f"{image_path_2}.jpg",
             product_id=0,
             lot_info=0,
             extra_info= extra_info)
@@ -448,7 +448,7 @@ while flag:
             internet_connection = True
           else:
             internet_connection = False
-        print("start gauge image removing")
+        print("start gauge image removing", internet_connection)
         os.remove(image_path_2)
         j=0
         
