@@ -310,13 +310,15 @@ while flag:
     if camera_connection:
       j = j + 1
 
+    print("tank_image_capture_flag", tank_image_capture_flag)
+    
     if j > 10 and tank_image_capture_flag: # capture image every 300sec
       tank_image_capture_flag = not tank_image_capture_flag
       gauge_image_capture_flag = not gauge_image_capture_flag
       
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
-      if True:
+      try:
         video_cap = cv2.VideoCapture(snapshot_url)
         
         if video_cap.isOpened():
@@ -384,20 +386,21 @@ while flag:
             internet_connection = True
           else:
             internet_connection = False
-          
+          print("start tank image removing")
           os.remove(image_path)
-      # except Exception as e:
-      #   err_msg = err_msg + "-cam_read_1-" + str(e)
-      #   pass
+      except Exception as e:
+        err_msg = err_msg + "-cam_read_1-" + str(e)
+        pass
       
       time.sleep(2)
 
+    print("gauge_image_capture_flag", gauge_image_capture_flag)
     if j > 10 and gauge_image_capture_flag:
       tank_image_capture_flag = not tank_image_capture_flag
       gauge_image_capture_flag = not gauge_image_capture_flag
       
       # Start to capture image from the Gauge
-      if True:
+      try:
         video_cap = cv2.VideoCapture(gauge_snapshot_url)
         
         if video_cap.isOpened():
@@ -444,12 +447,12 @@ while flag:
             internet_connection = True
           else:
             internet_connection = False
-      
+        print("start gauge image removing")
         os.remove(image_path_2)
         j=0
-      # except Exception as e:
-      #   err_msg = err_msg + "-cam_read_2-" + str(e)
-      #   pass
+      except Exception as e:
+        err_msg = err_msg + "-cam_read_2-" + str(e)
+        pass
   
     if(temp_a + temp_b >= get_ts or i > 30): # send to the server of Monitait
       if err_msg:
