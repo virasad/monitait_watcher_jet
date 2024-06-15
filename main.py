@@ -40,6 +40,8 @@ tank_volume_thresholds = 20
 initial_psi = 0
 estimated_psi = -1
 psi_thresholds = 50
+tank_image_capture_flag = True
+gauge_image_capture_flag = False 
 
 try:
   dbconnect = sqlite3.connect("/home/pi/monitait_watcher_jet/monitait.db")
@@ -308,8 +310,10 @@ while flag:
     if camera_connection:
       j = j + 1
 
-    if j > 10: # capture image every 300sec
-          
+    if j > 10 and tank_image_capture_flag: # capture image every 300sec
+      tank_image_capture_flag = not tank_image_capture_flag
+      gauge_image_capture_flag = not gauge_image_capture_flag
+      
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
       try:
@@ -388,6 +392,10 @@ while flag:
       
       time.sleep(2)
 
+    if j > 10 and gauge_image_capture_flag:
+      tank_image_capture_flag = not tank_image_capture_flag
+      gauge_image_capture_flag = not gauge_image_capture_flag
+      
       # Start to capture image from the Gauge
       try:
         video_cap = cv2.VideoCapture(gauge_snapshot_url)
