@@ -40,8 +40,6 @@ tank_volume_thresholds = 20
 initial_psi = 0
 estimated_psi = -1
 psi_thresholds = 50
-tank_image_capture_flag = True
-gauge_image_capture_flag = False 
 
 try:
   dbconnect = sqlite3.connect("/home/pi/monitait_watcher_jet/monitait.db")
@@ -309,15 +307,8 @@ while flag:
 
     if camera_connection:
       j = j + 1
-
-    if j == 9:
-      tank_image_capture_flag = not tank_image_capture_flag
-      gauge_image_capture_flag = not gauge_image_capture_flag
       
-    print("tank_image_capture_flag", tank_image_capture_flag)
-    if j > 10 and tank_image_capture_flag: # capture image every 300sec
-      tank_image_capture_flag = not tank_image_capture_flag
-      
+    if j == 5: # capture image every 300sec
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
       try:
@@ -383,7 +374,7 @@ while flag:
             image_path=image_path,
             product_id=0,
             lot_info=0,
-            extra_info= {})
+            extra_info= extra_info_1)
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
@@ -402,9 +393,7 @@ while flag:
     else:
       print(f"File '{image_path}' does not exist, so no action was taken.")
     
-    print("gauge_image_capture_flag", gauge_image_capture_flag)
-    if j > 10 and gauge_image_capture_flag:
-      gauge_image_capture_flag = not gauge_image_capture_flag
+    if j > 10:
       
       # Start to capture image from the Gauge
       try:
