@@ -389,9 +389,9 @@ while flag:
 
     if os.path.exists(f"{image_path}.jpg"):
       os.remove(f"{image_path}.jpg")
-      print(f"File '{f"{image_path}.jpg"}' has been removed.")
+      print(f"File {image_path} has been removed.")
     else:
-      print(f"File '{image_path}' does not exist, so no action was taken.")
+      print(f"File {image_path} does not exist, so no action was taken.")
     
     if j > 10:
       
@@ -454,9 +454,9 @@ while flag:
         
         if os.path.exists(f"{image_path_2}.jpg"):
           os.remove(f"{image_path_2}.jpg")
-          print(f"File '{image_path_2}' has been removed.")
+          print(f"File {image_path_2} has been removed.")
         else:
-          print(f"File '{image_path_2}' does not exist, so no action was taken.")
+          print(f"File {image_path_2} does not exist, so no action was taken.")
           
       except Exception as e:
         err_msg = err_msg + "-cam_read_2-" + str(e)
