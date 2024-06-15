@@ -35,6 +35,7 @@ snapshot_url = f"rtsp://{ip_camera_username}:{ip_camera_pass}@{ip_camera}:554/ca
 initial_tank_volume = 0
 estimated_tank_volume = -1
 tank_volume_thresholds = 20
+extra_info = {}
 
 initial_psi = 0
 estimated_psi = -1
@@ -57,13 +58,11 @@ try:
   buffer = b''
   last_received = ''
   ser.flushInput()
-  extra_info = {}
-  extra_info_1 = {}
+  
 except:
   err_msg = err_msg + "-ser_init"
   serial_connection = False
   pass
-
 
 try:
   video_cap = cv2.VideoCapture(snapshot_url)
