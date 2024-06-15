@@ -104,7 +104,7 @@ def calibrate_gauge(img, gauge_number, file_type):
     # cv2.imwrite('gauge-%s-calibration.%s' % (gauge_number, file_type), img)
 
     #get user input on min, max, values, and units
-    print('gauge number: %s' %gauge_number)
+    # print('gauge number: %s' %gauge_number)
     min_angle = 60 #the lowest possible angle
     max_angle = 370 #highest possible angle
     min_value = 0 #usually zero
