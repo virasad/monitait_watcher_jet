@@ -410,7 +410,7 @@ while flag:
           extra_info.update({"estimated_psi" : abs(estimated_psi)}) 
           
           r_c_1 = watcher_update(
-            register_id=hostname,
+            register_id=hostname+"-1",
             quantity=0,
             defect_quantity=0,
             send_img=True ,
