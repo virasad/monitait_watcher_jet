@@ -462,6 +462,7 @@ while flag:
         err_msg = err_msg + "-cam_read_2-" + str(e)
         pass
 
+
     if(temp_a + temp_b >= get_ts or i > 30): # send to the server of Monitait
       print("i > 30", i > 30)
       if err_msg:
@@ -517,7 +518,6 @@ while flag:
             image_captured
           restart_counter = restart_counter + 4
           pass
-
 
     if db_connection and internet_connection: # resend files and data if it there is any data in database
       try:
