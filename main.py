@@ -310,11 +310,13 @@ while flag:
     if camera_connection:
       j = j + 1
 
-    print("tank_image_capture_flag", tank_image_capture_flag)
-    
-    if j > 10 and tank_image_capture_flag: # capture image every 300sec
+    if j == 9:
       tank_image_capture_flag = not tank_image_capture_flag
       gauge_image_capture_flag = not gauge_image_capture_flag
+      
+    print("tank_image_capture_flag", tank_image_capture_flag)
+    if j > 10 and tank_image_capture_flag: # capture image every 300sec
+      tank_image_capture_flag = not tank_image_capture_flag
       
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
@@ -402,7 +404,6 @@ while flag:
     
     print("gauge_image_capture_flag", gauge_image_capture_flag)
     if j > 10 and gauge_image_capture_flag:
-      tank_image_capture_flag = not tank_image_capture_flag
       gauge_image_capture_flag = not gauge_image_capture_flag
       
       # Start to capture image from the Gauge
@@ -419,7 +420,7 @@ while flag:
           height, width, channels = src.shape
           
           # Specify the number of pixels to crop from the left and right sides
-          left_crop = 660
+          left_crop = 560
           right_crop = 242
           bottom_crop = 1
           
@@ -429,16 +430,21 @@ while flag:
           cv2.imwrite(f"{image_path}", src)
           gauge_number = 5
           file_type='jpg'
-          # name the calibration image of your gauge 'gauge-#.jpg', for example 'gauge-5.jpg'.  It's written this way so you can easily try multiple images
-          min_angle, max_angle, min_value, max_value, units, x, y, r = gauge_functions.calibrate_gauge(src, gauge_number, file_type)
-                
-
-          #feed an image (or frame) to get the current value, based on the calibration, by default uses same image as calibration
-          # img = cv2.imread('gauge-%s.%s' % (gauge_number, file_type))
-          estimated_psi = gauge_functions.get_current_value(src, min_angle, max_angle, min_value, max_value, x, y, r, gauge_number, file_type)
-          extra_info_1.update({"estimated_psi" : estimated_psi})  
-          initial_psi = estimated_psi
           
+          try:
+            # name the calibration image of your gauge 'gauge-#.jpg', for example 'gauge-5.jpg'.  It's written this way so you can easily try multiple images
+            min_angle, max_angle, min_value, max_value, units, x, y, r = gauge_functions.calibrate_gauge(src, gauge_number, file_type)
+                  
+
+            #feed an image (or frame) to get the current value, based on the calibration, by default uses same image as calibration
+            # img = cv2.imread('gauge-%s.%s' % (gauge_number, file_type))
+            estimated_psi = gauge_functions.get_current_value(src, min_angle, max_angle, min_value, max_value, x, y, r, gauge_number, file_type) 
+            initial_psi = abs(estimated_psi)
+          except:
+            estimated_psi = 0
+            initial_psi = abs(estimated_psi)
+          
+          extra_info_1.update({"estimated_psi" : estimated_psi}) 
           
           r_c_1 = watcher_update(
             register_id=hostname,
