@@ -464,7 +464,6 @@ while flag:
 
 
     if(temp_a + temp_b >= get_ts or i > 30): # send to the server of Monitait
-      print("i > 30", i > 30)
       if err_msg:
         if (err_msg != old_err_msg):
           extra_info.update({"err_msg" : err_msg})  
