@@ -172,12 +172,6 @@ def set_gpio_value(x):
   gpio29_0.write(b_list[0])
   return
 
-
-
-
-
-
-
 temp_a = 0
 temp_b = 0
 a = 0
