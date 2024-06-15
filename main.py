@@ -394,6 +394,12 @@ while flag:
       
       time.sleep(2)
 
+    if os.path.exists(image_path):
+      os.remove(image_path)
+      print(f"File '{image_path}' has been removed.")
+    else:
+      print(f"File '{image_path}' does not exist, so no action was taken.")
+    
     print("gauge_image_capture_flag", gauge_image_capture_flag)
     if j > 10 and gauge_image_capture_flag:
       tank_image_capture_flag = not tank_image_capture_flag
@@ -453,8 +459,15 @@ while flag:
       except Exception as e:
         err_msg = err_msg + "-cam_read_2-" + str(e)
         pass
+      
+    if os.path.exists(image_path_2):
+      os.remove(image_path_2)
+      print(f"File '{image_path_2}' has been removed.")
+    else:
+      print(f"File '{image_path_2}' does not exist, so no action was taken.")
   
     if(temp_a + temp_b >= get_ts or i > 30): # send to the server of Monitait
+      print("i > 30", i > 30)
       if err_msg:
         if (err_msg != old_err_msg):
           extra_info.update({"err_msg" : err_msg})  
