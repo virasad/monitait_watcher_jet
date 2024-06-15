@@ -320,12 +320,12 @@ while flag:
           # Drawing the detected circles 
           if circles is not None:
             circles = np.uint16(np.around(circles))
-            for i in circles[0, :]:
-              center = (i[0], i[1])
+            for h in circles[0, :]:
+              center = (h[0], h[1])
               # circle center
               cv2.circle(src, center, 1, (0, 100, 100), 3)
               # circle outline
-              radius = i[2]
+              radius = h[2]
               cv2.circle(src, center, radius, (255, 0, 255), 3)
                                 
               # Estimation the tank height
