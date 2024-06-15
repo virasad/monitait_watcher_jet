@@ -79,29 +79,6 @@ except Exception as e:
   err_msg = err_msg + "-cam_init" + str(e)
   camera_connection = False
   pass
-# try:
-#   if len(glob.glob("/dev/video?")) > 0:
-#     import pygame
-#     import pygame.camera
-#     pygame.camera.init()
-#     cam = pygame.camera.Camera("/dev/video0")
-#     camera_connection = True
-# except:
-#   err_msg = err_msg + "-cam_init"
-#   camera_connection = False
-#   usb_port = glob.glob("/dev/ttyUSB?")
-#   if len(usb_port) > 0:
-#     import serial.rs485
-#     try:
-#       ser_rs485=serial.rs485.RS485(port=usb_port[0],baudrate=9600)
-#       ser_rs485.rs485_mode = serial.rs485.RS485Settings(False,True)
-#       serial_rs485_connection = True
-#       # ser_rs485.write('a test'.encode('utf-8'))
-#     except:
-#       err_msg = err_msg + "-rs485_init"
-#       serial_rs485_connection = False
-#       pass
-#   pass
 
 def watcher_update(register_id, quantity, defect_quantity, send_img, image_path="scene_image.jpg", product_id=0, lot_info=0, extra_info=None, *args, **kwargs):
   quantity = quantity
@@ -307,8 +284,7 @@ while flag:
 
     if camera_connection:
       j = j + 1
-    print(j)
-    if j == 5: # capture image every 300sec
+    if j == 100: 
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
       try:
@@ -379,7 +355,6 @@ while flag:
             internet_connection = True
           else:
             internet_connection = False
-          print("start tank image removing")
           os.remove(f"{image_path}.jpg")
       except Exception as e:
         err_msg = err_msg + "-cam_read_1-" + str(e)
@@ -393,7 +368,7 @@ while flag:
     # else:
     #   print(f"File {image_path} does not exist, so no action was taken.")
     
-    if j > 10:
+    if j > 200:
       
       # Start to capture image from the Gauge
       try:
@@ -432,7 +407,6 @@ while flag:
           except:
             estimated_psi = 0
             initial_psi = abs(estimated_psi)
-          print("estimated_psi", estimated_psi)
           extra_info.update({"estimated_psi" : abs(estimated_psi)}) 
           
           r_c_1 = watcher_update(
@@ -448,18 +422,11 @@ while flag:
             internet_connection = True
           else:
             internet_connection = False
-        print("start gauge image removing", internet_connection)
         os.remove(f"{image_path_2}.jpg")
         j=0
       except Exception as e:
         err_msg = err_msg + "-cam_read_2-" + str(e)
         pass
-    
-    # if os.path.exists(f"{image_path_2}.jpg"):
-    #       os.remove(f"{image_path_2}.jpg")
-    #       print(f"File {image_path_2} has been removed.")
-    #     else:
-    #       print(f"File {image_path_2} does not exist, so no action was taken.")
     
     if(temp_a + temp_b >= get_ts or i > 30): # send to the server of Monitait
       if err_msg:
