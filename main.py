@@ -286,7 +286,7 @@ while flag:
       
       # Start to capture image from the Gauge
       try:
-        video_cap = cv2.VideoCapture(gauge_snapshot_url)
+        video_cap = cv2.VideoCapture(snapshot_url)
         
         if video_cap.isOpened():
           ret, src = video_cap.read()
