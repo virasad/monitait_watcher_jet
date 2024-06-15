@@ -29,8 +29,8 @@ ip_camera_pass = "1qaz!QAZ"
 ip_camera = "192.168.1.132"
 tank_diameter = 2
 
-gauge_ip_camera = "192.168.1.132"
-gauge_snapshot_url = f"rtsp://{ip_camera_username}:{ip_camera_pass}@{gauge_ip_camera}:554/cam/realmonitor?channel=1&subtype=0" 
+ip_camera = "192.168.1.132"
+snapshot_url = f"rtsp://{ip_camera_username}:{ip_camera_pass}@{ip_camera}:554/cam/realmonitor?channel=1&subtype=0" 
 
 initial_tank_volume = 0
 estimated_tank_volume = -1
@@ -67,11 +67,9 @@ except:
 
 try:
   video_cap = cv2.VideoCapture(snapshot_url)
-  video_cap_1 = cv2.VideoCapture(snapshot_url)
         
-  if video_cap.isOpened() and video_cap_1.isOpened():
+  if video_cap.isOpened():
     video_cap.release()
-    video_cap_1.release()   
     # print("The camera is ready")
     camera_connection = True
 except Exception as e:
