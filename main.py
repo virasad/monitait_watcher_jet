@@ -307,7 +307,7 @@ while flag:
 
     if camera_connection:
       j = j + 1
-      
+    print(j)
     if j == 5: # capture image every 300sec
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
@@ -380,18 +380,18 @@ while flag:
           else:
             internet_connection = False
           print("start tank image removing")
-          os.remove(image_path)
+          os.remove(f"{image_path}.jpg")
       except Exception as e:
         err_msg = err_msg + "-cam_read_1-" + str(e)
         pass
       
       time.sleep(2)
 
-    if os.path.exists(f"{image_path}.jpg"):
-      os.remove(f"{image_path}.jpg")
-      print(f"File {image_path} has been removed.")
-    else:
-      print(f"File {image_path} does not exist, so no action was taken.")
+    # if os.path.exists(f"{image_path}.jpg"):
+    #   os.remove(f"{image_path}.jpg")
+    #   print(f"File {image_path} has been removed.")
+    # else:
+    #   print(f"File {image_path} does not exist, so no action was taken.")
     
     if j > 10:
       
@@ -449,20 +449,18 @@ while flag:
           else:
             internet_connection = False
         print("start gauge image removing", internet_connection)
-        os.remove(image_path_2)
+        os.remove(f"{image_path_2}.jpg")
         j=0
-        
-        if os.path.exists(f"{image_path_2}.jpg"):
-          os.remove(f"{image_path_2}.jpg")
-          print(f"File {image_path_2} has been removed.")
-        else:
-          print(f"File {image_path_2} does not exist, so no action was taken.")
-          
       except Exception as e:
         err_msg = err_msg + "-cam_read_2-" + str(e)
         pass
-
-
+    
+    # if os.path.exists(f"{image_path_2}.jpg"):
+    #       os.remove(f"{image_path_2}.jpg")
+    #       print(f"File {image_path_2} has been removed.")
+    #     else:
+    #       print(f"File {image_path_2} does not exist, so no action was taken.")
+    
     if(temp_a + temp_b >= get_ts or i > 30): # send to the server of Monitait
       if err_msg:
         if (err_msg != old_err_msg):
