@@ -308,90 +308,90 @@ while flag:
     if camera_connection:
       j = j + 1
       
-    # if j == 5: # capture image every 300sec
-    #   # Capturing image from the IP camera
-    #   # Create the VideoCapture object with the authenticated URL
-    #   try:
-    #     video_cap = cv2.VideoCapture(snapshot_url)
+    if j == 5: # capture image every 300sec
+      # Capturing image from the IP camera
+      # Create the VideoCapture object with the authenticated URL
+      try:
+        video_cap = cv2.VideoCapture(snapshot_url)
         
-    #     if video_cap.isOpened():
-    #       ret, src = video_cap.read()
-    #       video_cap.release()
+        if video_cap.isOpened():
+          ret, src = video_cap.read()
+          video_cap.release()
           
-    #       image_number = f"{int(time.time())}_t"
-    #       image_path = "/home/pi/monitait_watcher_jet/" + str(image_number) + ".jpg"
+          image_number = f"{int(time.time())}_t"
+          image_path = "/home/pi/monitait_watcher_jet/" + str(image_number)
           
-    #       # Get the original image dimensions to crop the captured image 
-    #       height, width, channels = src.shape
-    #       new_height = height - 200  
-    #       new_width = width
+          # Get the original image dimensions to crop the captured image 
+          height, width, channels = src.shape
+          new_height = height - 200  
+          new_width = width
 
-    #       # Crop 200 pixels from top and bottom the image
-    #       src = src[100:100+new_height, :, :]
+          # Crop 200 pixels from top and bottom the image
+          src = src[100:100+new_height, :, :]
           
-    #       # Convert it to gray
-    #       gray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
+          # Convert it to gray
+          gray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
 
-    #       # Reduce the noise to avoid false circle detection
-    #       gray = cv2.medianBlur(gray, 5)
+          # Reduce the noise to avoid false circle detection
+          gray = cv2.medianBlur(gray, 5)
 
-    #       # Applynig the hough circles transform 
-    #       param2=10
-    #       rows = gray.shape[0]
-    #       circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 2 * rows,
-    #                                     param1=100, param2=param2, minRadius=10, maxRadius=100)
+          # Applynig the hough circles transform 
+          param2=10
+          rows = gray.shape[0]
+          circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 2 * rows,
+                                        param1=100, param2=param2, minRadius=10, maxRadius=100)
 
-    #       # Drawing the detected circles 
-    #       if circles is not None:
-    #         circles = np.uint16(np.around(circles))
-    #         for i in circles[0, :]:
-    #           center = (i[0], i[1])
-    #           # circle center
-    #           cv2.circle(src, center, 1, (0, 100, 100), 3)
-    #           # circle outline
-    #           radius = i[2]
-    #           cv2.circle(src, center, radius, (255, 0, 255), 3)
+          # Drawing the detected circles 
+          if circles is not None:
+            circles = np.uint16(np.around(circles))
+            for i in circles[0, :]:
+              center = (i[0], i[1])
+              # circle center
+              cv2.circle(src, center, 1, (0, 100, 100), 3)
+              # circle outline
+              radius = i[2]
+              cv2.circle(src, center, radius, (255, 0, 255), 3)
                                 
-    #           # Estimation the tank height
-    #           estimated_height = (radius + 63.3) / 33.3
+              # Estimation the tank height
+              estimated_height = (radius + 63.3) / 33.3
               
-    #           estimated_tank_volume = 3.14 * (tank_diameter**2) * estimated_height
+              estimated_tank_volume = 3.14 * (tank_diameter**2) * estimated_height
               
-    #         cv2.putText(src, f'Radius, {radius}, Estimated volume, {estimated_tank_volume}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2, cv2.LINE_4) 
-    #       else:
-    #         estimated_tank_volume = -1
+            cv2.putText(src, f'Radius, {radius}, Estimated volume, {estimated_tank_volume}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2, cv2.LINE_4) 
+          else:
+            estimated_tank_volume = -1
           
-    #       # Writing the output image
-    #       extra_info_1.update({"tank_volume" : estimated_tank_volume})  
-    #       cv2.imwrite(image_path, src)
-    #       initial_tank_volume = estimated_tank_volume
+          # Writing the output image
+          extra_info_1.update({"tank_volume" : estimated_tank_volume})  
+          cv2.imwrite(f"{image_path}.jpg", src)
+          initial_tank_volume = estimated_tank_volume
           
-    #       r_c_1 = watcher_update(
-    #         register_id=hostname,
-    #         quantity=0,
-    #         defect_quantity=0,
-    #         send_img=True ,
-    #         image_path=image_path,
-    #         product_id=0,
-    #         lot_info=0,
-    #         extra_info= extra_info_1)
-    #       if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
-    #         internet_connection = True
-    #       else:
-    #         internet_connection = False
-    #       print("start tank image removing")
-    #       os.remove(image_path)
-    #   except Exception as e:
-    #     err_msg = err_msg + "-cam_read_1-" + str(e)
-    #     pass
+          r_c_1 = watcher_update(
+            register_id=hostname,
+            quantity=0,
+            defect_quantity=0,
+            send_img=True ,
+            image_path=f"{image_path}.jpg",
+            product_id=0,
+            lot_info=0,
+            extra_info= extra_info_1)
+          if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
+            internet_connection = True
+          else:
+            internet_connection = False
+          print("start tank image removing")
+          os.remove(image_path)
+      except Exception as e:
+        err_msg = err_msg + "-cam_read_1-" + str(e)
+        pass
       
-    #   time.sleep(2)
+      time.sleep(2)
 
-    # if os.path.exists(image_path):
-    #   os.remove(image_path)
-    #   print(f"File '{image_path}' has been removed.")
-    # else:
-    #   print(f"File '{image_path}' does not exist, so no action was taken.")
+    if os.path.exists(f"{image_path}.jpg"):
+      os.remove(f"{image_path}.jpg")
+      print(f"File '{f"{image_path}.jpg"}' has been removed.")
+    else:
+      print(f"File '{image_path}' does not exist, so no action was taken.")
     
     if j > 10:
       
@@ -452,8 +452,8 @@ while flag:
         os.remove(image_path_2)
         j=0
         
-        if os.path.exists(image_path_2):
-          os.remove(image_path_2)
+        if os.path.exists(f"{image_path_2}.jpg"):
+          os.remove(f"{image_path_2}.jpg")
           print(f"File '{image_path_2}' has been removed.")
         else:
           print(f"File '{image_path_2}' does not exist, so no action was taken.")
