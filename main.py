@@ -283,7 +283,7 @@ while flag:
       j = j + 1
     print(j)
     if j > 2:
-      
+      # Start capturing image
       # Start to capture image from the Gauge
       try:
         video_cap = cv2.VideoCapture(snapshot_url)
