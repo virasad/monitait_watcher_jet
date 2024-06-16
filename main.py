@@ -64,17 +64,19 @@ except:
   serial_connection = False
   pass
 
-try:
-  video_cap = cv2.VideoCapture(snapshot_url)
+camera_connection = True
+
+# try:
+#   video_cap = cv2.VideoCapture(snapshot_url)
         
-  if video_cap.isOpened():
-    video_cap.release()
-    # print("The camera is ready")
-    camera_connection = True
-except Exception as e:
-  err_msg = err_msg + "-cam_init" + str(e)
-  camera_connection = False
-  pass
+#   if video_cap.isOpened():
+#     video_cap.release()
+#     # print("The camera is ready")
+#     camera_connection = True
+# except Exception as e:
+#   err_msg = err_msg + "-cam_init" + str(e)
+#   camera_connection = False
+#   pass
 
 def watcher_update(register_id, quantity, defect_quantity, send_img, image_path="scene_image.jpg", product_id=0, lot_info=0, extra_info=None, *args, **kwargs):
   quantity = quantity
@@ -280,7 +282,9 @@ while flag:
 
     if camera_connection:
       j = j + 1
-    if j > 10:
+      
+    print(j)
+    if j > 2:
       # Start capturing image
       # Start to capture image from the Gauge
       try:
@@ -321,6 +325,7 @@ while flag:
             estimated_psi = 0
             initial_psi = abs(estimated_psi)
           extra_info.update({"estimated_psi" : abs(estimated_psi)}) 
+          print("Start data sending")
           r_c_1 = watcher_update(
             register_id=hostname,
             quantity=0,
