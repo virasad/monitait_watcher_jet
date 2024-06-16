@@ -276,7 +276,7 @@ while flag:
     if camera_connection:
       j = j + 1
       
-    if j > 2:
+    if j > 100:
       # Start capturing image
       # Start to capture image from the Gauge
       try:
