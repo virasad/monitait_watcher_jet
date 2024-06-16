@@ -28,13 +28,7 @@ ip_camera_username = "admin"
 ip_camera_pass = "1qaz!QAZ"
 ip_camera = "192.168.1.132"
 tank_diameter = 2
-
-ip_camera = "192.168.1.132"
 snapshot_url = f"rtsp://{ip_camera_username}:{ip_camera_pass}@{ip_camera}:554/cam/realmonitor?channel=1&subtype=0" 
-
-initial_tank_volume = 0
-estimated_tank_volume = -1
-tank_volume_thresholds = 20
 extra_info = {}
 
 initial_psi = 0
@@ -64,19 +58,18 @@ except:
   serial_connection = False
   pass
 
-camera_connection = True
 
-# try:
-#   video_cap = cv2.VideoCapture(snapshot_url)
+try:
+  video_cap = cv2.VideoCapture(snapshot_url)
         
-#   if video_cap.isOpened():
-#     video_cap.release()
-#     # print("The camera is ready")
-#     camera_connection = True
-# except Exception as e:
-#   err_msg = err_msg + "-cam_init" + str(e)
-#   camera_connection = False
-#   pass
+  if video_cap.isOpened():
+    video_cap.release()
+    # print("The camera is ready")
+    camera_connection = True
+except Exception as e:
+  err_msg = err_msg + "-cam_init" + str(e)
+  camera_connection = False
+  pass
 
 def watcher_update(register_id, quantity, defect_quantity, send_img, image_path="scene_image.jpg", product_id=0, lot_info=0, extra_info=None, *args, **kwargs):
   quantity = quantity
@@ -283,49 +276,23 @@ while flag:
     if camera_connection:
       j = j + 1
       
-    print(j)
     if j > 2:
       # Start capturing image
       # Start to capture image from the Gauge
       try:
-        # video_cap = cv2.VideoCapture(snapshot_url)
+        video_cap = cv2.VideoCapture(snapshot_url)
         
-        # if video_cap.isOpened():
-        if True:
-          # ret, src = video_cap.read()
-          # video_cap.release()
-          src = cv2.imread("/home/pi/monitait_watcher_jet/1718475423_g.jpg")
+        if video_cap.isOpened():
+          ret, src = video_cap.read()
+          video_cap.release()
+          
           image_number = f"{int(time.time())}_g"
           image_path_2 = "/home/pi/monitait_watcher_jet/" + str(image_number)
           # Get the original image dimensions to crop the captured image 
           height, width, channels = src.shape
           
-          # Specify the number of pixels to crop from the left and right sides
-          left_crop = 560
-          right_crop = 242
-          bottom_crop = 1
-          
-          # Crop 200 pixels from top and bottom the image
-          src = src[:height-bottom_crop, left_crop:width-right_crop]
-          # src = src[100:100+new_height, :, :]
           cv2.imwrite(f"{image_path_2}.jpg", src)
-          gauge_number = 5
-          file_type='jpg'
           
-          try:
-            # name the calibration image of your gauge 'gauge-#.jpg', for example 'gauge-5.jpg'.  It's written this way so you can easily try multiple images
-            min_angle, max_angle, min_value, max_value, units, x, y, r = gauge_functions.calibrate_gauge(src, gauge_number, file_type)
-                  
-
-            #feed an image (or frame) to get the current value, based on the calibration, by default uses same image as calibration
-            # img = cv2.imread('gauge-%s.%s' % (gauge_number, file_type))
-            estimated_psi = gauge_functions.get_current_value(src, min_angle, max_angle, min_value, max_value, x, y, r, gauge_number, file_type) 
-            initial_psi = abs(estimated_psi)
-          except:
-            estimated_psi = 0
-            initial_psi = abs(estimated_psi)
-          extra_info.update({"estimated_psi" : abs(estimated_psi)}) 
-          print("Start data sending")
           r_c_1 = watcher_update(
             register_id=hostname,
             quantity=0,
