@@ -284,12 +284,13 @@ while flag:
       # Start capturing image
       # Start to capture image from the Gauge
       try:
-        video_cap = cv2.VideoCapture(snapshot_url)
+        # video_cap = cv2.VideoCapture(snapshot_url)
         
-        if video_cap.isOpened():
-          ret, src = video_cap.read()
-          video_cap.release()
-          
+        # if video_cap.isOpened():
+        if True:
+          # ret, src = video_cap.read()
+          # video_cap.release()
+          src = cv2.imread("/home/pi/monitait_watcher_jet/1718475423_g.jpg")
           image_number = f"{int(time.time())}_g"
           image_path_2 = "/home/pi/monitait_watcher_jet/" + str(image_number)
           # Get the original image dimensions to crop the captured image 
@@ -321,7 +322,7 @@ while flag:
             initial_psi = abs(estimated_psi)
           extra_info.update({"estimated_psi" : abs(estimated_psi)}) 
           r_c_1 = watcher_update(
-            register_id=hostname+"-1",
+            register_id=hostname,
             quantity=0,
             defect_quantity=0,
             send_img=True ,
