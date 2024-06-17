@@ -322,11 +322,12 @@ while flag:
             circles = np.uint16(np.around(circles))
             for h in circles[0, :]:
               center = (h[0], h[1])
-              # circle center
-              cv2.circle(src, center, 1, (0, 100, 100), 3)
+              # drowing circle center
+              # cv2.circle(src, center, 1, (0, 100, 100), 3)
               # circle outline
               radius = h[2]
-              cv2.circle(src, center, radius, (255, 0, 255), 3)
+              # drowing circle
+              # cv2.circle(src, center, radius, (255, 0, 255), 3)
                                 
               # Estimation the tank height
               estimated_height = (radius + 63.3) / 33.3
