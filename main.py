@@ -41,9 +41,19 @@ try:
   extra_info = {}
 
 except:
-  err_msg = err_msg + "-ser_init"
-  serial_connection = False
-  pass
+  try:
+    ser = serial.Serial(
+        port='/dev/serial1', baudrate = 9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=1)
+    serial_connection = True
+    serial_list = []
+    buffer = b''
+    last_received = ''
+    ser.flushInput()
+    extra_info = {}
+  except:
+    err_msg = err_msg + "-ser_init"
+    serial_connection = False
+    pass
 
 try:
   if len(glob.glob("/dev/video?")) > 0:
