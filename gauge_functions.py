@@ -173,7 +173,7 @@ def get_current_value(img, min_angle, max_angle, min_value, max_value, x, y, r, 
     # cv2.imwrite('gauge-%s-dst5.%s' % (gauge_number, file_type), dst5)
 
     # apply thresholding which helps for finding lines
-    th, dst2 = cv2.threshold(gray2, thresh, maxValue, cv2.THRESH_BINARY_INV);
+    th, dst2 = cv2.threshold(gray2, thresh, maxValue, cv2.THRESH_TRUNC);
 
     # found Hough Lines generally performs better without Canny / blurring, though there were a couple exceptions where it would only work with Canny / blurring
     #dst2 = cv2.medianBlur(dst2, 5)

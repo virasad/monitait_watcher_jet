@@ -385,9 +385,9 @@ while flag:
           height, width, channels = src.shape
           
           # Specify the number of pixels to crop from the left and right sides
-          left_crop = 560
-          right_crop = 242
-          bottom_crop = 1
+          left_crop = 100
+          right_crop = 2
+          bottom_crop = 700
           
           # Crop 200 pixels from top and bottom the image
           src = src[:height-bottom_crop, left_crop:width-right_crop]
