@@ -336,7 +336,7 @@ class Camera:
             health_count = 0
             try:
                 success, frame = self.video_cap.read()
-                print(f"camera {success}")
+                # print(f"camera {success}")
                 if success:
                     self.frame = frame[self.roi[1]:self.roi[3], self.roi[0]:self.roi[2]]
                     self.success = success
