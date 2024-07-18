@@ -259,10 +259,10 @@ class Ardiuno:
                     a = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2
                 if (a > 0):
                     self.set_gpio_value(a)
-                    self.gpio26_d.write(False)
+                    self.gpio26_d.off()
                     while (self.gpio21_a.is_pressed != self.gpio23_b.is_pressed):
                         time.sleep(0.001)
-                    self.gpio26_d.write(True)
+                    self.gpio26_d.on()
                     self.last_a += a
                     start_ts = time.time()
                     self.get_ts = 1/(start_ts - self.old_start_ts)+0.9*self.get_ts
@@ -272,12 +272,12 @@ class Ardiuno:
                     b = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2
                 if (b > 0):
                     self.set_gpio_value(b)
-                    self.gpio37_c.write(False) # identify it is b
-                    self.gpio26_d.write(False)
+                    self.gpio37_c.off() # identify it is b
+                    self.gpio26_d.off()
                     while (self.gpio21_a.is_pressed != self.gpio23_b.is_pressed):
                         time.sleep(0.001)
-                    self.gpio37_c.write(True) # identify default is a
-                    self.gpio26_d.write(True)
+                    self.gpio37_c.on() # identify default is a
+                    self.gpio26_d.on()
                     self.last_b += b
                     start_ts = time.time()
                     self.get_ts = 1/(start_ts - self.old_start_ts)+0.9*self.get_ts
