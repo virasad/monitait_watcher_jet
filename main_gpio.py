@@ -423,6 +423,7 @@ class Counter:
                 extra_info = {}
                 ts = time.time()
                 a ,b ,c, d ,dps = self.arduino.read_GPIO()
+                print(a, b , c, d, dps)
                 # print(f"counter > run {a} ,{b} ,{c} ,{dps}" )
                 if a + b > dps or ts - self.last_server_signal > self.watcher_live_signal:
                     self.last_server_signal = ts
