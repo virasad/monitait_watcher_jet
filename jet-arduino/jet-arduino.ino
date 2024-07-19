@@ -2,6 +2,8 @@
 
 const byte input_a = 2; // OK
 const byte input_b = 3; // NG
+const byte u = 5; // pwm u
+const byte b = 6; // pwm b
 const byte piPin = 11; // RPI Signal to Arduino
 const byte a_or_b = 18; // RPI Address to Arduino
 const byte Warning = 13; // Warning LED Panel
@@ -10,12 +12,12 @@ const byte rpi_off = 12; // To force restart RPI by Arduino
 const byte a_identifier = 8; // RPI Address to Arduino
 const byte b_identifier = 9; // RPI Address to Arduino
 
-byte input_pins[4] = {
-  14, 15, 16, 17
+byte input_pins[3] = {
+  14, 15, 16
 }; // RPI data pins to Arduino
 
-byte output_pins[4] = {
-  4, 5, 6, 7
+byte output_pins[3] = {
+  4, 7, 17
 }; // Arduino data pins to RPI
 
 boolean old_a;
@@ -65,26 +67,25 @@ void setup() {
 
 void loop() {
   // get analog data
-  c = analogRead(A5);
   battery = analogRead(A6);  
-  e = analogRead(A7);
+  c = analogRead(A7);
   digitalWrite(DataCapture, LOW);
   i++;
   if ( i > 500){
-    Serial.println(String(encoder_counter) + "," + String(counter_a) + "," + String(counter_b) + "," + String(c) + "," + String(e) + "," + String(battery/10 - 2) + "," + String(elapsed_speed) + "," + String(restart_counter));
+    Serial.println(String(encoder_counter) + "," + "-23" + "," + String(counter_a) + "," + String(counter_b) + "," + String(c) + "," + String(battery/10 - 2) + "," + String(elapsed_speed) + "," + String(restart_counter));
     i = 0;
   }
   // check if RPI is signaling the ARDUINO
   if (digitalRead(piPin)==LOW){
     digitalWrite(DataCapture, HIGH);
     get_byte = 0;
-    for(int i = 0; i < 4; i++){
+    for(int i = 0; i < 3; i++){
       if(digitalRead(input_pins[i]) == 1)
         bitSet(get_byte, i);
       else
         bitClear(get_byte, i);
     }
-    bitClear(get_byte, 4); bitClear(get_byte, 5); bitClear(get_byte, 6); bitClear(get_byte, 7);
+    bitClear(get_byte, 3); bitClear(get_byte, 4); bitClear(get_byte, 5); bitClear(get_byte, 6); bitClear(get_byte, 7);
     if(digitalRead(a_or_b)==LOW){
       counter_b = counter_b - get_byte;
     }
@@ -124,13 +125,13 @@ void loop() {
 
     else if (counter_a + counter_b <= 0){
       if (battery < 780){
-        out_pins_number = int(battery/66) ;
+        out_pins_number = int(battery/132) ;
         digitalWrite(a_identifier, HIGH);
         digitalWrite(b_identifier, HIGH);
         put_byte_on_pins(out_pins_number);
       }
       else{
-        out_pins_number = int(c/66) ;
+        out_pins_number = int(c/132) ;
         digitalWrite(a_identifier, LOW);
         digitalWrite(b_identifier, LOW);
         put_byte_on_pins(out_pins_number);
@@ -174,7 +175,7 @@ void loop() {
 }
 
 void put_byte_on_pins(byte in_byte){
-  for(int i = 0; i < 4; i++){
+  for(int i = 0; i < 3; i++){
       digitalWrite(output_pins[i], bitRead (in_byte, i));
     }
   return;

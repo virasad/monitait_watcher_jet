@@ -143,6 +143,8 @@ class Ardiuno:
         self.gpio19_1 = Button(10) # same
         self.gpio35_2 = Button(19) # same
 
+        self.gpio36_0 = Button(16) # same
+
         # send a, b , c, d data to arduino
         self.gpio29_0 = LED(5) # same
         self.gpio31_1 = LED(6) # same
@@ -159,6 +161,9 @@ class Ardiuno:
         self.gpio11_0 = LED(17) # DE/RE
         self.gpio13_0 = LED(27) # RS485 TX
         self.gpio15_0 = Button(22) # RS485 RX
+
+        self.gpio32_0 = Button(12) # Buzzer
+        self.gpio15_0.on() # it is high by default
 
         self.gpio37_c.on() # identify default is a
         self.gpio26_d.on() # identify as the default there is no read from RPI
