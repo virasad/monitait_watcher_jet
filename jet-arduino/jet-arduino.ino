@@ -72,7 +72,6 @@ void loop() {
   // get analog data
   battery = analogRead(A6);  
   c = analogRead(A7);
-  digitalWrite(DataCapture, !DataCapture);
   i++;
 
 if (Serial.available() > 0)
@@ -135,7 +134,7 @@ if (Serial.available() > 0)
   if (digitalRead(piPin)==LOW){
     wdt_reset();
     counter_a_b = 0;
-    digitalWrite(DataCapture, !DataCapture);
+    digitalWrite(DataCapture, !digitalRead(DataCapture));
     get_byte = 0;
     for(int i = 0; i < 3; i++){
       if(digitalRead(input_pins[i]) == 1)
