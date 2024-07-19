@@ -1,4 +1,4 @@
-from gpiozero import Button
+from gpiozero import InputDevice
 from gpiozero import LED
 import sqlite3
 import time
@@ -135,15 +135,15 @@ class Ardiuno:
         self.j = 0
         self.k = 0
         self.restart_counter = 0
-        self.gpio16_0 = Button(23) # Address pin for DIP switch 3
-        self.gpio18_0 = Button(24) # Address pin for DIP switch 4
+        self.gpio16_0 = InputDevice(23) # Address pin for DIP switch 3
+        self.gpio18_0 = InputDevice(24) # Address pin for DIP switch 4
         self.watcher_mode = 1*self.gpio16_0.is_pressed + 2*self.gpio18_0.is_pressed
         # input a, b, c, d data from arduino
-        self.gpio07_0 = Button(4) # same
-        self.gpio19_1 = Button(10) # same
-        self.gpio35_2 = Button(19) # same
+        self.gpio07_0 = InputDevice(4) # same
+        self.gpio19_1 = InputDevice(10) # same
+        self.gpio35_2 = InputDevice(19) # same
 
-        self.gpio36_0 = Button(16) # same
+        self.gpio36_0 = InputDevice(16) # same
 
         # send a, b , c, d data to arduino
         self.gpio29_0 = LED(5) # same
@@ -153,14 +153,14 @@ class Ardiuno:
         self.gpio31_1.off() # default all zero
         self.gpio33_2.off() # default all zero
 
-        self.gpio21_a = Button(9) #same
-        self.gpio23_b = Button(11) #same
+        self.gpio21_a = InputDevice(9) #same
+        self.gpio23_b = InputDevice(11) #same
         self.gpio37_c = LED(26) #same
         self.gpio26_d = LED(8) # same
 
         self.gpio11_0 = LED(17) # DE/RE
         self.gpio13_0 = LED(27) # RS485 TX
-        self.gpio15_0 = Button(22) # RS485 RX
+        self.gpio15_0 = InputDevice(22) # RS485 RX
 
         self.gpio32_0 = LED(12) # Buzzer
         self.gpio32_0.on() # it is high by default
