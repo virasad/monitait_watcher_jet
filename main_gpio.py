@@ -163,7 +163,7 @@ class Ardiuno:
         self.gpio15_0 = InputDevice(22) # RS485 RX
 
         self.gpio32_0 = LED(12) # Buzzer
-        self.gpio32_0.on() # it is high by default
+        self.gpio32_0.off() # it is high by default
 
         self.gpio37_c.on() # identify default is a
         self.gpio26_d.on() # identify as the default there is no read from RPI
@@ -293,7 +293,6 @@ class Ardiuno:
                     self.c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2
                 
                 print(self.last_a, self.last_b, self.c, self.d)
-                self.gpio32_0.toggle()
                 time.sleep(0.01)
             except Exception as e:
                 print(f"arduino GPIO reader {e}")
