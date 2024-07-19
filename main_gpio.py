@@ -197,7 +197,6 @@ class Ardiuno:
             except Exception as ee:
                 err_msg = err_msg + "-ser_init"
                 self.serial_connection = False
-                self.serial_connection = False
                 print(e)
                 return False
 
@@ -253,7 +252,7 @@ class Ardiuno:
             try:
                 in_bit_a = self.gpio21_a.value # read arduino a,b address
                 in_bit_b = self.gpio23_b.value
-                print(in_bit_a, in_bit_b)
+
                 in_bit_0 = self.gpio07_0.value # read arduino data
                 in_bit_1 = self.gpio19_1.value
                 in_bit_2 = self.gpio35_2.value
@@ -287,12 +286,11 @@ class Ardiuno:
                     start_ts = time.time()
                     self.get_ts = 1/(start_ts - self.old_start_ts)+0.9*self.get_ts
                     self.old_start_ts = start_ts
-                elif in_bit_a and in_bit_b: # read arduino data d (A7 in 15 levels [0..15])
+                elif in_bit_a and in_bit_b: # read arduino battery (A6 in 8 levels [0..7])
                     self.d = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2
-                else:                       # read arduino data c (A5 in 15 levels [0..15])
+                else:                       # read arduino data c (A7 in 8 levels [0..7])
                     self.c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2
                 
-                print(self.last_a, self.last_b, self.c, self.d, self.serial_data)
                 time.sleep(0.01)
             except Exception as e:
                 print(f"arduino GPIO reader {e}")
@@ -430,7 +428,6 @@ class Counter:
                 extra_info = {}
                 ts = time.time()
                 a ,b ,c, d ,dps = self.arduino.read_GPIO()
-                print(a, b , c, d, dps)
                 # print(f"counter > run {a} ,{b} ,{c} ,{dps}" )
                 if a + b > dps or ts - self.last_server_signal > self.watcher_live_signal:
                     self.last_server_signal = ts
