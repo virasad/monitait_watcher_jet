@@ -29,7 +29,7 @@ unsigned int battery;
 unsigned int c = 0; 
 unsigned int e = 0; // extra analog read on A7
 unsigned int i = 0; // counter for serial print
-unsigned int counter_rpi_reboot = 100;
+unsigned int counter_rpi_reboot = 1000;
 unsigned int restart_counter = 1;
 long counter_a_b = 0;
 unsigned long elapsed_speed=100;
@@ -146,7 +146,7 @@ void loop() {
   now_millis = millis();
   elapsed_speed =  long(50/(now_millis - a_capture_time) + 50/(now_millis - b_capture_time) + elapsed_speed*999/1000) ;
   counter_rpi_reboot = (elapsed_speed+1000)*restart_counter;
-  counter_a_b = abs(counter_a + counter_b);
+  counter_a_b = (999*counter_a_b + abs(counter_a + counter_b))/1000;
   if (battery < 800 or counter_a_b > counter_rpi_reboot/2)
     digitalWrite(Warning, HIGH);
   else
@@ -154,9 +154,9 @@ void loop() {
 
       
   if (counter_a_b > counter_rpi_reboot){
-//    digitalWrite(rpi_off, HIGH);
-//    delay(1000);
-//    digitalWrite(rpi_off, LOW);
+    digitalWrite(rpi_off, HIGH);
+    delay(1000);
+    digitalWrite(rpi_off, LOW);
     if (restart_counter < 500){
         restart_counter = restart_counter * 2;
         counter_rpi_reboot = (elapsed_speed+1000)*restart_counter;
