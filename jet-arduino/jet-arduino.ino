@@ -6,8 +6,8 @@ const byte u = 5; // pwm u
 const byte b = 6; // pwm b
 const byte piPin = 11; // RPI Signal to Arduino
 const byte a_or_b = 18; // RPI Address to Arduino
-const byte Warning = 13; // Warning LED Panel
-const byte DataCapture = 10; // Link LED Panel
+const byte Warning = 10; // Warning LED Panel
+const byte DataCapture = 13; // Link LED Panel
 const byte rpi_off = 12; // To force restart RPI by Arduino
 const byte a_identifier = 8; // RPI Address to Arduino
 const byte b_identifier = 9; // RPI Address to Arduino
@@ -72,11 +72,13 @@ void loop() {
   digitalWrite(DataCapture, LOW);
   i++;
   if ( i > 500){
-    Serial.println(String(encoder_counter) + "," + "-23" + "," + String(counter_a) + "," + String(counter_b) + "," + String(c) + "," + String(battery/10 - 2) + "," + String(elapsed_speed) + "," + String(restart_counter));
+    Serial.println(String(encoder_counter) + "," + "-24" + "," + String(counter_a) + "," + String(counter_b) + "," + String(c) + "," + String(battery/10 - 2) + "," + String(elapsed_speed) + "," + String(restart_counter));
     i = 0;
   }
   // check if RPI is signaling the ARDUINO
   if (digitalRead(piPin)==LOW){
+    wdt_reset();
+    counter_a_b = 0;
     digitalWrite(DataCapture, HIGH);
     get_byte = 0;
     for(int i = 0; i < 3; i++){
@@ -104,10 +106,10 @@ void loop() {
     if (counter_a > 0){
       digitalWrite(a_identifier, HIGH);
       digitalWrite(b_identifier, LOW);
-      if (counter_a < 16)
-        out_pins_number = counter_a % 16;
-      else if (counter_a >= 16)
-        out_pins_number = 15;
+      if (counter_a < 8)
+        out_pins_number = counter_a % 8;
+      else if (counter_a >= 7)
+        out_pins_number = 7;
       put_byte_on_pins(out_pins_number);
       delay(5);  
     }
@@ -116,9 +118,9 @@ void loop() {
       digitalWrite(a_identifier, LOW);
       digitalWrite(b_identifier, HIGH);
       if (counter_b < 16)
-        out_pins_number = counter_b % 16;
-      else if (counter_b >= 16)
-        out_pins_number = 15;
+        out_pins_number = counter_b % 8;
+      else if (counter_b >= 7)
+        out_pins_number = 7;
       put_byte_on_pins(out_pins_number);
       delay(5);   
     }
@@ -152,9 +154,9 @@ void loop() {
 
       
   if (counter_a_b > counter_rpi_reboot){
-    digitalWrite(rpi_off, HIGH);
-    delay(1000);
-    digitalWrite(rpi_off, LOW);
+//    digitalWrite(rpi_off, HIGH);
+//    delay(1000);
+//    digitalWrite(rpi_off, LOW);
     if (restart_counter < 500){
         restart_counter = restart_counter * 2;
         counter_rpi_reboot = (elapsed_speed+1000)*restart_counter;

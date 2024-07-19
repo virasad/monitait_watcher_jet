@@ -162,8 +162,8 @@ class Ardiuno:
         self.gpio13_0 = LED(27) # RS485 TX
         self.gpio15_0 = Button(22) # RS485 RX
 
-        self.gpio32_0 = Button(12) # Buzzer
-        self.gpio15_0.on() # it is high by default
+        self.gpio32_0 = LED(12) # Buzzer
+        self.gpio32_0.on() # it is high by default
 
         self.gpio37_c.on() # identify default is a
         self.gpio26_d.on() # identify as the default there is no read from RPI
@@ -253,7 +253,7 @@ class Ardiuno:
             try:
                 in_bit_a = self.gpio21_a.is_pressed # read arduino a,b address
                 in_bit_b = self.gpio23_b.is_pressed
-
+                print(in_bit_a, in_bit_b)
                 in_bit_0 = self.gpio07_0.is_pressed # read arduino data
                 in_bit_1 = self.gpio19_1.is_pressed
                 in_bit_2 = self.gpio35_2.is_pressed
