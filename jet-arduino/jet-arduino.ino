@@ -2,11 +2,11 @@
 
 const byte input_a = 2; // OK
 const byte input_b = 3; // NG
-const byte u = 5; // pwm u
-const byte b = 6; // pwm b
+const int UP_PIN = 6;
+const int DOWN_PIN = 5;
 const byte piPin = 11; // RPI Signal to Arduino
 const byte a_or_b = 18; // RPI Address to Arduino
-const byte Warning = 10; // Warning LED Panel
+const byte Ejector = 10; // Motor (warning) LED Panel
 const byte DataCapture = 13; // Link LED Panel
 const byte rpi_off = 12; // To force restart RPI by Arduino
 const byte a_identifier = 8; // RPI Address to Arduino
@@ -36,6 +36,9 @@ unsigned long elapsed_speed=100;
 volatile long a_capture_time=millis();
 volatile long b_capture_time=millis();
 unsigned long now_millis;
+int pwmup = 255;
+int pwmdown = 255;
+
 
 byte get_byte;
 byte out_pins_number;
@@ -59,7 +62,7 @@ void setup() {
   pinMode(b_identifier, OUTPUT);
   pinMode(rpi_off, OUTPUT);
   pinMode(DataCapture, OUTPUT);
-  pinMode(Warning, OUTPUT);
+  pinMode(Ejector, OUTPUT);
   
   attachInterrupt(digitalPinToInterrupt(input_a), count_up_a, RISING);
   attachInterrupt(digitalPinToInterrupt(input_b), count_up_b, RISING);
@@ -69,9 +72,62 @@ void loop() {
   // get analog data
   battery = analogRead(A6);  
   c = analogRead(A7);
-  digitalWrite(DataCapture, LOW);
+  digitalWrite(DataCapture, !DataCapture);
   i++;
-  if ( i > 500){
+
+if (Serial.available() > 0)
+  {
+//    // read the incoming byte:
+    String inString = Serial.readStringUntil('\n');
+    char inChar=inString[0];
+//    // say what you got:
+    switch (inChar){
+      case '1':
+        {analogWrite(UP_PIN, 255-pwmup);
+        analogWrite(DOWN_PIN, 255);}
+        break;
+
+      case '2':
+        {analogWrite(UP_PIN, 255);
+        analogWrite(DOWN_PIN, 255-pwmdown);}
+        break;
+
+      case '8':
+        {analogWrite(UP_PIN, 255);
+        analogWrite(DOWN_PIN, 255);}
+        break;
+
+      case '3':
+        {encoder_counter=0;}
+        break;
+
+      case '4':
+        {int commandIndex = inString.indexOf(',');
+        if (commandIndex != -1){pwmup = inString.substring(commandIndex +1).toInt();}}
+        break;
+
+      case '5':
+        {int commandIndex = inString.indexOf(',');
+        if (commandIndex != -1){pwmdown = inString.substring(commandIndex +1).toInt();}}
+        break;
+
+      case '6':
+        {digitalWrite(Ejector, HIGH);}
+        break;
+
+      case '7':
+        {digitalWrite(Ejector, LOW);}
+        break;
+
+      default: 
+      break;
+      }
+    
+    
+    }
+
+  
+  if ( i > 1){
     Serial.println(String(encoder_counter) + "," + "-24" + "," + String(counter_a) + "," + String(counter_b) + "," + String(c) + "," + String(battery/10 - 2) + "," + String(elapsed_speed) + "," + String(restart_counter));
     i = 0;
   }
@@ -79,7 +135,7 @@ void loop() {
   if (digitalRead(piPin)==LOW){
     wdt_reset();
     counter_a_b = 0;
-    digitalWrite(DataCapture, HIGH);
+    digitalWrite(DataCapture, !DataCapture);
     get_byte = 0;
     for(int i = 0; i < 3; i++){
       if(digitalRead(input_pins[i]) == 1)
@@ -148,10 +204,9 @@ void loop() {
   counter_rpi_reboot = (elapsed_speed+1000)*restart_counter;
   counter_a_b = (999*counter_a_b + abs(counter_a + counter_b))/1000;
   if (battery < 800 or counter_a_b > counter_rpi_reboot/2)
-    digitalWrite(Warning, HIGH);
+    digitalWrite(DataCapture, HIGH);
   else
-    digitalWrite(Warning, LOW);
-
+    digitalWrite(DataCapture, LOW);
       
   if (counter_a_b > counter_rpi_reboot){
     digitalWrite(rpi_off, HIGH);
