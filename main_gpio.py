@@ -137,7 +137,7 @@ class Ardiuno:
         self.restart_counter = 0
         self.gpio16_0 = InputDevice(23) # Address pin for DIP switch 3
         self.gpio18_0 = InputDevice(24) # Address pin for DIP switch 4
-        self.watcher_mode = 1*self.gpio16_0.is_pressed + 2*self.gpio18_0.is_pressed
+        self.watcher_mode = 1*self.gpio16_0.value + 2*self.gpio18_0.value
         # input a, b, c, d data from arduino
         self.gpio07_0 = InputDevice(4) # same
         self.gpio19_1 = InputDevice(10) # same
@@ -251,12 +251,12 @@ class Ardiuno:
         self.old_start_ts = time.time()
         while not self.stop_thread:
             try:
-                in_bit_a = self.gpio21_a.is_pressed # read arduino a,b address
-                in_bit_b = self.gpio23_b.is_pressed
+                in_bit_a = self.gpio21_a.value # read arduino a,b address
+                in_bit_b = self.gpio23_b.value
                 print(in_bit_a, in_bit_b)
-                in_bit_0 = self.gpio07_0.is_pressed # read arduino data
-                in_bit_1 = self.gpio19_1.is_pressed
-                in_bit_2 = self.gpio35_2.is_pressed
+                in_bit_0 = self.gpio07_0.value # read arduino data
+                in_bit_1 = self.gpio19_1.value
+                in_bit_2 = self.gpio35_2.value
 
                 a = 0
                 b = 0
@@ -265,7 +265,7 @@ class Ardiuno:
                 if (a > 0):
                     self.set_gpio_value(a)
                     self.gpio26_d.off()
-                    while (self.gpio21_a.is_pressed != self.gpio23_b.is_pressed):
+                    while (self.gpio21_a.value != self.gpio23_b.value):
                         time.sleep(0.001)
                     self.gpio26_d.on()
                     self.last_a += a
@@ -279,7 +279,7 @@ class Ardiuno:
                     self.set_gpio_value(b)
                     self.gpio37_c.off() # identify it is b
                     self.gpio26_d.off()
-                    while (self.gpio21_a.is_pressed != self.gpio23_b.is_pressed):
+                    while (self.gpio21_a.value != self.gpio23_b.value):
                         time.sleep(0.001)
                     self.gpio37_c.on() # identify default is a
                     self.gpio26_d.on()
