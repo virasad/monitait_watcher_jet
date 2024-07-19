@@ -293,7 +293,7 @@ class Ardiuno:
                     self.c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2
                 
                 print(self.last_a, self.last_b, self.c, self.d)
-                self.gpio32_0.off()
+                self.gpio32_0.toggle()
                 time.sleep(0.01)
             except Exception as e:
                 print(f"arduino GPIO reader {e}")
