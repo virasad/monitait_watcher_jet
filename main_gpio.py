@@ -222,6 +222,11 @@ class Ardiuno:
             try:
                 tmp_serial_data = {}
                 self.buffer += self.ser.read(2000)
+                self.ser.write("1\n".encode('utf-8'))
+                time.sleep(1)
+                self.ser.write("2\n".encode('utf-8'))
+                time.sleep(1)
+                self.ser.write("8\n".encode('utf-8'))
                 time.sleep(0.01)
                 if (b'\r\n' in self.buffer): # find line in serial data
                     last_received, self.buffer = self.buffer.split(b'\r\n')[-2:]
