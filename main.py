@@ -20,6 +20,21 @@ serial_rs485_connection = False
 camera_connection = False
 image_captured = False
 
+# A function to get IP addr
+def get_ip_address():
+  try:
+    # Create a socket connection
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    # Connect to an external server (doesn't have to be reachable)
+    s.connect(("8.8.8.8", 80))  # Google's public DNS server
+    ip_address = s.getsockname()[0]  # Get the IP address
+  except Exception as e:
+    err_msg = err_msg + "-unable-to-get-IP-address"
+  finally:
+    s.close()
+  
+  return ip_address
+
 
 try:
   dbconnect = sqlite3.connect("/home/pi/monitait_watcher_jet/monitait.db")
@@ -310,7 +325,10 @@ while flag:
           old_err_msg = err_msg
           err_msg = ""
         
-
+      # get watcher IP addr
+      ip = get_ip_address()
+      extra_info.update({"ip" : ip})
+      
       i = 0 
       r_c = watcher_update(
         register_id=hostname,
