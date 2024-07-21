@@ -50,6 +50,20 @@ except:
   db_connection = False
   pass
 
+def get_ip_address():
+  try:
+    # Create a socket connection
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    # Connect to an external server (doesn't have to be reachable)
+    s.connect(("8.8.8.8", 80))  # Google's public DNS server
+    ip_address = s.getsockname()[0]  # Get the IP address
+  except Exception as e:
+    err_msg = err_msg + "Unable to get IP address"
+  finally:
+    s.close()
+  
+  return ip_address
+
 try:
   ser = serial.Serial(
         port='/dev/serial0', baudrate = 9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=1)
@@ -410,6 +424,8 @@ while flag:
             initial_psi = abs(estimated_psi)
           extra_info.update({"estimated_psi" : abs(estimated_psi)}) 
           
+          ip = get_ip_address()
+          extra_info.update({"ip" : ip})
           r_c_1 = watcher_update(
             register_id=hostname+"-1",
             quantity=0,
