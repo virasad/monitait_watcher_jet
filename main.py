@@ -50,6 +50,7 @@ except:
   db_connection = False
   pass
 
+# A function to get IP addr
 def get_ip_address():
   try:
     # Create a socket connection
@@ -58,7 +59,7 @@ def get_ip_address():
     s.connect(("8.8.8.8", 80))  # Google's public DNS server
     ip_address = s.getsockname()[0]  # Get the IP address
   except Exception as e:
-    err_msg = err_msg + "Unable to get IP address"
+    err_msg = err_msg + "-unable-to-get-IP-address"
   finally:
     s.close()
   
@@ -403,14 +404,6 @@ while flag:
           right_crop = 2
           bottom_crop = 700
           
-          
-          
-          
-          
-          
-          
-          
-          
           # Crop 200 pixels from top and bottom the image
           src = src[:height-bottom_crop, left_crop:width-right_crop]
           # src = src[100:100+new_height, :, :]
@@ -432,6 +425,7 @@ while flag:
             initial_psi = abs(estimated_psi)
           extra_info.update({"estimated_psi" : abs(estimated_psi)}) 
           
+          # get watcher IP addr
           ip = get_ip_address()
           extra_info.update({"ip" : ip})
           r_c_1 = watcher_update(
