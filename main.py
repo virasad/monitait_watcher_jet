@@ -318,10 +318,10 @@ while flag:
           new_width = width
 
           # Crop 200 pixels from top and bottom the image
-          src = src[100:100+new_height, :, :]
+          src1 = src[286:880, 498:1188]
           
           # Convert it to gray
-          gray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
+          gray = cv2.cvtColor(src1, cv2.COLOR_BGR2GRAY)
 
           # Reduce the noise to avoid false circle detection
           gray = cv2.medianBlur(gray, 5)
@@ -344,10 +344,8 @@ while flag:
               # drowing circle
               # cv2.circle(src, center, radius, (255, 0, 255), 3)
                                 
-              # Estimation the tank height
-              estimated_height = (radius + 63.3) / 33.3
-              
-              estimated_tank_volume = 3.14 * (tank_diameter**2) * estimated_height
+              # Estimation the tank volume
+              estimated_tank_volume = -0.0045008791208791*(radius**2) + 1.0258476923077*radius - 17.456805274725
               
             cv2.putText(src, f'Radius, {radius}, Estimated volume, {estimated_tank_volume}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2, cv2.LINE_4) 
           else:
