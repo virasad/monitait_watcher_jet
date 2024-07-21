@@ -403,6 +403,14 @@ while flag:
           right_crop = 2
           bottom_crop = 700
           
+          
+          
+          
+          
+          
+          
+          
+          
           # Crop 200 pixels from top and bottom the image
           src = src[:height-bottom_crop, left_crop:width-right_crop]
           # src = src[100:100+new_height, :, :]
