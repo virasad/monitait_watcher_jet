@@ -425,9 +425,6 @@ while flag:
             initial_psi = abs(estimated_psi)
           extra_info.update({"estimated_psi" : abs(estimated_psi)}) 
           
-          # get watcher IP addr
-          ip = get_ip_address()
-          extra_info.update({"ip" : ip})
           r_c_1 = watcher_update(
             register_id=hostname+"-1",
             quantity=0,
@@ -454,6 +451,10 @@ while flag:
           old_err_msg = err_msg
           err_msg = ""
 
+      # get watcher IP addr
+      ip = get_ip_address()
+      extra_info.update({"ip" : ip})
+      
       i = 0 
       r_c = watcher_update(
         register_id=hostname,
