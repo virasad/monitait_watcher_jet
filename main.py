@@ -326,8 +326,8 @@ while flag:
           err_msg = ""
         
       # get watcher IP addr
-      ip = get_ip_address()
-      extra_info.update({"ip" : ip})
+      local_ip = get_ip_address()
+      extra_info.update({"local_ip" : local_ip})
       
       i = 0 
       r_c = watcher_update(
