@@ -437,7 +437,7 @@ while flag:
             internet_connection = True
           else:
             internet_connection = False
-        os.remove(f"{image_path_2}.jpg")
+          os.remove(f"{image_path_2}.jpg")
       except Exception as e:
         err_msg = err_msg + "-cam_read_2-" + str(e)
         pass
