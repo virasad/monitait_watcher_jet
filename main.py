@@ -74,7 +74,8 @@ try:
   last_received = ''
   ser.flushInput()
   extra_info = {}
-  extra_info_1 = {}
+  extra_info_volume = {}
+  extra_info_gauge = {}
 except:
   err_msg = err_msg + "-ser_init"
   serial_connection = False
@@ -352,7 +353,7 @@ while flag:
             estimated_tank_volume = -1
           
           # Writing the output image
-          extra_info_1.update({"tank_volume" : estimated_tank_volume})  
+          extra_info_volume.update({"tank_volume" : estimated_tank_volume})  
           cv2.imwrite(f"{image_path}.jpg", src)
           initial_tank_volume = estimated_tank_volume
           
@@ -364,7 +365,7 @@ while flag:
             image_path=f"{image_path}.jpg",
             product_id=0,
             lot_info=0,
-            extra_info= extra_info_1)
+            extra_info= extra_info_volume)
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
@@ -383,7 +384,7 @@ while flag:
     #   print(f"File {image_path} does not exist, so no action was taken.")
     
     if j > 200:
-      
+      j=0   # reset counting index
       # Start to capture image from the Gauge
       try:
         video_cap = cv2.VideoCapture(gauge_snapshot_url)
@@ -421,7 +422,7 @@ while flag:
           except:
             estimated_psi = 0
             initial_psi = abs(estimated_psi)
-          extra_info.update({"estimated_psi" : abs(estimated_psi)}) 
+          extra_info_gauge.update({"estimated_psi" : abs(estimated_psi)}) 
           
           r_c_1 = watcher_update(
             register_id=hostname+"-1",
@@ -431,13 +432,12 @@ while flag:
             image_path=f"{image_path_2}.jpg",
             product_id=0,
             lot_info=0,
-            extra_info= extra_info)
+            extra_info= extra_info_gauge)
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
             internet_connection = False
         os.remove(f"{image_path_2}.jpg")
-        j=0
       except Exception as e:
         err_msg = err_msg + "-cam_read_2-" + str(e)
         pass
@@ -450,8 +450,8 @@ while flag:
           err_msg = ""
 
       # get watcher IP addr
-      ip = get_ip_address()
-      extra_info.update({"ip" : ip})
+      local_ip = get_ip_address()
+      extra_info.update({"local_ip" : local_ip})
       
       i = 0 
       r_c = watcher_update(
