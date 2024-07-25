@@ -85,7 +85,7 @@ try:
   video_cap = cv2.VideoCapture(snapshot_url)
   video_cap_1 = cv2.VideoCapture(snapshot_url)
         
-  if video_cap.isOpened() and video_cap_1.isOpened():
+  if video_cap.isOpened() or video_cap_1.isOpened():
     video_cap.release()
     video_cap_1.release()   
     # print("The camera is ready")
