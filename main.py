@@ -322,33 +322,72 @@ while flag:
           src1 = src[286:880, 498:1188]
           
           # Convert it to gray
-          gray = cv2.cvtColor(src1, cv2.COLOR_BGR2GRAY)
+          bg2gray = cv2.cvtColor(src1, cv2.COLOR_BGR2GRAY)
 
           # Reduce the noise to avoid false circle detection
+          gray = cv2.medianBlur(bg2gray, 5)
+          
+          # Reduce the noise to avoid false circle detection
           gray = cv2.medianBlur(gray, 5)
+          blurred = cv2.GaussianBlur(gray, (11, 11), 0)
+          binary_thresh = cv2.threshold(blurred, 200, 255, cv2.THRESH_BINARY)[1]
+          erode_thresh = cv2.erode(binary_thresh, None, iterations=2)
+          thresh = cv2.dilate(erode_thresh, None, iterations=4)
 
+          pre_rect_area, max_rect_area = -1, -1
+          contours, hier = cv2.findContours(thresh,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
+          # Finding the largest spat area
+          for cnt in contours:
+            current_rect_area = cv2.contourArea(cnt)
+            if current_rect_area > pre_rect_area:
+              max_rect_area = current_rect_area
+              pre_rect_area = max_rect_area
+              (x_m,y_m,w_m,h_m) = cv2.boundingRect(cnt)
+                  
           # Applynig the hough circles transform 
-          param2=10
+          param2=80
           rows = gray.shape[0]
-          circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 2 * rows,
-                                        param1=100, param2=param2, minRadius=10, maxRadius=100)
-
-          # Drawing the detected circles 
+          circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 2, 15,
+                                  param1=50, param2=param2, minRadius=10, maxRadius=250)
+          
+          k_index = 0
+          # Finding possible circle 
           if circles is not None:
             circles = np.uint16(np.around(circles))
-            for h in circles[0, :]:
-              center = (h[0], h[1])
-              # drowing circle center
-              # cv2.circle(src, center, 1, (0, 100, 100), 3)
-              # circle outline
-              radius = h[2]
-              # drowing circle
-              # cv2.circle(src, center, radius, (255, 0, 255), 3)
-                                
-              # Estimation the tank volume
-              estimated_tank_volume = -0.0045008791208791*(radius**2) + 1.0258476923077*radius - 17.456805274725
+            for i in circles[0, :]:
+              center = (i[0], i[1])
+              #Checking if the found circles on the proper area
+              if x_m <= center[0] <= x_m+w_m and y_m <= center[1] <= y_m+h_m:
+                k_index = k_index + 1
+                radius = i[2]
+                center = center
+            
+            if k_index == 1:
+              estimated_tank_volume = -19.95 + (1.062*radius) - 0.0034 * (radius**2)
+              radius = i[2]
+            else:
+              # Applynig the hough circles transform 
+              param2=80
+              rows = gray.shape[0]
               
-            cv2.putText(src, f'Radius, {radius}, Estimated volume, {estimated_tank_volume}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2, cv2.LINE_4) 
+              circles_2 = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 2, 2 * rows,
+                                      param1=50, param2=param2, minRadius=10, maxRadius=250)
+              # Drawing the detected circles 
+              if circles_2 is not None:
+                circles_2 = np.uint16(np.around(circles_2))
+                for i in circles_2[0, :]:
+                  center = (i[0], i[1])
+                  if x_m <= center[0] <= x_m+w_m and y_m <= center[1] <= y_m+h_m:
+                    # circle center
+                    cv2.circle(src, center, 1, (0, 100, 100), 3)
+                    # circle outline
+                    radius = i[2]
+                    cv2.circle(src, center, radius, (255, 0, 255), 3)
+                                    
+                    # Estimation the tank height
+                    estimated_tank_volume = -19.95 + (1.062*radius) - 0.0034 * (radius**2)
+                  else:
+                    pass
           else:
             estimated_tank_volume = -1
           
