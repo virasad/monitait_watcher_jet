@@ -378,12 +378,9 @@ while flag:
                 for i_index in circles_2[0, :]:
                   center = (i_index[0], i_index[1])
                   if x_m <= center[0] <= x_m+w_m and y_m <= center[1] <= y_m+h_m:
-                    # circle center
-                    cv2.circle(src, center, 1, (0, 100, 100), 3)
                     # circle outline
                     radius = i_index[2]
-                    cv2.circle(src, center, radius, (255, 0, 255), 3)
-                                    
+                            
                     # Estimation the tank height
                     estimated_tank_volume = -19.95 + (1.062*radius) - 0.0034 * (radius**2)
                   else:
