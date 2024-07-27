@@ -300,11 +300,10 @@ while flag:
 
     if camera_connection:
       j = j + 1
-    print(j)
-    if j == 5: 
+    if j == 100: 
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
-      if True:
+      try:
         video_cap = cv2.VideoCapture(snapshot_url)
         
         if video_cap.isOpened():
@@ -336,7 +335,7 @@ while flag:
           thresh = cv2.dilate(erode_thresh, None, iterations=4)
 
           pre_rect_area, max_rect_area = -1, -1
-          contours, hier = cv2.findContours(thresh,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
+          _, contours, hier = cv2.findContours(thresh,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
           # Finding the largest spat area
           for cnt in contours:
             current_rect_area = cv2.contourArea(cnt)
@@ -355,17 +354,17 @@ while flag:
           # Finding possible circle 
           if circles is not None:
             circles = np.uint16(np.around(circles))
-            for i in circles[0, :]:
-              center = (i[0], i[1])
+            for i_index in circles[0, :]:
+              center = (i_index[0], i_index[1])
               #Checking if the found circles on the proper area
               if x_m <= center[0] <= x_m+w_m and y_m <= center[1] <= y_m+h_m:
                 k_index = k_index + 1
-                radius = i[2]
+                radius = i_index[2]
                 center = center
             
             if k_index == 1:
               estimated_tank_volume = -19.95 + (1.062*radius) - 0.0034 * (radius**2)
-              radius = i[2]
+              radius = i_index[2]
             else:
               # Applynig the hough circles transform 
               param2=80
@@ -376,13 +375,13 @@ while flag:
               # Drawing the detected circles 
               if circles_2 is not None:
                 circles_2 = np.uint16(np.around(circles_2))
-                for i in circles_2[0, :]:
-                  center = (i[0], i[1])
+                for i_index in circles_2[0, :]:
+                  center = (i_index[0], i_index[1])
                   if x_m <= center[0] <= x_m+w_m and y_m <= center[1] <= y_m+h_m:
                     # circle center
                     cv2.circle(src, center, 1, (0, 100, 100), 3)
                     # circle outline
-                    radius = i[2]
+                    radius = i_index[2]
                     cv2.circle(src, center, radius, (255, 0, 255), 3)
                                     
                     # Estimation the tank height
@@ -411,9 +410,9 @@ while flag:
           else:
             internet_connection = False
           os.remove(f"{image_path}.jpg")
-      # except Exception as e:
-      #   err_msg = err_msg + "-cam_read_1-" + str(e)
-      #   pass
+      except Exception as e:
+        err_msg = err_msg + "-cam_read_1-" + str(e)
+        pass
       
       time.sleep(2)
 
@@ -423,7 +422,7 @@ while flag:
     # else:
     #   print(f"File {image_path} does not exist, so no action was taken.")
     
-    if j > 5:
+    if j > 200:
       j=0   # reset counting index
       # Start to capture image from the Gauge
       try:
