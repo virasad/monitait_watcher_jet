@@ -300,10 +300,11 @@ while flag:
 
     if camera_connection:
       j = j + 1
-    if j == 100: 
+    print(j)
+    if j == 5: 
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
-      try:
+      if True:
         video_cap = cv2.VideoCapture(snapshot_url)
         
         if video_cap.isOpened():
@@ -410,9 +411,9 @@ while flag:
           else:
             internet_connection = False
           os.remove(f"{image_path}.jpg")
-      except Exception as e:
-        err_msg = err_msg + "-cam_read_1-" + str(e)
-        pass
+      # except Exception as e:
+      #   err_msg = err_msg + "-cam_read_1-" + str(e)
+      #   pass
       
       time.sleep(2)
 
@@ -422,7 +423,7 @@ while flag:
     # else:
     #   print(f"File {image_path} does not exist, so no action was taken.")
     
-    if j > 200:
+    if j > 5:
       j=0   # reset counting index
       # Start to capture image from the Gauge
       try:
