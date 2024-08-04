@@ -314,7 +314,7 @@ while flag:
           image_path = "/home/pi/monitait_watcher_jet/" + str(image_number)
           
           # Get the original image dimensions to crop the captured image 
-          height, width, channels = src.shape
+          height, width = 1080, 1920
           # When image size is 1920 * 880
           # left = 496
           # top = 300
