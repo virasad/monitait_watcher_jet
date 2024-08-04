@@ -478,6 +478,12 @@ while flag:
         err_msg = err_msg + "-cam_read_2-" + str(e)
         pass
     
+    # Reset image capturing index 
+    if j > 210:
+      j = 0
+    else:
+      pass
+    
     if(temp_a + temp_b >= get_ts or i > 30): # send to the server of Monitait
       if err_msg:
         if (err_msg != old_err_msg):
@@ -488,7 +494,7 @@ while flag:
       # get watcher IP addr
       local_ip = get_ip_address()
       extra_info.update({"local_ip" : local_ip})
-      
+      extra_info.update({"camera_counting_index" : j})
       i = 0 
       r_c = watcher_update(
         register_id=hostname,
