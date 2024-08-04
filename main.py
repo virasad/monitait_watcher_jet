@@ -326,12 +326,11 @@ while flag:
           top = 478
           right = 838
           bottom = 182
-
-          src = src[top:height-bottom, left:width-right]
-
-          # Crop 200 pixels from top and bottom the image
-          src1 = src[286:880, 498:1188]
           
+          # Crop 200 pixels from top and bottom the image
+          # src1 = src[286:880, 498:1188]
+          src1 = src[top:height-bottom, left:width-right]
+
           # Convert it to gray
           bg2gray = cv2.cvtColor(src1, cv2.COLOR_BGR2GRAY)
 
