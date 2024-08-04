@@ -315,8 +315,19 @@ while flag:
           
           # Get the original image dimensions to crop the captured image 
           height, width, channels = src.shape
-          new_height = height - 200  
-          new_width = width
+          # When image size is 1920 * 880
+          # left = 496
+          # top = 300
+          # right = 726
+          # bottom = 30
+
+          # When image size is 1920 * 1080
+          left = 608
+          top = 478
+          right = 838
+          bottom = 182
+
+          src = src[top:height-bottom, left:width-right]
 
           # Crop 200 pixels from top and bottom the image
           src1 = src[286:880, 498:1188]
@@ -441,7 +452,6 @@ while flag:
           
           # Crop 200 pixels from top and bottom the image
           src = src[:height-bottom_crop, left_crop:width-right_crop]
-          # src = src[100:100+new_height, :, :]
           cv2.imwrite(f"{image_path_2}.jpg", src)
           gauge_number = 5
           file_type='jpg'
