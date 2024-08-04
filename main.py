@@ -382,11 +382,11 @@ while flag:
                     radius = i_index[2]
                             
                     # Estimation the tank height
-                    estimated_tank_volume = -19.95 + (1.062*radius) - 0.0034 * (radius**2)
+                    estimated_tank_volume = abs(-19.95 + (1.062*radius) - 0.0034 * (radius**2))
                   else:
                     pass
           else:
-            estimated_tank_volume = -1
+            estimated_tank_volume = 1
           
           # Writing the output image
           extra_info_volume.update({"tank_volume" : estimated_tank_volume})  
