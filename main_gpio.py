@@ -479,7 +479,8 @@ class Scanner:
                     return self.device
         return None
 
-    def barcode_reader_evdev(self.dev):
+    def barcode_reader_evdev(self):
+        
         self.barcode_string_output = ''
         # barcode can have a 'shift' character; this switches the character set
         # from the lower to upper case variant for the next character only.
@@ -503,7 +504,7 @@ class Scanner:
     
     def read_barcode(self):
         try:
-            self.upcnumber = self.barcode_reader_evdev(self.dev)
+            self.upcnumber = self.barcode_reader_evdev()
             print(self.upcnumber)
         except KeyboardInterrupt:
             print('Keyboard interrupt')
