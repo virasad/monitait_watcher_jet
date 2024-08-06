@@ -464,9 +464,9 @@ class Scanner:
         self.barcode_string_output = ''
         for path in evdev.list_devices():
             print('path:', path)
-            self.dev = self.get_device()
-            print('selected device:', self.dev)
-            self.dev.grab()
+        self.dev = self.get_device()
+        print('selected device:', self.dev)
+        self.dev.grab()
 
     def get_device(self):
         self.devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
