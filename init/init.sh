@@ -1,6 +1,7 @@
 sudo apt-get install python3-pip -y
 sudo apt-get install sqlite3 curl libsdl2-mixer-2.0-0 libsdl2-image-2.0-0 libsdl2-2.0-0 -y
 python3 -m pip install -r /home/pi/monitait_watcher_jet/init/requirements.txt --break-system-packages
+sudo bash opencv-init.sh
 sudo cp /home/pi/monitait_watcher_jet/init/monitait-watcher-jet.service /lib/systemd/system/
 sudo chmod 644 /lib/systemd/system/monitait-watcher-jet.service
 chmod +x /home/pi/monitait_watcher_jet/main.py
