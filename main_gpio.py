@@ -547,7 +547,7 @@ class Counter:
     def run(self):
         self.last_server_signal = time.time()
         self.last_image = time.time()
-        old_barcode = ''
+        self.old_barcode = ''
         while not self.stop_thread:
             try:
                 data_saved = False
@@ -570,11 +570,11 @@ class Counter:
                         else:
                             send_image = False
                     extra_info = self.arduino.read_serial()
-                    if barcode != '' and barcode != old_barcode:                        
-                        old_barcode = barcode
+                    if barcode != '' and barcode != self.old_barcode:                        
+                        self.old_barcode = barcode
 
-                    if old_barcode !='':
-                        extra_info.update({"batch_uuid" : str(old_barcode)})
+                    if self.old_barcode != '':
+                        extra_info.update({"batch_uuid" : str(self.old_barcode)})
 
                     timestamp = datetime.datetime.utcnow()
                     if watcher_update(hostname, quantity=a, defect_quantity=b, send_img=send_image, image_path=image_name, extra_info=extra_info, timestamp=timestamp):
