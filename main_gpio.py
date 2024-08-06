@@ -512,7 +512,7 @@ class Scanner:
         except Exception as err:
             print(err)
             pass
-        self.dev.ungrab()
+#        self.dev.ungrab()
         
         return self.upcnumber
 
@@ -550,8 +550,9 @@ class Counter:
                 ts = time.time()
                 a ,b ,c, d ,dps = self.arduino.read_GPIO()
                 barcode = self.scanner.read_barcode()
-                # print(f"counter > run {a} ,{b} ,{c} ,{dps}" )
+                print(f"counter > run {a} ,{b} ,{c} ,{dps}, {barcode}")
                 if a + b > dps or ts - self.last_server_signal > self.watcher_live_signal:
+                    print("check")
                     self.last_server_signal = ts
                     if ts - self.last_image > self.take_picture_interval:
                         captured, image_name = self.camera.capture_and_save()
@@ -563,9 +564,10 @@ class Counter:
                             send_image = False
                     extra_info = self.arduino.read_serial()
                     if self.scanner.barcode_string_output != '':
+                        extra_info.update({"batch_uuid" : str(barcode)})
 
-                        extra_info.update({"batch_uuid" : barcode})
                     timestamp = datetime.datetime.utcnow()
+                    print(extra_info)
                     if watcher_update(hostname, quantity=a, defect_quantity=b, send_img=send_image, image_path=image_name, extra_info=extra_info, timestamp=timestamp):
                         data_saved = True
                     else:
