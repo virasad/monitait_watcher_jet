@@ -461,6 +461,7 @@ class Scanner:
         self.ERROR_CHARACTER = '?'
         self.VALUE_UP = 0
         self.VALUE_DOWN = 1
+        self.barcode_string_output = ''
 
     def barcode_reader_evdev(self):
         self.barcode_string_output = ''
