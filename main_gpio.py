@@ -479,7 +479,7 @@ class Scanner:
                     return self.device
         return None
 
-    def barcode_reader_evdev(self):
+    def barcode_reader_evdev(self.dev):
         self.barcode_string_output = ''
         # barcode can have a 'shift' character; this switches the character set
         # from the lower to upper case variant for the next character only.
