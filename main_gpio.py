@@ -504,9 +504,8 @@ class Scanner:
             self.dev.grab()
 
             try:
-                while True:
-                    self.upcnumber = self.barcode_reader_evdev(self.dev)
-                    print(self.upcnumber)
+                self.upcnumber = self.barcode_reader_evdev(self.dev)
+                print(self.upcnumber)
             except KeyboardInterrupt:
                 print('Keyboard interrupt')
                 pass
@@ -514,6 +513,8 @@ class Scanner:
                 print(err)
                 pass
             self.dev.ungrab()
+        
+        return self.upcnumber
 
 
 class Counter:
@@ -548,6 +549,7 @@ class Counter:
                 extra_info = {}
                 ts = time.time()
                 a ,b ,c, d ,dps = self.arduino.read_GPIO()
+                barcode = self.scanner.read_barcode()
                 # print(f"counter > run {a} ,{b} ,{c} ,{dps}" )
                 if a + b > dps or ts - self.last_server_signal > self.watcher_live_signal:
                     self.last_server_signal = ts
@@ -561,7 +563,8 @@ class Counter:
                             send_image = False
                     extra_info = self.arduino.read_serial()
                     if self.scanner.barcode_string_output != '':
-                        extra_info.update({"batch_uuid" : self.scanner.barcode_string_output})
+
+                        extra_info.update({"batch_uuid" : barcode})
                     timestamp = datetime.datetime.utcnow()
                     if watcher_update(hostname, quantity=a, defect_quantity=b, send_img=send_image, image_path=image_name, extra_info=extra_info, timestamp=timestamp):
                         data_saved = True
