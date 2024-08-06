@@ -547,6 +547,7 @@ class Counter:
     def run(self):
         self.last_server_signal = time.time()
         self.last_image = time.time()
+        old_barcode = ''
         while not self.stop_thread:
             try:
                 data_saved = False
@@ -572,7 +573,8 @@ class Counter:
                     if barcode != '' and barcode != old_barcode:                        
                         old_barcode = barcode
 
-                    extra_info.update({"batch_uuid" : str(old_barcode)})
+                    if old_barcode !='':
+                        extra_info.update({"batch_uuid" : str(old_barcode)})
 
                     timestamp = datetime.datetime.utcnow()
                     if watcher_update(hostname, quantity=a, defect_quantity=b, send_img=send_image, image_path=image_name, extra_info=extra_info, timestamp=timestamp):
