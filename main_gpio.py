@@ -462,6 +462,22 @@ class Scanner:
         self.VALUE_UP = 0
         self.VALUE_DOWN = 1
         self.barcode_string_output = ''
+        for path in evdev.list_devices():
+            print('path:', path)
+            self.dev = self.get_device()
+            print('selected device:', self.dev)
+            self.dev.grab()
+
+    def get_device(self):
+        self.devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
+        for self.device in self.devices:
+            print('device:', self.device)
+            print('info:', self.device.info)
+            print(self.device.path, self.device.name, self.device.phys)
+            for vp in self.VENDOR_PRODUCT:
+                if self.device.info.vendor == vp[0] and self.device.info.product == vp[1]:
+                    return self.device
+        return None
 
     def barcode_reader_evdev(self):
         self.barcode_string_output = ''
@@ -484,35 +500,18 @@ class Scanner:
                 self.barcode_string_output += ch
         
         return self.barcode_string_output
-
-    def get_device(self):
-        self.devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
-        for self.device in self.devices:
-            print('device:', self.device)
-            print('info:', self.device.info)
-            print(self.device.path, self.device.name, self.device.phys)
-            for vp in self.VENDOR_PRODUCT:
-                if self.device.info.vendor == vp[0] and self.device.info.product == vp[1]:
-                    return self.device
-        return None
     
     def read_barcode(self):
-        for path in evdev.list_devices():
-            print('path:', path)
-            self.dev = self.get_device()
-            print('selected device:', self.dev)
-            self.dev.grab()
-
-            try:
-                self.upcnumber = self.barcode_reader_evdev(self.dev)
-                print(self.upcnumber)
-            except KeyboardInterrupt:
-                print('Keyboard interrupt')
-                pass
-            except Exception as err:
-                print(err)
-                pass
-            self.dev.ungrab()
+        try:
+            self.upcnumber = self.barcode_reader_evdev(self.dev)
+            print(self.upcnumber)
+        except KeyboardInterrupt:
+            print('Keyboard interrupt')
+            pass
+        except Exception as err:
+            print(err)
+            pass
+        self.dev.ungrab()
         
         return self.upcnumber
 
