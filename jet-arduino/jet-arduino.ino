@@ -216,7 +216,7 @@ if (Serial.available() > 0)
         counter_rpi_reboot = (elapsed_speed+1000)*restart_counter;
       }
     else{
-        restart_counter = 500;
+        restart_counter = 499;
         resetFunc();
         }
     delay(1000);
