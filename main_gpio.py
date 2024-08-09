@@ -557,7 +557,7 @@ class Counter:
                 ts = time.time()
                 a ,b ,c, d ,dps = self.arduino.read_GPIO()
                 barcode = self.scanner.read_barcode()
-
+                print(a, b , dps, barcode, self.old_barcode)
                 if a + b > dps or ts - self.last_server_signal > self.watcher_live_signal:
                     print("check")
                     self.last_server_signal = ts
@@ -570,7 +570,7 @@ class Counter:
                         else:
                             send_image = False
                     extra_info = self.arduino.read_serial()
-                    if barcode != '' and barcode != self.old_barcode:                        
+                    if barcode != '' and barcode != self.old_barcode:
                         self.old_barcode = barcode
 
                     if self.old_barcode != '':
