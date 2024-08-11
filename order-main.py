@@ -14,6 +14,11 @@ import cv2
 from threading import Thread
 import evdev
 
+## URLs
+batch_url = 'https://develop-app.monitait.com/api/elastic-search/batch/'
+stationID_url = f'https://develop-app.monitait.com/api/factory/watcher/{register_id}/'
+sendbatch_url = 'https://develop-app.monitait.com/api/elastic-search/send-batch-report/'
+
 hostname = str(socket.gethostname())
 
 def handler(signal, frame):
@@ -650,12 +655,6 @@ class Counter:
 
 # Watcher hostname (register id)
 register_id = hostname
-
-## URLs
-batch_url = 'https://develop-app.monitait.com/api/elastic-search/batch/'
-stationID_url = f'https://develop-app.monitait.com/api/factory/watcher/{register_id}/'
-sendbatch_url = 'https://develop-app.monitait.com/api/elastic-search/send-batch-report/'
-
 
 # ## Setting the regiester ID in header
 # headers = {
