@@ -581,11 +581,11 @@ class Counter:
                 if batch_resp.status_code == 200 and stationID_resp.status_code == 200:
                     print("Getting to catch the order list")
                     order_list = batch_resp.json()
-
+                    batches = [entry["_source"]["batch"] for entry in order_list]
                     ## Checking the headers resp
                     if batches != []:
                         # Sending batch report data (in the main while loop)
-                        batches = [entry["_source"]["batch"] for entry in order_list]
+                        
                         print(f"The batches list are: ", {batches})
                         print("\n\n")
                         
