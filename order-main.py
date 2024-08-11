@@ -595,24 +595,50 @@ class Counter:
                             operator_scaning_barcode = self.scanner.read_barcode()
                             if "OR" in operator_scaning_barcode:
                                 # separating OR scanned barcode
-                                _, _, sales_order = operator_scaning_barcode.partition("OR")
+                                _, _, scaned_sales_order = operator_scaning_barcode.partition("OR")
                                 order_counting_start_flag = True
                                 print(f"The operator barcode scaned, the sales order is {sales_order}")
+                                
+                                sales_order_batch = next(item for item in batches if item["sales_order"] == scaned_sales_order) # The order which the w>print(sales_order_batch)
                             else:
                                 pass
                         
-                        # # Starting to count the boxes
-                        # finishing_order_flag = False
-                        # while not finishing_order_flag:
-                            
-                        #     ts = time.time()
-                        #     a ,b ,c, d ,dps = self.arduino.read_GPIO()
-                        #     if abs(a - a_initial) >= 1:
-                        #         a_initial = a
-                        #         # Reading the 
-                        #         barcode = self.scanner.read_barcode()
-                        #     else:
-                        #         print("counted")
+                        
+                        # Starting to count the boxes
+                        finished_order_flag = False
+                        while (not finished_order_flag) and order_counting_start_flag:
+                            ts = time.time()
+                            a ,b ,c, d ,dps = self.arduino.read_GPIO()
+                            print("a ,b ,c, d ,dps", a ,b ,c, d ,dps)
+                            if abs(a - a_initial) >= 1:
+                                a_initial = a
+                                box_scaned_barcode = 0
+                                # Reading the box barcode
+                                scaned_box_barcode_flag = False
+                                waiting_start_time = time.time()
+                                while not scaned_box_barcode_flag:
+                                    box_scaned_barcode = self.scanner.read_barcode()
+                                    print("scaned barcoded of the box", box_scaned_barcode)
+                                    # Check if 10 seconds have passed
+                                    if time.time() - waiting_start_time > 30 or box_scaned_barcode != 0:
+                                        
+                                        for batch in sales_order_batch:
+                                            if batch['assigned_id']==box_scaned_barcode:
+                                                # Extract uniq_id
+                                                uniq_id = batch['uniq_id']
+                                                # Decrease quantity by 1 if it's greater than 0
+                                                if batch['quantity'] > 0:
+                                                    batch['quantity'] -= 1
+                                                    
+                                        scaned_box_barcode_flag = True
+                                        print("Box not detected by the scanner :(")
+                                        break
+                                
+                                if all(item['quantity'] == 0 for item in items):
+                                    finished_order_flag = True
+                                    break
+                            else:
+                                print("Box not counted yet")
                             
                             
                         #     print(a, b , dps, barcode, self.old_barcode)
