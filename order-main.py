@@ -652,7 +652,7 @@ class Counter:
 register_id = hostname
 
 ## URLs
-header_url = 'https://develop-app.monitait.com/api/elastic-search/batch/'
+batch_url = 'https://develop-app.monitait.com/api/elastic-search/batch/'
 stationID_url = f'https://develop-app.monitait.com/api/factory/watcher/{register_id}/'
 sendbatch_url = 'https://develop-app.monitait.com/api/elastic-search/send-batch-report/'
 
@@ -685,7 +685,8 @@ arduino = main_gpio.Ardiuno()
 camera = main_gpio.Camera()
 db = main_gpio.DB()
 scanner = main_gpio.Scanner()
-counter = main_gpio.Counter(arduino=arduino, db=db, camera=camera, scanner=scanner)
+counter = main_gpio.Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, batch_url=batch_url, stationID_url= stationID_url
+                            sendbatch_url=sendbatch_url, register_id=register_id)
 Thread(target=counter.run).start()
 time.sleep(10)
 Thread(target=counter.db_checker).start()
