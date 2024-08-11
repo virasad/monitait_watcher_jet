@@ -586,7 +586,7 @@ class Counter:
                     if batches != []:
                         # Sending batch report data (in the main while loop)
                         
-                        print(f"The batches list are: ", {batches})
+                        print(f"The batches list are: {batches}")
                         print("\n\n")
                         
                         # Waiting to start by scanning "ORXXX" 
