@@ -597,7 +597,7 @@ class Counter:
                                 # separating OR scanned barcode
                                 _, _, scaned_sales_order = operator_scaning_barcode.partition("OR")
                                 order_counting_start_flag = True
-                                print(f"The operator barcode scaned, the sales order is {sales_order}")
+                                print(f"The operator barcode scaned, the sales order is {scaned_sales_order}")
                                 
                                 sales_order_batch = next(item for item in batches if item["sales_order"] == scaned_sales_order) # The order which the w>print(sales_order_batch)
                             else:
