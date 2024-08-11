@@ -681,11 +681,11 @@ sendbatch_url = 'https://develop-app.monitait.com/api/elastic-search/send-batch-
 
 # sales_order_batch = next(item for item in batches if item["sales_order"] == scaned_sales_order) # The order which the w>print(sales_order_batch)
 
-arduino = main_gpio.Ardiuno()
-camera = main_gpio.Camera()
-db = main_gpio.DB()
-scanner = main_gpio.Scanner()
-counter = main_gpio.Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, batch_url=batch_url, stationID_url= stationID_url
+arduino = Ardiuno()
+camera = Camera()
+db = DB()
+scanner = Scanner()
+counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, batch_url=batch_url, stationID_url= stationID_url,
                             sendbatch_url=sendbatch_url, register_id=register_id)
 Thread(target=counter.run).start()
 time.sleep(10)
