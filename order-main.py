@@ -624,8 +624,7 @@ class Counter:
                                     if time.time() - waiting_start_time > 30 or box_scaned_barcode != 0:
                                         print("inner loop")
                                         for batch in sales_order_batch:
-                                            print(batch['assigned_id'], box_scaned_barcode, type(batch['assigned_id']), type(box_scaned_barcode), batch['assigned_id']==box_scaned_barcode)
-                                            if batch['assigned_id']==box_scaned_barcode:
+                                            if batch['assigned_id']==str(box_scaned_barcode):
                                                 # Extract uniq_id
                                                 uniq_id = batch['uniq_id']
                                                 # Decrease quantity by 1 if it's greater than 0
