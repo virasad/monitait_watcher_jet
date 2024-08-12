@@ -571,7 +571,7 @@ class Counter:
                 send_image = False
                 image_name = ""
                 extra_info = {}
-                
+                sales_order_batch = {}  
                 # Getting order from URL
                 batch_resp = requests.get(self.batch_url, headers=self.headers)
                 
@@ -600,9 +600,7 @@ class Counter:
                                     print("batch", batch, batch["sales_order"], scaned_sales_order, batch["sales_order"] == int(scaned_sales_order))
                                     if batch["sales_order"] == int(scaned_sales_order):
                                         sales_order_batch = batch
-                                    else:
-                                        sales_order_batch = {}  
-                                
+                                        
                                 print("sales_order_batch", sales_order_batch)
                             else:
                                 pass
