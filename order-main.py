@@ -571,7 +571,7 @@ class Counter:
                 send_image = False
                 image_name = ""
                 extra_info = {}
-                sales_order_batch = {}  
+                order_batches = {}  
                 # Getting order from URL
                 batch_resp = requests.get(self.batch_url, headers=self.headers)
                 
@@ -581,9 +581,9 @@ class Counter:
                 if batch_resp.status_code == 200 and stationID_resp.status_code == 200:
                     print("Getting to catch the order list")
                     order_list = batch_resp.json()
-                    batches = [entry["_source"]["batch"] for entry in order_list]
+                    orders = [entry["_source"]["batch"] for entry in order_list]
                     ## Checking the headers resp
-                    if batches != []:
+                    if orders != []:
                         # Sending batch report data (in the main while loop)
                         
                         # Waiting to start by scanning "ORXXX" 
@@ -596,12 +596,12 @@ class Counter:
                                 order_counting_start_flag = True
                                 print(f"The operator barcode scaned, the sales order is {scaned_sales_order}")
                                 
-                                for batch in batches:
-                                    print("batch", batch, batch["sales_order"], scaned_sales_order, batch["sales_order"] == int(scaned_sales_order))
-                                    if batch["sales_order"] == int(scaned_sales_order):
-                                        sales_order_batch = batch
+                                for order in orders:
+                                    print(order["sales_order"], scaned_sales_order, order["sales_order"] == int(scaned_sales_order))
+                                    if order["sales_order"] == int(scaned_sales_order):
+                                        order_batches = order['batches']
                                         
-                                print("sales_order_batch", sales_order_batch)
+                                print("order_batches", order_batches)
                             else:
                                 pass
                         
@@ -623,7 +623,8 @@ class Counter:
                                     # Check if 10 seconds have passed
                                     if time.time() - waiting_start_time > 30 or box_scaned_barcode != 0:
                                         print("inner loop")
-                                        for batch in sales_order_batch:
+                                        for batch in order_batches:
+                                            print(batch['assigned_id'], str(box_scaned_barcode), type(batch['assigned_id']), type(str(box_scaned_barcode)))
                                             if batch['assigned_id']==str(box_scaned_barcode):
                                                 # Extract uniq_id
                                                 uniq_id = batch['uniq_id']
@@ -637,7 +638,7 @@ class Counter:
                                     # else:
                                     #     print("Box not detected by the scanner :(")
                                 
-                                if all(item['quantity'] == 0 for item in sales_order_batch):
+                                if all(item['quantity'] == 0 for item in order_batches):
                                     finished_order_flag = True
                                     break
                             # else:
@@ -673,7 +674,7 @@ class Counter:
                         #             self.arduino.minus(a=a, b=b)
                         
                     else:
-                        print("The batches are empty, waiting to fill the batch list")
+                        print("The orders list are empty, waiting to fill the order list")
                     
                 else:
                     print(f"request error in the requests, batch status code {batch_resp.status_code}, stationID status code {stationID_resp.status_code}")
@@ -708,7 +709,7 @@ class Counter:
 # ## Waiting to scan sales_order value to find which batch should start
 # scaned_sales_order = 45
 
-# sales_order_batch = next(item for item in batches if item["sales_order"] == scaned_sales_order) # The order which the w>print(sales_order_batch)
+# order_batches = next(item for item in batches if item["sales_order"] == scaned_sales_order) # The order which the w>print(order_batches)
 
 arduino = Ardiuno()
 camera = Camera()
