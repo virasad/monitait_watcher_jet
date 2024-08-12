@@ -599,7 +599,11 @@ class Counter:
                                 order_counting_start_flag = True
                                 print(f"The operator barcode scaned, the sales order is {scaned_sales_order}")
                                 
-                                sales_order_batch = next(item for item in batches if item["sales_order"] == scaned_sales_order) # The order which the w>print(sales_order_batch)
+                                for order in batches:
+                                    if order["sales_order"] == scaned_sales_order:
+                                        sales_order_batch = order
+                                    else:
+                                        sales_order_batch = {}  
                             else:
                                 pass
                         
