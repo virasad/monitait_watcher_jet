@@ -579,11 +579,15 @@ class Counter:
                 stationID_resp = requests.get(self.stationID_url, headers=self.headers)
 
                 if batch_resp.status_code == 200 and stationID_resp.status_code == 200:
-                    print("Getting to catch the order list")
                     order_list = batch_resp.json()
+                    stationID_list = stationID_resp.json()
+                    
+                    stationID = stationID_list['station']['id']
+                    
                     orders = [entry["_source"]["batch"] for entry in order_list]
                     ## Checking the headers resp
                     if orders != []:
+                        print("The order catched successfully")
                         # Sending batch report data (in the main while loop)
                         
                         # Waiting to start by scanning "ORXXX" 
@@ -592,13 +596,13 @@ class Counter:
                             operator_scaning_barcode = self.scanner.read_barcode()
                             if "OR" in operator_scaning_barcode:
                                 # separating OR scanned barcode
-                                _, _, scaned_sales_order = operator_scaning_barcode.partition("OR")
+                                _, _, scanned_sales_order = operator_scaning_barcode.partition("OR")
                                 order_counting_start_flag = True
-                                print(f"The operator barcode scaned, the sales order is {scaned_sales_order}")
+                                print(f"The operator barcode scanned, the sales order is {scanned_sales_order}")
                                 
                                 for order in orders:
-                                    print(order["sales_order"], scaned_sales_order, order["sales_order"] == int(scaned_sales_order))
-                                    if order["sales_order"] == int(scaned_sales_order):
+                                    print(order["sales_order"], scanned_sales_order, order["sales_order"] == int(scanned_sales_order))
+                                    if order["sales_order"] == int(scanned_sales_order):
                                         order_batches = order['batches']
                                         
                                 print("order_batches", order_batches)
@@ -613,27 +617,37 @@ class Counter:
                             if abs(a - a_initial) >= 1:
                                 print("a ,b ,c, d ,dps", a ,b ,c, d ,dps)
                                 a_initial = a
-                                box_scaned_barcode = 0
+                                box_scanned_barcode = 0
                                 # Reading the box barcode
-                                scaned_box_barcode_flag = False
+                                scanned_box_barcode_flag = False
                                 waiting_start_time = time.time()
-                                while not scaned_box_barcode_flag:
-                                    box_scaned_barcode = self.scanner.read_barcode()
-                                    print("scaned barcoded of the box", box_scaned_barcode, time.time() - waiting_start_time > 30 or box_scaned_barcode != 0)
+                                while not scanned_box_barcode_flag:
+                                    box_scanned_barcode = self.scanner.read_barcode()
+                                    print("scanned barcoded of the box", box_scanned_barcode)
                                     # Check if 10 seconds have passed
-                                    if time.time() - waiting_start_time > 30 or box_scaned_barcode != 0:
+                                    if time.time() - waiting_start_time > 30 or box_scanned_barcode != 0:
                                         print("inner loop")
                                         for batch in order_batches:
-                                            print(batch['assigned_id'], str(box_scaned_barcode), type(batch['assigned_id']), type(str(box_scaned_barcode)))
-                                            if batch['assigned_id']==str(box_scaned_barcode):
+                                            if batch['assigned_id']==str(box_scanned_barcode):
                                                 # Extract uniq_id
                                                 uniq_id = batch['uniq_id']
                                                 # Decrease quantity by 1 if it's greater than 0
                                                 if batch['quantity'] > 0:
                                                     batch['quantity'] -= 1
                                                 print("uniq_id", uniq_id, "quantity", batch['quantity'])
+                                                
+                                                # Sendin batch to batch URL
+                                                batch_report_body = {"batch_uuid":uniq_id, "assigned_id":batch['assigned_id'],
+                                                                     "type": "new", "station": int(stationID),
+                                                                     "order_id": int(scanned_sales_order),
+                                                                     "defected_qty": 0, "added_quantity": a, 
+                                                                     "defect_image":[], "action_type": "stop"}  
+                                                
+                                                send_batch_response = requests.post(self.sendbatch_url, json=batch_report_body)   
+                                                print("Send batch status code", send_batch_response.status_code)
+                                                print("Send batch json", send_batch_response.json())
                                                     
-                                        scaned_box_barcode_flag = True
+                                        scanned_box_barcode_flag = True
                                         break
                                     # else:
                                     #     print("Box not detected by the scanner :(")
@@ -684,32 +698,6 @@ class Counter:
                 time.sleep(1)
                 print(f"counter > run {e}")
 
-# Watcher hostname (register id)
-
-
-# ## Setting the regiester ID in header
-# headers = {
-#     'Register-ID': register_id, 
-#     'Content-Type': 'application/json',
-# }
-
-# headers_resp = requests.get(header_url, headers=headers)
-
-# ## Checking the headers resp
-# print("Headers ID resp: ",headers_resp.status_code)
-# order_list = headers_resp.json()
-# # Getting the station-id of watcher with watcher-reg-id
-# stationID_resp = requests.get(stationID_url, headers=headers)
-
-# print("Station ID resp: ", stationID_resp.status_code)  
-
-# # Sending batch report data (in the main while loop)
-# batches = [entry["_source"]["batch"] for entry in order_list]
-
-# ## Waiting to scan sales_order value to find which batch should start
-# scaned_sales_order = 45
-
-# order_batches = next(item for item in batches if item["sales_order"] == scaned_sales_order) # The order which the w>print(order_batches)
 
 arduino = Ardiuno()
 camera = Camera()
