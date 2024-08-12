@@ -635,14 +635,14 @@ class Counter:
                                                     
                                         scaned_box_barcode_flag = True
                                         break
-                                    else:
-                                        print("Box not detected by the scanner :(")
+                                    # else:
+                                    #     print("Box not detected by the scanner :(")
                                 
                                 if all(item['quantity'] == 0 for item in sales_order_batch):
                                     finished_order_flag = True
                                     break
-                            else:
-                                print("Box not counted yet")
+                            # else:
+                            #     print("Box not counted yet")
                             
                             
                         #     print(a, b , dps, barcode, self.old_barcode)
