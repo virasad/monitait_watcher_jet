@@ -622,11 +622,12 @@ class Counter:
                                 waiting_start_time = time.time()
                                 while not scaned_box_barcode_flag:
                                     box_scaned_barcode = self.scanner.read_barcode()
-                                    print("scaned barcoded of the box", box_scaned_barcode)
+                                    print("scaned barcoded of the box", box_scaned_barcode, time.time() - waiting_start_time > 30 or box_scaned_barcode != 0)
                                     # Check if 10 seconds have passed
                                     if time.time() - waiting_start_time > 30 or box_scaned_barcode != 0:
                                         
                                         for batch in sales_order_batch:
+                                            print(batch['assigned_id'], box_scaned_barcode, type(batch['assigned_id']), type(box_scaned_barcode), batch['assigned_id']==box_scaned_barcode)
                                             if batch['assigned_id']==box_scaned_barcode:
                                                 # Extract uniq_id
                                                 uniq_id = batch['uniq_id']
@@ -640,7 +641,7 @@ class Counter:
                                     else:
                                         print("Box not detected by the scanner :(")
                                 
-                                if all(item['quantity'] == 0 for item in items):
+                                if all(item['quantity'] == 0 for item in sales_order_batch):
                                     finished_order_flag = True
                                     break
                             else:
