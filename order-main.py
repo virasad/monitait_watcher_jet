@@ -586,9 +586,6 @@ class Counter:
                     if batches != []:
                         # Sending batch report data (in the main while loop)
                         
-                        print(f"The batches list are: {batches}")
-                        print("\n\n")
-                        
                         # Waiting to start by scanning "ORXXX" 
                         order_counting_start_flag = False
                         while not order_counting_start_flag:
@@ -599,22 +596,24 @@ class Counter:
                                 order_counting_start_flag = True
                                 print(f"The operator barcode scaned, the sales order is {scaned_sales_order}")
                                 
-                                for order in batches:
-                                    if order["sales_order"] == scaned_sales_order:
-                                        sales_order_batch = order
+                                for batch in batches:
+                                    print("batch", batch, batch["sales_order"], scaned_sales_order, batch["sales_order"] == int(scaned_sales_order))
+                                    if batch["sales_order"] == int(scaned_sales_order):
+                                        sales_order_batch = batch
                                     else:
                                         sales_order_batch = {}  
+                                
+                                print("sales_order_batch", sales_order_batch)
                             else:
                                 pass
-                        
                         
                         # Starting to count the boxes
                         finished_order_flag = False
                         while (not finished_order_flag) and order_counting_start_flag:
                             ts = time.time()
                             a ,b ,c, d ,dps = self.arduino.read_GPIO()
-                            print("a ,b ,c, d ,dps", a ,b ,c, d ,dps)
                             if abs(a - a_initial) >= 1:
+                                print("a ,b ,c, d ,dps", a ,b ,c, d ,dps)
                                 a_initial = a
                                 box_scaned_barcode = 0
                                 # Reading the box barcode
@@ -625,7 +624,7 @@ class Counter:
                                     print("scaned barcoded of the box", box_scaned_barcode, time.time() - waiting_start_time > 30 or box_scaned_barcode != 0)
                                     # Check if 10 seconds have passed
                                     if time.time() - waiting_start_time > 30 or box_scaned_barcode != 0:
-                                        
+                                        print("inner loop")
                                         for batch in sales_order_batch:
                                             print(batch['assigned_id'], box_scaned_barcode, type(batch['assigned_id']), type(box_scaned_barcode), batch['assigned_id']==box_scaned_barcode)
                                             if batch['assigned_id']==box_scaned_barcode:
