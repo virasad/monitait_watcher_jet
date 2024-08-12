@@ -633,10 +633,12 @@ class Counter:
                                                 # Decrease quantity by 1 if it's greater than 0
                                                 if batch['quantity'] > 0:
                                                     batch['quantity'] -= 1
+                                                print("uniq_id", uniq_id, "quantity", batch['quantity'])
                                                     
                                         scaned_box_barcode_flag = True
-                                        print("Box not detected by the scanner :(")
                                         break
+                                    else:
+                                        print("Box not detected by the scanner :(")
                                 
                                 if all(item['quantity'] == 0 for item in items):
                                     finished_order_flag = True
