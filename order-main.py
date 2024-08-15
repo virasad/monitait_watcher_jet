@@ -620,6 +620,7 @@ class Counter:
                                 box_scanned_barcode = 0
                                 # Reading the box barcode
                                 scanned_box_barcode_flag = False
+                                assigned_id_flag = False
                                 waiting_start_time = time.time()
                                 while not scanned_box_barcode_flag:
                                     box_scanned_barcode = self.scanner.read_barcode()
@@ -629,6 +630,7 @@ class Counter:
                                         print("inner loop")
                                         for batch in order_batches:
                                             if batch['assigned_id']==str(box_scanned_barcode):
+                                                assigned_id_flag = True
                                                 # Extract uniq_id
                                                 uniq_id = batch['uniq_id']
                                                 # Decrease quantity by 1 if it's greater than 0
@@ -648,7 +650,13 @@ class Counter:
                                                                                     headers=self.headers)   
                                                 print("Send batch status code", send_batch_response.status_code)
                                                 print("Send batch json", send_batch_response.json())
-                                                    
+                                        # Ejection process
+                                        if not assigned_id_flag:
+                                            print("The barcode is not on the order list")
+                                            # The detected barcode is not on the order list
+                                            self.arduino.gpio32_0.off()
+                                            time.sleep(1)
+                                            self.arduino.gpio32_0.on()
                                         scanned_box_barcode_flag = True
                                         break
                                     # else:
