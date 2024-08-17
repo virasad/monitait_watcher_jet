@@ -17,7 +17,7 @@ import evdev
 hostname = str(socket.gethostname())
 register_id = hostname
 global stationID
-global scanned_sales_order
+scanned_sales_order = 0
 ## URLs
 batch_url = 'https://develop-app.monitait.com/api/elastic-search/batch/'
 stationID_url = f'https://develop-app.monitait.com/api/factory/watcher/{register_id}/'
@@ -839,7 +839,7 @@ camera = Camera()
 db = DB()
 scanner = Scanner()
 counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, batch_url=batch_url, stationID_url= stationID_url,
-                            sendbatch_url=sendbatch_url, register_id=register_id)
+                            sendbatch_url=sendbatch_url, register_id=register_id, scanned_sales_order=scanned_sales_order)
 Thread(target=counter.run).start()
 # time.sleep(10)
 # Thread(target=counter.db_checker).start()
