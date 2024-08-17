@@ -97,7 +97,7 @@ class DB:
             self.cursor = self.dbconnect.cursor()
             self.cursor.execute('''CREATE TABLE IF NOT EXISTS monitait_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, register_id TEXT, temp_a INTEGER NULL, temp_b INTEGER NULL, image_name TEXT NULL, extra_info JSON, ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)''')
             self.cursor.execute('''CREATE TABLE IF NOT EXISTS watcher_order_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, sales_order INTEGER NULL, product INTEGER NULL, factory INTEGER NULL, is_done INTEGER NULL, 
-                                batches_text TEXT NOT NULL, station_id INTEGER NULL
+                                station_id INTEGER NOT NULL, batches_text TEXT NOT NULL
                                 )''')
             self.dbconnect.commit()
         except Exception as e:
@@ -115,7 +115,7 @@ class DB:
     
     def order_write(self, sales_order=0, product=0, batches_text={}, factory=0, is_done=0, station_id = 0):
         try:
-            self.cursor.execute('''insert into watcher_order_table (sales_order, product, factory, is_done, batches_text, station_id) values (?,?,?,?,?,?)''', (sales_order, product, factory, is_done, batches_text, station_id))
+            self.cursor.execute('''insert into watcher_order_table (sales_order, product, factory, is_done, station_id, batches_text) values (?,?,?,?,?,?)''', (sales_order, product, factory, is_done, station_id, batches_text))
             self.dbconnect.commit()
             return True
         except Exception as  e_ow:
@@ -720,7 +720,8 @@ class Counter:
                                         # Save the orders to database
                                         self.db.order_write(sales_order=int(scanned_sales_order), product=order["product"], factory=order["factory"], 
                                                             is_done = 0,
-                                                            batches_text= json.dumps(order_batches), station_id=stationID)
+                                                            station_id=int(stationID),
+                                                            batches_text= json.dumps(order_batches))
                                         
                                 print("order_batches", order_batches)
                             else:
