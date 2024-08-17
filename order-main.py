@@ -161,9 +161,9 @@ class DB:
             print(f"DB > delete {e}")
             return False
     
-    def order_delete(self, id):
+    def order_delete(self, sales_order):
         try:
-            self.cursor.execute("""DELETE from watcher_order_table where id = {}""".format(id))
+            self.cursor.execute("""DELETE from watcher_order_table where  sales_order = {}""".format(sales_order))
             self.dbconnect.commit()
             return True
         except Exception as e_od:
@@ -759,7 +759,7 @@ class Counter:
                                                 print("uniq_id", uniq_id, "quantity", batch['quantity'])
                                                 # Delete the privious order data
                                                 order_data = self.db.order_read()
-                                                self.db.delete(order_data[0])
+                                                self.db.order_delete(int(scanned_sales_order))
                                                 
                                                 # Write the counted order data
                                                 self.db.order_write(sales_order=int(scanned_sales_order), product=order["product"], factory=order["factory"], 
