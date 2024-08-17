@@ -594,15 +594,15 @@ class Counter:
         while not self.stop_thread:
             try:
                 data = self.db.read()
-                if len(data):
+                if len(data) != 0:
                     if watcher_update(register_id=data[1], quantity=data[2], defect_quantity=data[3], send_img=len(data[4]) > 0, image_path=data[4], extra_info=json.loads(data[5]), timestamp=datetime.datetime.strptime(data[6], '%Y-%m-%d %H:%M:%S.%f')):
                         self.db.delete(data[0])
                 time.sleep(1)
             except Exception as e:
                 print(f"counter > db_checker {e}")
     
-    def db_order_checker(self):
-        while not self.stop_thread:
+    # def db_order_checker(self):
+    #     while not self.stop_thread:
 
     def run(self):
         self.last_server_signal = time.time()
@@ -777,4 +777,4 @@ counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, batch_
                             sendbatch_url=sendbatch_url, register_id=register_id)
 Thread(target=counter.run).start()
 time.sleep(10)
-# Thread(target=counter.db_checker).start()
+Thread(target=counter.db_checker).start()
