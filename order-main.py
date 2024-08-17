@@ -611,7 +611,7 @@ class Counter:
         a_initial = 0
         ## Setting the regiester ID in header
         while not self.stop_thread:
-            try:
+            if True:
                 data_saved = False
                 send_image = False
                 image_name = ""
@@ -654,7 +654,7 @@ class Counter:
                                 
                                 # Save the orders to database
                                 self.db.order_write(sales_order=scanned_sales_order, product=orders["product"], factory=orders["factory"], 
-                                                    is_done = 0, , 
+                                                    is_done = 0,
                                                     batches_string= json.dumps(orders["batches"]))
                         
                                 order_counting_start_flag = True
@@ -764,9 +764,9 @@ class Counter:
                     print(f"request error in the requests, batch status code {batch_resp.status_code}, stationID status code {stationID_resp.status_code}")
                 
                 time.sleep(1)
-            except Exception as e:
-                time.sleep(1)
-                print(f"counter > run {e}")
+            # except Exception as e:
+            #     time.sleep(1)
+            #     print(f"counter > run {e}")
 
 
 arduino = Ardiuno()
@@ -777,4 +777,4 @@ counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, batch_
                             sendbatch_url=sendbatch_url, register_id=register_id)
 Thread(target=counter.run).start()
 time.sleep(10)
-Thread(target=counter.db_checker).start()
+# Thread(target=counter.db_checker).start()
