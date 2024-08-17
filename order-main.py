@@ -17,6 +17,7 @@ import evdev
 hostname = str(socket.gethostname())
 register_id = hostname
 global stationID
+global scanned_sales_order
 ## URLs
 batch_url = 'https://develop-app.monitait.com/api/elastic-search/batch/'
 stationID_url = f'https://develop-app.monitait.com/api/factory/watcher/{register_id}/'
