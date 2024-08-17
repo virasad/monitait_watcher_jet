@@ -690,7 +690,7 @@ class Counter:
                     orders = [entry["_source"]["batch"] for entry in order_list]
                     ## Checking the headers resp
                     if orders != []:
-                        print("The order catched successfully")
+                        print("The order catched successfully", stationID, stationID)
                         # while True:
                         #     # Ejection process
                             
@@ -763,7 +763,8 @@ class Counter:
                                                 # Write the counted order data
                                                 self.db.order_write(sales_order=int(scanned_sales_order), product=order["product"], factory=order["factory"], 
                                                             is_done = 0,
-                                                            batches_text= json.dumps(order_batches), station_id=stationID)
+                                                             station_id=stationID,
+                                                            batches_text= json.dumps(order_batches))
                                                 
                                         # Ejection process
                                         if not assigned_id_flag:
