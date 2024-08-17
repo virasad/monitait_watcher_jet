@@ -96,7 +96,9 @@ class DB:
             self.dbconnect = sqlite3.connect("/home/pi/monitait_watcher_jet/monitait.db", check_same_thread=False)
             self.cursor = self.dbconnect.cursor()
             self.cursor.execute('''create table monitait_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, register_id TEXT, temp_a INTEGER NULL, temp_b INTEGER NULL, image_name TEXT NULL, extra_info JSON, ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)''')
-            self.cursor.execute('''create table watcher_order_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, sales_order INTEGER NULL, product INTEGER NULL, batches_string TEXT NULL, factory INTEGER NULL, is_done INTEGER NULL)''')
+            self.cursor.execute('''create table watcher_order_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, sales_order INTEGER NULL, product INTEGER NULL, factory INTEGER NULL, is_done INTEGER NULL, , 
+                                batches_text TEXT NOT NULL -- Store batches as a JSON string,
+                                )''')
             self.dbconnect.commit()
         except Exception as e:
             print(f"DB > init {e}")
@@ -113,7 +115,7 @@ class DB:
     
     def order_write(self, sales_order=0, product=0, batches_string="", factory=0, is_done=0):
         try:
-            self.cursor.execute('''insert into watcher_order_table (sales_order, product, batches_string, factory, is_done) values (?,?,?,?,?)''', (sales_order, product, batches_string, factory, is_done))
+            self.cursor.execute('''insert into watcher_order_table (sales_order, product, factory, is_done, batches_string) values (?,?,?,?,?)''', (sales_order, product, factory, is_done, batches_string))
             self.dbconnect.commit()
             return True
         except Exception as  e_ow:
@@ -651,8 +653,9 @@ class Counter:
                                 _, _, scanned_sales_order = operator_scaning_barcode.partition("OR")
                                 
                                 # Save the orders to database
-                                self.db.order_write(sales_order=scanned_sales_order, product=orders["product"], 
-                                                    batches_string= str(orders["batches_string"]), factory=orders["factory"], is_done = 0)
+                                self.db.order_write(sales_order=scanned_sales_order, product=orders["product"], factory=orders["factory"], 
+                                                    is_done = 0, , 
+                                                    batches_string= json.dumps(orders["batches"]))
                         
                                 order_counting_start_flag = True
                                 print(f"The operator barcode scanned, the sales order is {scanned_sales_order}")
