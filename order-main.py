@@ -639,12 +639,12 @@ class Counter:
                     # Read the order to see is the quantity decreased
                     counted_order_data = self.db.order_read()
                     if len(counted_order_data) != 0:
-                        print("counted_order_data", counted_order_data)
                         counted_order_data_json = json.loads(counted_order_data[5])
                         for counted_batch in counted_order_data_json:
                             main_quantity = main_order_dict[counted_batch['uniq_id']]['quantity']
                             current_quantity = counted_batch['quantity']
                             if abs(main_quantity - current_quantity) >= 2:
+                                print("start post requests")
                                 main_order_dict[counted_batch['uniq_id']]['quantity'] = current_quantity
                                 # Post requests
                                 # Sendin batch to batch URL
@@ -824,7 +824,7 @@ class Counter:
             #     time.sleep(1)
             #     print(f"counter > run {e}")
 
-headers = {'Register-ID': host_name, 'Content-Type': 'application/json'}
+headers = {'Register-ID': register_id, 'Content-Type': 'application/json'}
 try:
     stationID_resp = requests.get(stationID_url, headers=headers)
     stationID_list = stationID_resp.json()
@@ -839,7 +839,7 @@ scanner = Scanner()
 counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, batch_url=batch_url, stationID_url= stationID_url,
                             sendbatch_url=sendbatch_url, register_id=register_id)
 Thread(target=counter.run).start()
-time.sleep(10)
-Thread(target=counter.db_checker).start()
+# time.sleep(10)
+# Thread(target=counter.db_checker).start()
 time.sleep(10)
 Thread(target=counter.db_order_checker).start()
