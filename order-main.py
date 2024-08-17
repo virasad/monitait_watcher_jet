@@ -97,7 +97,7 @@ class DB:
             self.cursor = self.dbconnect.cursor()
             self.cursor.execute('''CREATE TABLE IF NOT EXISTS monitait_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, register_id TEXT, temp_a INTEGER NULL, temp_b INTEGER NULL, image_name TEXT NULL, extra_info JSON, ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)''')
             self.cursor.execute('''CREATE TABLE IF NOT EXISTS watcher_order_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, sales_order INTEGER NULL, product INTEGER NULL, factory INTEGER NULL, is_done INTEGER NULL, 
-                                batches_text TEXT NOT NULL
+                                batches_text TEXT NOT NULL, station_id INTEGER NULL,
                                 )''')
             self.dbconnect.commit()
         except Exception as e:
@@ -113,9 +113,9 @@ class DB:
             print(f"DB > write {e}")
             return False
     
-    def order_write(self, sales_order=0, product=0, batches_text={}, factory=0, is_done=0):
+    def order_write(self, sales_order=0, product=0, batches_text={}, factory=0, is_done=0, station_id = 0):
         try:
-            self.cursor.execute('''insert into watcher_order_table (sales_order, product, factory, is_done, batches_text) values (?,?,?,?,?)''', (sales_order, product, factory, is_done, batches_text))
+            self.cursor.execute('''insert into watcher_order_table (sales_order, product, factory, is_done, batches_text, station_id) values (?,?,?,?,?,?)''', (sales_order, product, factory, is_done, batches_text, station_id))
             self.dbconnect.commit()
             return True
         except Exception as  e_ow:
@@ -607,8 +607,59 @@ class Counter:
             except Exception as e:
                 print(f"counter > db_checker {e}")
     
-    # def db_order_checker(self):
-    #     while not self.stop_thread:
+    def db_order_checker(self):
+        read_order_once = False
+        db_checking_flag = False
+        while not self.stop_thread:
+            try:
+                # Checking order list on the order DB to catch actual main quantity value
+                if not read_order_once:
+                    order_data = self.db.order_read()
+                    main_order_dict = {}
+                    if len(order_data) != 0:
+                        read_order_once = True
+                        db_checking_flag = True
+                        batches_json = json.loads(order_data[0][5]) # Convert batches json dumps to json
+                        for batch in batches_json:
+                            main_order_dict[batch['uniq_id']]={
+                                                            'quantity': batch['quantity'],
+                                                            'assigned_id': batch['assigned_id']}
+                            
+                    else:
+                        db_checking_flag = False
+                        read_order_once = False
+                
+                if db_checking_flag:
+                    # Read the order to see is the quantity decreased
+                    counted_order_data = self.db.order_read()
+                    if len(counted_order_data) != 0:
+                        counted_order_data_json = json.loads(counted_order_data[0][5])
+                        stationID = counted_order_data[0][6]
+                        for counted_batch in counted_order_data_json:
+                            main_quantity = main_order_dict[counted_batch['uniq_id']]['quantity']
+                            current_quantity = counted_batch['quantity']
+                            if abs(main_quantity - current_quantity) >= 2:
+                                main_order_dict[counted_batch['uniq_id']]['quantity'] = current_quantity
+                                # Post requests
+                                # Sendin batch to batch URL
+                                batch_report_body = {"batch_uuid":counted_batch['uniq_id'], "assigned_id":counted_batch['assigned_id'],
+                                                        "type": "new", "station": int(stationID),
+                                                        "order_id": int(scanned_sales_order),
+                                                        "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
+                                                        "defect_image":[], "action_type": "stop"}  
+                                
+                                send_batch_response = async_post.send_request(self.sendbatch_url, batch_report_body,
+                                                                    self.headers)
+                                print(f'Sent request, Task ID: {send_batch_response.id}')
+                                print("Send batch status code", send_batch_response.status_code)
+                                print("Send batch json", send_batch_response.json())
+                    else:
+                        pass
+                else
+                    pass
+                time.sleep(1)
+            except Exception as e_orc:
+                print(f"counter > db_order_checker {e_orc}")
 
     def run(self):
         self.last_server_signal = time.time()
@@ -668,7 +719,7 @@ class Counter:
                                         # Save the orders to database
                                         self.db.order_write(sales_order=int(scanned_sales_order), product=order["product"], factory=order["factory"], 
                                                             is_done = 0,
-                                                            batches_text= json.dumps(order_batches))
+                                                            batches_text= json.dumps(order_batches), station_id=stationID)
                                         
                                 print("order_batches", order_batches)
                             else:
@@ -703,19 +754,15 @@ class Counter:
                                                 if batch['quantity'] > 0:
                                                     batch['quantity'] -= 1
                                                 print("uniq_id", uniq_id, "quantity", batch['quantity'])
+                                                # Delete the privious order data
+                                                order_data = self.db.order_read()
+                                                self.db.delete(order_data[0])
                                                 
-                                                # Sendin batch to batch URL
-                                                batch_report_body = {"batch_uuid":uniq_id, "assigned_id":batch['assigned_id'],
-                                                                     "type": "new", "station": int(stationID),
-                                                                     "order_id": int(scanned_sales_order),
-                                                                     "defected_qty": 0, "added_quantity": a, 
-                                                                     "defect_image":[], "action_type": "stop"}  
+                                                # Write the counted order data
+                                                self.db.order_write(sales_order=int(scanned_sales_order), product=order["product"], factory=order["factory"], 
+                                                            is_done = 0,
+                                                            batches_text= json.dumps(order_batches), station_id=stationID)
                                                 
-                                                send_batch_response = async_post.send_request(self.sendbatch_url, batch_report_body,
-                                                                                 self.headers)
-                                                print(f'Sent request, Task ID: {send_batch_response.id}')
-                                                print("Send batch status code", send_batch_response.status_code)
-                                                print("Send batch json", send_batch_response.json())
                                         # Ejection process
                                         if not assigned_id_flag:
                                             print("The barcode is not on the order list")
@@ -784,3 +831,5 @@ counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, batch_
 Thread(target=counter.run).start()
 time.sleep(10)
 Thread(target=counter.db_checker).start()
+time.sleep(10)
+Thread(target=counter.db_order_checker).start()
