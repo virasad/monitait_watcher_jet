@@ -16,7 +16,7 @@ import evdev
 
 hostname = str(socket.gethostname())
 register_id = hostname
-
+global stationID
 ## URLs
 batch_url = 'https://develop-app.monitait.com/api/elastic-search/batch/'
 stationID_url = f'https://develop-app.monitait.com/api/factory/watcher/{register_id}/'
@@ -96,9 +96,15 @@ class DB:
             self.dbconnect = sqlite3.connect("/home/pi/monitait_watcher_jet/monitait.db", check_same_thread=False)
             self.cursor = self.dbconnect.cursor()
             self.cursor.execute('''CREATE TABLE IF NOT EXISTS monitait_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, register_id TEXT, temp_a INTEGER NULL, temp_b INTEGER NULL, image_name TEXT NULL, extra_info JSON, ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)''')
-            self.cursor.execute('''CREATE TABLE IF NOT EXISTS watcher_order_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, sales_order INTEGER NULL, product INTEGER NULL, factory INTEGER NULL, is_done INTEGER NULL, 
-                                station_id INTEGER NOT NULL, batches_text TEXT NOT NULL
+            self.cursor.execute('''CREATE TABLE IF NOT EXISTS watcher_order_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, sales_order INTEGER NULL, product INTEGER NULL, factory INTEGER NULL, 
+                                is_done INTEGER NULL, batches_text TEXT NOT NULL
                                 )''')
+            # Check table structure
+            self.cursor.execute("PRAGMA table_info(watcher_order_table);")
+            columns = self.cursor.fetchall()
+
+            for column in columns:
+                print(column)
             self.dbconnect.commit()
         except Exception as e:
             print(f"DB > init {e}")
@@ -113,9 +119,9 @@ class DB:
             print(f"DB > write {e}")
             return False
     
-    def order_write(self, sales_order=0, product=0, batches_text={}, factory=0, is_done=0, station_id = 0):
+    def order_write(self, sales_order=0, product=0, batches_text={}, factory=0, is_done=0):
         try:
-            self.cursor.execute('''insert into watcher_order_table (sales_order, product, factory, is_done, station_id, batches_text) values (?,?,?,?,?,?)''', (sales_order, product, factory, is_done, station_id, batches_text))
+            self.cursor.execute('''insert into watcher_order_table (sales_order, product, factory, is_done, batches_text) values (?,?,?,?,?)''', (sales_order, product, factory, is_done, batches_text))
             self.dbconnect.commit()
             return True
         except Exception as  e_ow:
@@ -635,7 +641,6 @@ class Counter:
                     if len(counted_order_data) != 0:
                         print("counted_order_data", counted_order_data)
                         counted_order_data_json = json.loads(counted_order_data[5])
-                        stationID = counted_order_data[6]
                         for counted_batch in counted_order_data_json:
                             main_quantity = main_order_dict[counted_batch['uniq_id']]['quantity']
                             current_quantity = counted_batch['quantity']
@@ -679,13 +684,10 @@ class Counter:
                 batch_resp = requests.get(self.batch_url, headers=self.headers)
                 
                 # Getting the station-id of watcher with watcher-reg-id
-                stationID_resp = requests.get(self.stationID_url, headers=self.headers)
-                print(batch_resp.status_code, stationID_resp.status_code)
-                if batch_resp.status_code == 200 and stationID_resp.status_code == 200:
+                print(batch_resp.status_code)
+                if batch_resp.status_code == 200:
                     order_list = batch_resp.json()
-                    stationID_list = stationID_resp.json()
                     
-                    stationID = stationID_list['station']['id']
                     
                     orders = [entry["_source"]["batch"] for entry in order_list]
                     ## Checking the headers resp
@@ -720,7 +722,6 @@ class Counter:
                                         # Save the orders to database
                                         self.db.order_write(sales_order=int(scanned_sales_order), product=order["product"], factory=order["factory"], 
                                                             is_done = 0,
-                                                            station_id=int(stationID),
                                                             batches_text= json.dumps(order_batches))
                                         
                                 print("order_batches", order_batches)
@@ -763,7 +764,6 @@ class Counter:
                                                 # Write the counted order data
                                                 self.db.order_write(sales_order=int(scanned_sales_order), product=order["product"], factory=order["factory"], 
                                                             is_done = 0,
-                                                             station_id=stationID,
                                                             batches_text= json.dumps(order_batches))
                                                 
                                         # Ejection process
@@ -817,14 +817,21 @@ class Counter:
                         print("The orders list are empty, waiting to fill the order list")
                     
                 else:
-                    print(f"request error in the requests, batch status code {batch_resp.status_code}, stationID status code {stationID_resp.status_code}")
+                    print(f"request error in the requests, batch status code {batch_resp.status_code}")
                 
                 time.sleep(1)
             # except Exception as e:
             #     time.sleep(1)
             #     print(f"counter > run {e}")
 
-
+headers = {'Register-ID': host_name, 'Content-Type': 'application/json'}
+try:
+    stationID_resp = requests.get(stationID_url, headers=headers)
+    stationID_list = stationID_resp.json()
+                        
+    stationID = stationID_list['station']['id']
+except Exception as ex:
+    print(f"headers except {ex}")
 arduino = Ardiuno()
 camera = Camera()
 db = DB()
