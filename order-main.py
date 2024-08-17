@@ -14,6 +14,7 @@ import cv2
 from threading import Thread
 import evdev
 
+global err_msg = ""
 hostname = str(socket.gethostname())
 register_id = hostname
 
@@ -48,7 +49,6 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
         "timestamp":timestamp, 
         "product_info":product_info
         }
-    print(DATA)
     session = requests.Session()
 
     URL = "https://app.monitait.com/api/factory/update-watcher/" # send data without waiting for elastic id
@@ -59,7 +59,6 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
         if send_img:
             try:
                 response = session.post(URL_DATA, data=json.dumps(DATA), headers={"content-type": "application/json"}, timeout=150)
-                print(response.text)
                 result = response.json()
                 _id = result.get('_id', None)
                 time.sleep(1)
@@ -97,13 +96,12 @@ class DB:
         try:
             self.dbconnect = sqlite3.connect("/home/pi/monitait_watcher_jet/monitait.db", check_same_thread=False)
             self.cursor = self.dbconnect.cursor()
-            self.db_connection = True
             self.cursor.execute('''create table monitait_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, register_id TEXT, temp_a INTEGER NULL, temp_b INTEGER NULL, image_name TEXT NULL, extra_info JSON, ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)''')
+            self.cursor.execute('''create table watcher_order_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, sales_order INTEGER NULL, product INTEGER NULL, batches_string TEXT NULL, factory INTEGER NULL, is_done INTEGER NULL)''')
             self.dbconnect.commit()
         except Exception as e:
-            pass
             print(f"DB > init {e}")
-
+            pass
 
     def write(self, register_id=hostname, a=0, b=0, extra_info={}, image_name="", timestamp=datetime.datetime.utcnow()):
         try:
@@ -111,7 +109,16 @@ class DB:
             self.dbconnect.commit()
             return True
         except Exception as e:
-            # print(f"DB > write {e}")
+            print(f"DB > write {e}")
+            return False
+    
+    def order_write(self, sales_order=0, product=0, batches_string="", factory=0, is_done=0):
+        try:
+            self.cursor.execute('''insert into watcher_order_table (sales_order, product, batches_string, factory, is_done) values (?,?,?,?,?)''', (sales_order, product, batches_string, factory, is_done))
+            self.dbconnect.commit()
+            return True
+        except Exception as  e_ow:
+            print(f"DB > order write {e_ow}")
             return False
 
     def read(self):
@@ -120,16 +127,34 @@ class DB:
             rows = self.cursor.fetchall()
             return rows[0]
         except Exception as e:
-            # print(f"DB > read {e}")
+            print(f"DB > read {e}")
             return []
-
+    
+    def order_read(self):
+        try:
+            self.cursor.execute('SELECT * FROM watcher_order_table LIMIT 1')
+            rows = self.cursor.fetchall()
+            return rows[0]
+        except Exception as e_or:
+            print(f"DB > read order {e_or}")
+            return []
+    
     def delete(self, id):
         try:
             self.cursor.execute("""DELETE from monitait_table where id = {}""".format(id))
             self.dbconnect.commit()
             return True
         except Exception as e:
-            # print(f"DB > delete {e}")
+            print(f"DB > delete {e}")
+            return False
+    
+    def order_delete(self, id):
+        try:
+            self.cursor.execute("""DELETE from watcher_order_table where id = {}""".format(id))
+            self.dbconnect.commit()
+            return True
+        except Exception as e_od:
+            print(f"DB > delete order {e_od}")
             return False
 
 class Ardiuno:
@@ -529,10 +554,26 @@ class Scanner:
         
         return self.upcnumber
 
+# class AsyncPostRequest:
+#     def __init__(self, , broker_url: broker_url):
+#         # Initialize Celery
+#         self.app = Celery('tasks', broker=broker_url)
+
+#         # Define the Celery task
+#         @self.app.task
+#         def make_post_request(sendbatch_url, batch_report_body, headers):
+#             response = requests.post(sendbatch_url, json=batch_report_body, headers=headers)
+#             return response.json()
+
+#         self.make_post_request = make_post_request
+#     def send_request(self, send_batch_url, batch_report_body, header):
+#         # Call the task asynchronously
+#         result = self.make_post_request.delay(sendbatch_url, batch_report_body, headers)
+#         return result
 
 class Counter:
     def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner:Scanner, batch_url: batch_url, stationID_url: stationID_url,
-                 sendbatch_url: sendbatch_url, register_id: hostname) -> None:
+                 sendbatch_url: sendbatch_url, register_id: hostname, AsyncPostRequest:AsyncPostRequest) -> None:
         self.arduino = arduino
         self.stop_thread = False
         self.order_list = []
@@ -543,6 +584,7 @@ class Counter:
         self.stationID_url = stationID_url
         self.sendbatch_url = sendbatch_url
         self.register_id = register_id
+        self.AsyncPostRequest = AsyncPostRequest
         self.headers = {'Register-ID': self.register_id, 
                         'Content-Type': 'application/json'}
         self.watcher_live_signal = 60 * 5
@@ -558,6 +600,9 @@ class Counter:
                 time.sleep(1)
             except Exception as e:
                 print(f"counter > db_checker {e}")
+    
+    def db_order_checker(self):
+        pass
 
     def run(self):
         self.last_server_signal = time.time()
@@ -577,7 +622,7 @@ class Counter:
                 
                 # Getting the station-id of watcher with watcher-reg-id
                 stationID_resp = requests.get(self.stationID_url, headers=self.headers)
-
+                print(batch_resp.status_code, stationID_resp.status_code)
                 if batch_resp.status_code == 200 and stationID_resp.status_code == 200:
                     order_list = batch_resp.json()
                     stationID_list = stationID_resp.json()
@@ -588,6 +633,15 @@ class Counter:
                     ## Checking the headers resp
                     if orders != []:
                         print("The order catched successfully")
+                        # while True:
+                        #     # Ejection process
+                            
+                        #     print("The barcode is not on the order list")
+                        #     # The detected barcode is not on the order list
+                        #     self.arduino.gpio32_0.off()
+                        #     time.sleep(1)
+                        #     self.arduino.gpio32_0.on()
+                        #     time.sleep(1)
                         # Sending batch report data (in the main while loop)
                         
                         # Waiting to start by scanning "ORXXX" 
@@ -597,6 +651,11 @@ class Counter:
                             if "OR" in operator_scaning_barcode:
                                 # separating OR scanned barcode
                                 _, _, scanned_sales_order = operator_scaning_barcode.partition("OR")
+                                
+                                # Save the orders to database
+                                self.db.order_write(sales_order=scanned_sales_order, product=orders["product"], 
+                                                    batches_string= str(orders["batches_string"]), factory=orders["factory"], is_done = 0)
+                        
                                 order_counting_start_flag = True
                                 print(f"The operator barcode scanned, the sales order is {scanned_sales_order}")
                                 
@@ -645,9 +704,9 @@ class Counter:
                                                                      "defected_qty": 0, "added_quantity": a, 
                                                                      "defect_image":[], "action_type": "stop"}  
                                                 
-                                                send_batch_response = requests.post(self.sendbatch_url, 
-                                                                                    json=batch_report_body,
-                                                                                    headers=self.headers)   
+                                                send_batch_response = async_post.send_request(self.sendbatch_url, batch_report_body,
+                                                                                 self.headers)
+                                                print(f'Sent request, Task ID: {send_batch_response.id}')
                                                 print("Send batch status code", send_batch_response.status_code)
                                                 print("Send batch json", send_batch_response.json())
                                         # Ejection process
