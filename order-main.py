@@ -126,7 +126,10 @@ class DB:
         try:
             self.cursor.execute('SELECT * FROM monitait_table')
             rows = self.cursor.fetchall()
-            return rows[0]
+            if len(rows) == 0:
+                return []
+            else:
+                return rows[0]
         except Exception as e:
             print(f"DB > read {e}")
             return []
@@ -135,7 +138,10 @@ class DB:
         try:
             self.cursor.execute('SELECT * FROM watcher_order_table')
             rows = self.cursor.fetchall()
-            return rows[0]
+            if len(rows) == 0:
+                return []
+            else:
+                return rows[0]
         except Exception as e_or:
             print(f"DB > read order {e_or}")
             return []
