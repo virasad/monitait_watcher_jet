@@ -115,9 +115,9 @@ class DB:
             print(f"DB > write {e}")
             return False
     
-    def order_write(self, sales_order=0, product=0, batches_string={}, factory=0, is_done=0):
+    def order_write(self, sales_order=0, product=0, batches_text={}, factory=0, is_done=0):
         try:
-            self.cursor.execute('''insert into watcher_order_table (sales_order, product, factory, is_done, batches_string) values (?,?,?,?,?)''', (sales_order, product, factory, is_done, batches_string))
+            self.cursor.execute('''insert into watcher_order_table (sales_order, product, factory, is_done, batches_text) values (?,?,?,?,?)''', (sales_order, product, factory, is_done, batches_text))
             self.dbconnect.commit()
             return True
         except Exception as  e_ow:
@@ -664,7 +664,7 @@ class Counter:
                                         # Save the orders to database
                                         self.db.order_write(sales_order=int(scanned_sales_order), product=order["product"], factory=order["factory"], 
                                                             is_done = 0,
-                                                            batches_string= json.dumps(order_batches))
+                                                            batches_text= json.dumps(order_batches))
                                         
                                 print("order_batches", order_batches)
                             else:
