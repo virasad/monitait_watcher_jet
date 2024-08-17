@@ -587,7 +587,7 @@ class Scanner:
 
 class Counter:
     def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner:Scanner, batch_url: batch_url, stationID_url: stationID_url,
-                 sendbatch_url: sendbatch_url, register_id: hostname) -> None:
+                 sendbatch_url: sendbatch_url, register_id: hostname, scanned_sales_order: scanned_sales_order) -> None:
         self.arduino = arduino
         self.stop_thread = False
         self.order_list = []
@@ -598,6 +598,7 @@ class Counter:
         self.stationID_url = stationID_url
         self.sendbatch_url = sendbatch_url
         self.register_id = register_id
+        self.scanned_sales_order = scanned_sales_order
         self.headers = {'Register-ID': self.register_id, 
                         'Content-Type': 'application/json'}
         self.watcher_live_signal = 60 * 5
@@ -651,7 +652,7 @@ class Counter:
                                 # Sendin batch to batch URL
                                 batch_report_body = {"batch_uuid":counted_batch['uniq_id'], "assigned_id":counted_batch['assigned_id'],
                                                         "type": "new", "station": int(stationID),
-                                                        "order_id": int(scanned_sales_order),
+                                                        "order_id": int(self.scanned_sales_order),
                                                         "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
                                                         "defect_image":[], "action_type": "stop"}  
                                 
@@ -711,17 +712,17 @@ class Counter:
                             operator_scaning_barcode = self.scanner.read_barcode()
                             if "OR" in operator_scaning_barcode:
                                 # separating OR scanned barcode
-                                _, _, scanned_sales_order = operator_scaning_barcode.partition("OR")
+                                _, _, self.scanned_sales_order = operator_scaning_barcode.partition("OR")
                         
                                 order_counting_start_flag = True
-                                print(f"The operator barcode scanned, the sales order is {scanned_sales_order}")
+                                print(f"The operator barcode scanned, the sales order is {self.scanned_sales_order}")
                                 
                                 for order in orders:
-                                    print(order["sales_order"], scanned_sales_order, order["sales_order"] == int(scanned_sales_order))
-                                    if order["sales_order"] == int(scanned_sales_order):
+                                    print(order["sales_order"], self.scanned_sales_order, order["sales_order"] == int(self.scanned_sales_order))
+                                    if order["sales_order"] == int(self.scanned_sales_order):
                                         order_batches = order['batches']
                                         # Save the orders to database
-                                        self.db.order_write(sales_order=int(scanned_sales_order), product=order["product"], factory=order["factory"], 
+                                        self.db.order_write(sales_order=int(self.scanned_sales_order), product=order["product"], factory=order["factory"], 
                                                             is_done = 0,
                                                             batches_text= json.dumps(order_batches))
                                         
@@ -760,10 +761,10 @@ class Counter:
                                                 print("uniq_id", uniq_id, "quantity", batch['quantity'])
                                                 # Delete the privious order data
                                                 order_data = self.db.order_read()
-                                                self.db.order_delete(int(scanned_sales_order))
+                                                self.db.order_delete(int(self.scanned_sales_order))
                                                 
                                                 # Write the counted order data
-                                                self.db.order_write(sales_order=int(scanned_sales_order), product=order["product"], factory=order["factory"], 
+                                                self.db.order_write(sales_order=int(self.scanned_sales_order), product=order["product"], factory=order["factory"], 
                                                             is_done = 0,
                                                             batches_text= json.dumps(order_batches))
                                                 
