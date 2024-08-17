@@ -651,11 +651,6 @@ class Counter:
                             if "OR" in operator_scaning_barcode:
                                 # separating OR scanned barcode
                                 _, _, scanned_sales_order = operator_scaning_barcode.partition("OR")
-                                print(type(int(scanned_sales_order)), type(orders["product"]), type(factory=orders["factory"]), type(json.dumps(orders["batches"])))
-                                # Save the orders to database
-                                self.db.order_write(sales_order=scanned_sales_order, product=orders["product"], factory=orders["factory"], 
-                                                    is_done = 0,
-                                                    batches_string= json.dumps(orders["batches"]))
                         
                                 order_counting_start_flag = True
                                 print(f"The operator barcode scanned, the sales order is {scanned_sales_order}")
@@ -664,6 +659,10 @@ class Counter:
                                     print(order["sales_order"], scanned_sales_order, order["sales_order"] == int(scanned_sales_order))
                                     if order["sales_order"] == int(scanned_sales_order):
                                         order_batches = order['batches']
+                                        # Save the orders to database
+                                        self.db.order_write(sales_order=int(scanned_sales_order), product=order["product"], factory=order["factory"], 
+                                                            is_done = 0,
+                                                            batches_string= json.dumps(order_batches))
                                         
                                 print("order_batches", order_batches)
                             else:
@@ -672,6 +671,7 @@ class Counter:
                         # Starting to count the boxes
                         finished_order_flag = False
                         while (not finished_order_flag) and order_counting_start_flag:
+                            
                             ts = time.time()
                             a ,b ,c, d ,dps = self.arduino.read_GPIO()
                             if abs(a - a_initial) >= 1:
