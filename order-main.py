@@ -113,7 +113,7 @@ class DB:
             print(f"DB > write {e}")
             return False
     
-    def order_write(self, sales_order=0, product=0, batches_string, factory=0, is_done=0):
+    def order_write(self, sales_order=0, product=0, batches_string={}, factory=0, is_done=0):
         try:
             self.cursor.execute('''insert into watcher_order_table (sales_order, product, factory, is_done, batches_string) values (?,?,?,?,?)''', (sales_order, product, factory, is_done, batches_string))
             self.dbconnect.commit()
