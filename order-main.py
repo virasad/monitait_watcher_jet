@@ -113,7 +113,7 @@ class DB:
             print(f"DB > write {e}")
             return False
     
-    def order_write(self, sales_order=0, product=0, batches_string="", factory=0, is_done=0):
+    def order_write(self, sales_order=0, product=0, batches_string, factory=0, is_done=0):
         try:
             self.cursor.execute('''insert into watcher_order_table (sales_order, product, factory, is_done, batches_string) values (?,?,?,?,?)''', (sales_order, product, factory, is_done, batches_string))
             self.dbconnect.commit()
@@ -651,7 +651,7 @@ class Counter:
                             if "OR" in operator_scaning_barcode:
                                 # separating OR scanned barcode
                                 _, _, scanned_sales_order = operator_scaning_barcode.partition("OR")
-                                
+                                print(type(int(scanned_sales_order)), type(orders["product"]), type(factory=orders["factory"]), type(json.dumps(orders["batches"])))
                                 # Save the orders to database
                                 self.db.order_write(sales_order=scanned_sales_order, product=orders["product"], factory=orders["factory"], 
                                                     is_done = 0,
