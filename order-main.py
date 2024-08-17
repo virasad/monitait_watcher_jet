@@ -655,9 +655,8 @@ class Counter:
                                                         "order_id": int(self.scanned_sales_order),
                                                         "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
                                                         "defect_image":[], "action_type": "stop"}  
-                                
-                                send_batch_response = async_post.send_request(self.sendbatch_url, batch_report_body,
-                                                                    self.headers)
+                                send_batch_response = requests.post(self.sendbatch_url, json=batch_report_body, headers=self.headers)
+
                                 print(f'Sent request, Task ID: {send_batch_response.id}')
                                 print("Send batch status code", send_batch_response.status_code)
                                 print("Send batch json", send_batch_response.json())
