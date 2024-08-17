@@ -97,7 +97,7 @@ class DB:
             self.cursor = self.dbconnect.cursor()
             self.cursor.execute('''CREATE TABLE IF NOT EXISTS monitait_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, register_id TEXT, temp_a INTEGER NULL, temp_b INTEGER NULL, image_name TEXT NULL, extra_info JSON, ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)''')
             self.cursor.execute('''CREATE TABLE IF NOT EXISTS watcher_order_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, sales_order INTEGER NULL, product INTEGER NULL, factory INTEGER NULL, is_done INTEGER NULL, 
-                                batches_text TEXT NOT NULL, station_id INTEGER NULL,
+                                batches_text TEXT NOT NULL, station_id INTEGER NULL
                                 )''')
             self.dbconnect.commit()
         except Exception as e:
@@ -619,12 +619,12 @@ class Counter:
                     if len(order_data) != 0:
                         read_order_once = True
                         db_checking_flag = True
-                        batches_json = json.loads(order_data[0][5]) # Convert batches json dumps to json
+                        print("order_data", order_data)
+                        batches_json = json.loads(order_data[5]) # Convert batches json dumps to json
                         for batch in batches_json:
                             main_order_dict[batch['uniq_id']]={
                                                             'quantity': batch['quantity'],
                                                             'assigned_id': batch['assigned_id']}
-                            
                     else:
                         db_checking_flag = False
                         read_order_once = False
@@ -633,8 +633,9 @@ class Counter:
                     # Read the order to see is the quantity decreased
                     counted_order_data = self.db.order_read()
                     if len(counted_order_data) != 0:
-                        counted_order_data_json = json.loads(counted_order_data[0][5])
-                        stationID = counted_order_data[0][6]
+                        print("counted_order_data", counted_order_data)
+                        counted_order_data_json = json.loads(counted_order_data[5])
+                        stationID = counted_order_data[6]
                         for counted_batch in counted_order_data_json:
                             main_quantity = main_order_dict[counted_batch['uniq_id']]['quantity']
                             current_quantity = counted_batch['quantity']
