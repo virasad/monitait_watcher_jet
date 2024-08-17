@@ -611,7 +611,7 @@ class Counter:
         read_order_once = False
         db_checking_flag = False
         while not self.stop_thread:
-            try:
+            if True:
                 # Checking order list on the order DB to catch actual main quantity value
                 if not read_order_once:
                     order_data = self.db.order_read()
@@ -655,11 +655,11 @@ class Counter:
                                 print("Send batch json", send_batch_response.json())
                     else:
                         pass
-                else
+                else:
                     pass
                 time.sleep(1)
-            except Exception as e_orc:
-                print(f"counter > db_order_checker {e_orc}")
+            # except Exception as e_orc:
+            #     print(f"counter > db_order_checker {e_orc}")
 
     def run(self):
         self.last_server_signal = time.time()
