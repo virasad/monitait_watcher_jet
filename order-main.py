@@ -14,7 +14,6 @@ import cv2
 from threading import Thread
 import evdev
 
-global err_msg = ""
 hostname = str(socket.gethostname())
 register_id = hostname
 
@@ -573,7 +572,7 @@ class Scanner:
 
 class Counter:
     def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner:Scanner, batch_url: batch_url, stationID_url: stationID_url,
-                 sendbatch_url: sendbatch_url, register_id: hostname, AsyncPostRequest:AsyncPostRequest) -> None:
+                 sendbatch_url: sendbatch_url, register_id: hostname) -> None:
         self.arduino = arduino
         self.stop_thread = False
         self.order_list = []
@@ -584,7 +583,6 @@ class Counter:
         self.stationID_url = stationID_url
         self.sendbatch_url = sendbatch_url
         self.register_id = register_id
-        self.AsyncPostRequest = AsyncPostRequest
         self.headers = {'Register-ID': self.register_id, 
                         'Content-Type': 'application/json'}
         self.watcher_live_signal = 60 * 5
