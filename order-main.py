@@ -206,7 +206,7 @@ class DB:
     def detect_value_change(self, sales_order):
         try:
             # Fetch the current values
-            self.cursor.execute("SELECT quantity FROM watcher_order_table WHERE sales_order = ?", (sales_order,))
+            self.cursor.execute("SELECT batches_text FROM watcher_order_table WHERE sales_order = ?", (sales_order,))
             current_values = self.cursor.fetchone()
 
             if current_values is None:
@@ -615,23 +615,6 @@ class Scanner:
         
         return self.upcnumber
 
-# class AsyncPostRequest:
-#     def __init__(self, , broker_url: broker_url):
-#         # Initialize Celery
-#         self.app = Celery('tasks', broker=broker_url)
-
-#         # Define the Celery task
-#         @self.app.task
-#         def make_post_request(sendbatch_url, batch_report_body, headers):
-#             response = requests.post(sendbatch_url, json=batch_report_body, headers=headers)
-#             return response.json()
-
-#         self.make_post_request = make_post_request
-#     def send_request(self, send_batch_url, batch_report_body, header):
-#         # Call the task asynchronously
-#         result = self.make_post_request.delay(sendbatch_url, batch_report_body, headers)
-#         return result
-
 class Counter:
     def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner:Scanner, batch_url: batch_url, stationID_url: stationID_url,
                  sendbatch_url: sendbatch_url, register_id: hostname, scanned_sales_order: scanned_sales_order) -> None:
@@ -693,10 +676,10 @@ class Counter:
                         for counted_batch in counted_order_data_json:
                             main_quantity = main_order_dict[counted_batch['uniq_id']]['quantity']
                             current_quantity = counted_batch['quantity']
+                            print("\n\n db_order_checker > ", current_quantity, counted_batch['quantity'], counted_batch['assigned_id'])
                             if abs(main_quantity - current_quantity) >= 2:
-                                print("start post requests")
+                                print("db_order_checker > start post requests")
                                 main_order_dict[counted_batch['uniq_id']]['quantity'] = current_quantity
-                                print("Counted batch", counted_batch['uniq_id'])
                                 # Post requests
                                 # Sendin batch to batch URL
                                 batch_report_body = {"batch_uuid":counted_batch['uniq_id'], "assigned_id":counted_batch['assigned_id'],
@@ -706,7 +689,7 @@ class Counter:
                                                         "defect_image":[], "action_type": "stop"}  
                                 send_batch_response = requests.post(self.sendbatch_url, json=batch_report_body, headers=self.headers)
 
-                                print("Send batch status code", send_batch_response.status_code)
+                                print("db_order_checker > Send batch status code", send_batch_response.status_code)
                     else:
                         pass
                 else:
@@ -739,7 +722,7 @@ class Counter:
                     orders = [entry["_source"]["batch"] for entry in order_list]
                     ## Checking the headers resp
                     if orders != []:
-                        print("The order catched successfully", stationID, stationID)
+                        print("run > The order catched successfully", stationID, stationID)
                         # while True:
                         #     # Ejection process
                             
@@ -760,7 +743,7 @@ class Counter:
                                 _, _, self.scanned_sales_order = operator_scaning_barcode.partition("OR")
                         
                                 order_counting_start_flag = True
-                                print(f"The operator barcode scanned, the sales order is {self.scanned_sales_order}")
+                                print(f"run > The operator barcode scanned, the sales order is {self.scanned_sales_order}")
                                 
                                 for order in orders:
                                     if order["sales_order"] == int(self.scanned_sales_order):
@@ -769,8 +752,6 @@ class Counter:
                                         self.db.order_write(sales_order=int(self.scanned_sales_order), product=order["product"], factory=order["factory"], 
                                                             is_done = 0,
                                                             batches_text= json.dumps(order_batches))
-                                        
-                                print("order_batches", order_batches)
                             else:
                                 pass
                         
@@ -781,7 +762,7 @@ class Counter:
                             ts = time.time()
                             a ,b ,c, d ,dps = self.arduino.read_GPIO()
                             if abs(a - a_initial) >= 1:
-                                print("a ,b ,c, d ,dps", a ,b ,c, d ,dps)
+                                print("run > a ,b ,c, d ,dps", a ,b ,c, d ,dps)
                                 a_initial = a
                                 box_scanned_barcode = 0
                                 # Reading the box barcode
@@ -790,10 +771,10 @@ class Counter:
                                 waiting_start_time = time.time()
                                 while not scanned_box_barcode_flag:
                                     box_scanned_barcode = self.scanner.read_barcode()
-                                    print("scanned barcoded of the box", box_scanned_barcode)
+                                    print("run > scanned barcoded of the box", box_scanned_barcode)
                                     # Check if 10 seconds have passed
                                     if time.time() - waiting_start_time > 30 or box_scanned_barcode != 0:
-                                        print("inner loop")
+                                        print("run > inner loop")
                                         for batch in order_batches:
                                             if batch['assigned_id']==str(box_scanned_barcode):
                                                 assigned_id_flag = True
@@ -807,12 +788,12 @@ class Counter:
                                                     self.db.order_update(sales_order=int(self.scanned_sales_order), product=order["product"], batches_text= json.dumps(order_batches), 
                                                                          factory=order["factory"], is_done = 0)
                                                     
-                                                    print("The current assigned id quantity value (remainded value):", batch['quantity'])
+                                                    print("run > The current assigned id quantity value (remainded value):", batch['quantity'])
                                                     # Write the counted order data
                                                     self.db.order_write(sales_order=int(self.scanned_sales_order), product=order["product"], factory=order["factory"], 
                                                                 is_done = 0, batches_text= json.dumps(order_batches))
                                                 elif batch['quantity'] == 0:
-                                                    print("Counted value from this assined is has been finished")
+                                                    print("run > Counted value from this assined is has been finished")
                                                     # Update the is_done column in the order list
                                                     self.db.order_update(sales_order=int(self.scanned_sales_order), is_done = 1)
                                                     # The detected barcode is not on the order list
@@ -823,7 +804,7 @@ class Counter:
                                                     pass
                                         # Ejection process
                                         if not assigned_id_flag:
-                                            print("The barcode is not on the order list")
+                                            print("run > The barcode is not on the order list")
                                             # The detected barcode is not on the order list
                                             self.arduino.gpio32_0.off()
                                             time.sleep(1)
