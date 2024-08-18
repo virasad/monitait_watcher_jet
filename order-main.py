@@ -636,7 +636,6 @@ class Counter:
         db_checking_flag = False
         while not self.stop_thread:
             if True:
-                print(read_order_once, db_checking_flag)
                 # Checking order list on the order DB to catch actual main quantity value
                 if not read_order_once:
                     order_data = self.db.order_read()
@@ -755,7 +754,7 @@ class Counter:
                                 scanned_box_barcode_flag = False
                                 assigned_id_flag = False
                                 waiting_start_time = time.time()
-                                rint("Order list before decreasing", json.dumps(order_batches))
+                                print("Order list before decreasing", json.dumps(order_batches))
                                 while not scanned_box_barcode_flag:
                                     box_scanned_barcode = self.scanner.read_barcode()
                                     print("run > scanned barcoded of the box", box_scanned_barcode)
