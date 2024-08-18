@@ -297,9 +297,9 @@ while flag:
       if not("-sergpio_read" in err_msg):
         err_msg = err_msg + "-sergpio_read-" + str(e)
       pass
-
-    if camera_connection:
-      j = j + 1
+    
+    # Counting camera index
+    j = j + 1
     if j == 100: 
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
