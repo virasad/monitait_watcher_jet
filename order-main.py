@@ -756,6 +756,7 @@ class Counter:
                                 waiting_start_time = time.time()
                                 print("Order list before decreasing", json.dumps(order_batches))
                                 while not scanned_box_barcode_flag:
+                                    a ,b ,c, d ,dps = self.arduino.read_GPIO()
                                     box_scanned_barcode = self.scanner.read_barcode()
                                     print("run > scanned barcoded of the box", box_scanned_barcode)
                                     # Check if 10 seconds have passed
