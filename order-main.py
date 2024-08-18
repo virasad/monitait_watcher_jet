@@ -202,6 +202,21 @@ class DB:
         except Exception as e_ou:
             print(f"DB > update order {e_ou}")
             return False
+        
+    def detect_value_change(self, sales_order):
+        try:
+            # Fetch the current values
+            cursor.execute("SELECT quantity FROM watcher_order_table WHERE id = ?", (sales_order,))
+            current_values = cursor.fetchone()
+
+            if current_values is None:
+                print("Quantity not found.")
+                return None
+            else:
+                print("current_values", current_values)
+        except Exception as e_od:
+            print(f"DB > detect value change order {e_od}")
+            return False
 
 class Ardiuno:
     def __init__(self) -> None:
@@ -654,6 +669,7 @@ class Counter:
             if True:
                 # Checking order list on the order DB to catch actual main quantity value
                 if not read_order_once:
+                    self.db.detect_value_change(self, int(self.scanned_sales_order)):
                     order_data = self.db.order_read()
                     main_order_dict = {}
                     if len(order_data) != 0:
