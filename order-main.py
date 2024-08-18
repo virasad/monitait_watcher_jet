@@ -658,7 +658,7 @@ class Counter:
                     if len(order_data) != 0:
                         read_order_once = True
                         db_checking_flag = True
-                        print("order_data", order_data)
+                        print("db_order_checker order_data", order_data)
                         batches_json = json.loads(order_data[5]) # Convert batches json dumps to json
                         for batch in batches_json:
                             main_order_dict[batch['uniq_id']]={
@@ -676,7 +676,7 @@ class Counter:
                         for counted_batch in counted_order_data_json:
                             main_quantity = main_order_dict[counted_batch['uniq_id']]['quantity']
                             current_quantity = counted_batch['quantity']
-                            print("\n\n db_order_checker > ", current_quantity, counted_batch['quantity'], counted_batch['assigned_id'])
+                            print("\n\n db_order_checker > ", current_quantity, main_quantity, counted_batch['assigned_id'])
                             if abs(main_quantity - current_quantity) >= 2:
                                 print("db_order_checker > start post requests")
                                 main_order_dict[counted_batch['uniq_id']]['quantity'] = current_quantity
