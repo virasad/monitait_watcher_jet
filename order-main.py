@@ -648,6 +648,7 @@ class Counter:
                             if abs(main_quantity - current_quantity) >= 2:
                                 print("start post requests")
                                 main_order_dict[counted_batch['uniq_id']]['quantity'] = current_quantity
+                                print("Counted batch", counted_batch['uniq_id'])
                                 # Post requests
                                 # Sendin batch to batch URL
                                 batch_report_body = {"batch_uuid":counted_batch['uniq_id'], "assigned_id":counted_batch['assigned_id'],
@@ -657,9 +658,7 @@ class Counter:
                                                         "defect_image":[], "action_type": "stop"}  
                                 send_batch_response = requests.post(self.sendbatch_url, json=batch_report_body, headers=self.headers)
 
-                                print(f'Sent request, Task ID: {send_batch_response.id}')
                                 print("Send batch status code", send_batch_response.status_code)
-                                print("Send batch json", send_batch_response.json())
                     else:
                         pass
                 else:
@@ -685,7 +684,6 @@ class Counter:
                 batch_resp = requests.get(self.batch_url, headers=self.headers)
                 
                 # Getting the station-id of watcher with watcher-reg-id
-                print(batch_resp.status_code)
                 if batch_resp.status_code == 200:
                     order_list = batch_resp.json()
                     
@@ -717,7 +715,6 @@ class Counter:
                                 print(f"The operator barcode scanned, the sales order is {self.scanned_sales_order}")
                                 
                                 for order in orders:
-                                    print(order["sales_order"], self.scanned_sales_order, order["sales_order"] == int(self.scanned_sales_order))
                                     if order["sales_order"] == int(self.scanned_sales_order):
                                         order_batches = order['batches']
                                         # Save the orders to database
@@ -757,16 +754,22 @@ class Counter:
                                                 # Decrease quantity by 1 if it's greater than 0
                                                 if batch['quantity'] > 0:
                                                     batch['quantity'] -= 1
-                                                print("uniq_id", uniq_id, "quantity", batch['quantity'])
-                                                # Delete the privious order data
-                                                order_data = self.db.order_read()
-                                                self.db.order_delete(int(self.scanned_sales_order))
-                                                
-                                                # Write the counted order data
-                                                self.db.order_write(sales_order=int(self.scanned_sales_order), product=order["product"], factory=order["factory"], 
-                                                            is_done = 0,
-                                                            batches_text= json.dumps(order_batches))
-                                                
+                                                    # Delete the privious order data
+                                                    order_data = self.db.order_read()
+                                                    self.db.order_delete(int(self.scanned_sales_order))
+                                                    print("The current assigned id quantity value (remainded value):", batch['quantity'])
+                                                    # Write the counted order data
+                                                    self.db.order_write(sales_order=int(self.scanned_sales_order), product=order["product"], factory=order["factory"], 
+                                                                is_done = 0,
+                                                                batches_text= json.dumps(order_batches))
+                                                else if batch['quantity'] == 0:
+                                                    print("Counted value from this assined is has been finished")
+                                                    # The detected barcode is not on the order list
+                                                    self.arduino.gpio32_0.off()
+                                                    time.sleep(1)
+                                                    self.arduino.gpio32_0.on()
+                                                else: 
+                                                    pass
                                         # Ejection process
                                         if not assigned_id_flag:
                                             print("The barcode is not on the order list")
