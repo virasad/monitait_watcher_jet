@@ -170,6 +170,38 @@ class DB:
         except Exception as e_od:
             print(f"DB > delete order {e_od}")
             return False
+        
+    def order_update(self, sales_order, product=None, batches_text=None, factory=None, is_done=None):
+        try:
+            query = "UPDATE watcher_order_table SET"
+            params = []
+            # Check which column to updated
+            if product is not None:
+                query += "product = ?, "
+                params.append(product)
+            if batches_text is not None:
+                query += "batches_text = ?, "
+                params.append(batches_text)
+            if factory is not None:
+                query += "factory = ?, "
+                params.append(factory)
+            if is_done is not None:
+                query += "is_done = ?, "
+                params.append(is_done)
+            # Remove the trailing comma and space
+            query = query.rstrip(', ')
+            
+            # Add the WHERE clause
+            query += " WHERE sales_order = ?"
+            params.append(sales_order)
+
+            # Execute the UPDATE statement
+            self.cursor.execute(query, params)
+            self.dbconnect.commit()
+            return True
+        except Exception as e_ou:
+            print(f"DB > update order {e_ou}")
+            return False
 
 class Ardiuno:
     def __init__(self) -> None:
@@ -754,16 +786,19 @@ class Counter:
                                                 # Decrease quantity by 1 if it's greater than 0
                                                 if batch['quantity'] > 0:
                                                     batch['quantity'] -= 1
-                                                    # Delete the privious order data
-                                                    order_data = self.db.order_read()
-                                                    self.db.order_delete(int(self.scanned_sales_order))
+                                                    
+                                                    # Update the order list
+                                                    self.db.order_update(sales_order=int(self.scanned_sales_order), product=order["product"], batches_text= json.dumps(order_batches), 
+                                                                         factory=order["factory"], is_done = 0)
+                                                    
                                                     print("The current assigned id quantity value (remainded value):", batch['quantity'])
                                                     # Write the counted order data
                                                     self.db.order_write(sales_order=int(self.scanned_sales_order), product=order["product"], factory=order["factory"], 
-                                                                is_done = 0,
-                                                                batches_text= json.dumps(order_batches))
+                                                                is_done = 0, batches_text= json.dumps(order_batches))
                                                 else if batch['quantity'] == 0:
                                                     print("Counted value from this assined is has been finished")
+                                                    # Update the is_done column in the order list
+                                                    self.db.order_update(sales_order=int(self.scanned_sales_order), is_done = 1)
                                                     # The detected barcode is not on the order list
                                                     self.arduino.gpio32_0.off()
                                                     time.sleep(1)
