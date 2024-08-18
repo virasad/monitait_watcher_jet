@@ -173,7 +173,7 @@ class DB:
         
     def order_update(self, sales_order, product=None, batches_text=None, factory=None, is_done=None):
         try:
-            query = "UPDATE watcher_order_table SET"
+            query = "UPDATE watcher_order_table SET "
             params = []
             # Check which column to updated
             if product is not None:
