@@ -795,7 +795,7 @@ class Counter:
                                                     # Write the counted order data
                                                     self.db.order_write(sales_order=int(self.scanned_sales_order), product=order["product"], factory=order["factory"], 
                                                                 is_done = 0, batches_text= json.dumps(order_batches))
-                                                else if batch['quantity'] == 0:
+                                                elif batch['quantity'] == 0:
                                                     print("Counted value from this assined is has been finished")
                                                     # Update the is_done column in the order list
                                                     self.db.order_update(sales_order=int(self.scanned_sales_order), is_done = 1)
