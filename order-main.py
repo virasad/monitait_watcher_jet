@@ -669,7 +669,7 @@ class Counter:
             if True:
                 # Checking order list on the order DB to catch actual main quantity value
                 if not read_order_once:
-                    self.db.detect_value_change(self, int(self.scanned_sales_order)):
+                    self.db.detect_value_change(self, int(self.scanned_sales_order))
                     order_data = self.db.order_read()
                     main_order_dict = {}
                     if len(order_data) != 0:
