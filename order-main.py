@@ -684,8 +684,8 @@ class Counter:
                             if counted_batch['quantity'] != 0:
                                 main_quantity = main_order_dict[counted_batch['batch_uuid']]['quantity']
                                 current_quantity = counted_batch['quantity']
-                                print(current_quantity, main_quantity, main_order_dict[counted_batch['batch_uuid']]['assigned_id'])
                                 if abs(main_quantity - current_quantity) >= 2:
+                                    print(current_quantity, main_quantity, main_order_dict[counted_batch['batch_uuid']]['assigned_id'])
                                     print("\n db_order_checker > start post requests")
                                     b_1 = b_1 + 2
                                     main_order_dict[counted_batch['batch_uuid']]['quantity'] = current_quantity
@@ -694,7 +694,7 @@ class Counter:
                                     batch_report_body = {"batch_uuid":counted_batch['batch_uuid'], "assigned_id":counted_batch['assigned_id'],
                                                             "type": "new", "station": int(stationID),
                                                             "order_id": int(self.scanned_sales_order),
-                                                            "defected_qty": 0, "added_quantity": b_1, 
+                                                            "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
                                                             "defect_image":[], "action_type": "stop"}  
                                     send_batch_response = requests.post(self.sendbatch_url, json=batch_report_body, headers=self.headers)
 
@@ -778,11 +778,11 @@ class Counter:
                                 scanned_box_barcode_flag = False
                                 assigned_id_flag = False
                                 waiting_start_time = time.time()
-                                print("Order list before decreasing", json.dumps(order_batches))
+                                #print("Order list before decreasing", json.dumps(order_batches))
                                 while not scanned_box_barcode_flag:
                                     
                                     box_scanned_barcode = self.scanner.read_barcode()
-                                    print("run > scanned barcoded of the box", box_scanned_barcode)
+                                    #rint("run > scanned barcoded of the box", box_scanned_barcode)
                                     # Check if 10 seconds have passed
                                     if abs(b - b_initial) < 1 or box_scanned_barcode != 0:
                                         b_initial = b
