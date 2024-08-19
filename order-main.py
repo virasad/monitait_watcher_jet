@@ -609,8 +609,8 @@ class Scanner:
     def run_with_timeout(self, timeout):
         thread = Thread(target=self.read_barcode)
         thread.start()
-        thread.join(10)  # Wait for the thread to finish or timeout
-
+        thread.join(timeout)  # Wait for the thread to finish or timeout
+        print("thread checker")
         if thread.is_alive():
             print("Task timed out!")
             # Optionally, you can handle the timeout case here
@@ -741,6 +741,7 @@ class Counter:
                         # Waiting to start by scanning "ORXXX" 
                         order_counting_start_flag = False
                         while not order_counting_start_flag:
+                            sd = self.scanner.run_with_timeout()
                             operator_scaning_barcode = self.scanner.read_barcode()
                             if "OR" in operator_scaning_barcode:
                                 # separating OR scanned barcode
