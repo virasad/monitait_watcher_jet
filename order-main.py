@@ -591,36 +591,34 @@ class Scanner:
     
     def read_barcode(self):
         print(50)
-        start_time = time.time()  # Record the start time
 
-        while True:
-            if time.time() - start_time > 30:  # Check if 30 seconds have passed
-                print("Barcode reading timed out")
-                return None  # Handle the timeout case
-
-            try:
-                self.upcnumber = self.barcode_reader_evdev()
-                if self.upcnumber:  # If a barcode is read, return it
-                    print(self.upcnumber)
-                    return self.upcnumber
-            except KeyboardInterrupt:
-                print('Keyboard interrupt')
-                return None
-            except Exception as err:
-                print(err)
-                return None
-        # try:
-        #     self.upcnumber = self.barcode_reader_evdev()
-        #     print(self.upcnumber)
-        # except KeyboardInterrupt:
-        #     print('Keyboard interrupt')
-        #     pass
-        # except Exception as err:
-        #     print(err)
-        #     pass
-#        self.dev.ungrab()
+        try:
+            self.upcnumber = self.barcode_reader_evdev()
+            if self.upcnumber:  # If a barcode is read, return it
+                print(self.upcnumber)
+                return self.upcnumber
+        except KeyboardInterrupt:
+            print('Keyboard interrupt')
+            return None
+        except Exception as err:
+            print(err)
+            return None
         
         return self.upcnumber
+
+    def run_with_timeout(self, timeout):
+        thread = Thread(target=self.read_barcode)
+        thread.start()
+        thread.join(10)  # Wait for the thread to finish or timeout
+
+        if thread.is_alive():
+            print("Task timed out!")
+            # Optionally, you can handle the timeout case here
+            # e.g., setting result to None or cleaning up resources
+        else:
+            print("Task finished within the timeout.")
+        
+        
 
 class Counter:
     def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner:Scanner, batch_url: batch_url, stationID_url: stationID_url,
