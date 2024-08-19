@@ -663,9 +663,12 @@ class Counter:
                         print("db_order_checker order_data", order_data)
                         batches_json = json.loads(order_data[5]) # Convert batches json dumps to json
                         for batch in batches_json:
-                            main_order_dict[batch['batch_uuid']]={
-                                                            'quantity': batch['quantity'],
-                                                            'assigned_id': batch['assigned_id']}
+                            if batch['quantity'] != 0:
+                                main_order_dict[batch['batch_uuid']]={
+                                                                'quantity': batch['quantity'],
+                                                                'assigned_id': batch['assigned_id']}
+                            else:
+                                pass
                     else:
                         db_checking_flag = False
                         read_order_once = False
