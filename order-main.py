@@ -762,9 +762,11 @@ class Counter:
                                     
                                     print("run > a ,b ,c, d ,dps n", a ,b ,c, d ,dps)
                                     ng_flag = False
+                                    s_t = time.time
                                     while not ng_flag:
-                                        a ,b ,c, d ,dps = self.arduino.read_GPIO()
-                                        if abs(b - b_initial) >= 1:
+                                        print("b")
+                                        box_scanned_barcode = self.scanner.read_barcode()
+                                        if time.time()  - s_t  >= 10:
                                             ng_flag = True
                                             pass
                                     print("run > scanned barcoded of the box", box_scanned_barcode)
