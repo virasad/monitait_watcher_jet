@@ -685,7 +685,7 @@ class Counter:
                                 main_quantity = main_order_dict[counted_batch['batch_uuid']]['quantity']
                                 current_quantity = counted_batch['quantity']
                                 if abs(main_quantity - current_quantity) >= 2:
-                                    print(current_quantity, main_quantity, main_order_dict[counted_batch['batch_uuid']]['assigned_id'])
+                                    print(current_quantity, main_quantity, main_order_dict[counted_batch['batch_uuid']]['assigned_id'], self.scanned_sales_order)
                                     print("\n db_order_checker > start post requests")
                                     b_1 = b_1 + 2
                                     main_order_dict[counted_batch['batch_uuid']]['quantity'] = current_quantity
@@ -693,7 +693,7 @@ class Counter:
                                     # Sendin batch to batch URL
                                     batch_report_body = {"batch_uuid":counted_batch['batch_uuid'], "assigned_id":counted_batch['assigned_id'],
                                                             "type": "new", "station": int(stationID),
-                                                            "order_id": int(self.scanned_sales_order),
+                                                            "order_id": int(109),
                                                             "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
                                                             "defect_image":[], "action_type": "stop"}  
                                     send_batch_response = requests.post(self.sendbatch_url, json=batch_report_body, headers=self.headers)
