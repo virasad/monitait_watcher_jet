@@ -663,7 +663,7 @@ class Counter:
                         print("db_order_checker order_data", order_data)
                         batches_json = json.loads(order_data[5]) # Convert batches json dumps to json
                         for batch in batches_json:
-                            main_order_dict[batch['uniq_id']]={
+                            main_order_dict[batch['batch_uuid']]={
                                                             'quantity': batch['quantity'],
                                                             'assigned_id': batch['assigned_id']}
                     else:
@@ -676,14 +676,14 @@ class Counter:
                     if len(counted_order_data) != 0:
                         counted_order_data_json = json.loads(counted_order_data[5])
                         for counted_batch in counted_order_data_json:
-                            main_quantity = main_order_dict[counted_batch['uniq_id']]['quantity']
+                            main_quantity = main_order_dict[counted_batch['batch_uuid']]['quantity']
                             current_quantity = counted_batch['quantity']
                             if abs(main_quantity - current_quantity) >= 2:
                                 print("\n db_order_checker > start post requests")
-                                main_order_dict[counted_batch['uniq_id']]['quantity'] = current_quantity
+                                main_order_dict[counted_batch['batch_uuid']]['quantity'] = current_quantity
                                 # Post requests
                                 # Sendin batch to batch URL
-                                batch_report_body = {"batch_uuid":counted_batch['uniq_id'], "assigned_id":counted_batch['assigned_id'],
+                                batch_report_body = {"batch_uuid":counted_batch['batch_uuid'], "assigned_id":counted_batch['assigned_id'],
                                                         "type": "new", "station": int(stationID),
                                                         "order_id": int(self.scanned_sales_order),
                                                         "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
@@ -782,8 +782,8 @@ class Counter:
                                         for batch in order_batches:
                                             if batch['assigned_id']==str(box_scanned_barcode):
                                                 assigned_id_flag = True
-                                                # Extract uniq_id
-                                                uniq_id = batch['uniq_id']
+                                                # Extract batch_uuid
+                                                batch_uuid = batch['batch_uuid']
                                                 # Decrease quantity by 1 if it's greater than 0
                                                 if batch['quantity'] > 0:
                                                     batch['quantity'] -= 1
