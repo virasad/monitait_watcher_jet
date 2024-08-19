@@ -537,6 +537,7 @@ class Scanner:
         evdev.ecodes.KEY_SLASH: ['/', '?'],
         evdev.ecodes.KEY_SPACE: [' ', ' '],
         }
+        print(10)
         self.ERROR_CHARACTER = '?'
         self.VALUE_UP = 0
         self.VALUE_DOWN = 1
@@ -554,6 +555,7 @@ class Scanner:
             pass
 
     def get_device(self):
+        print(45)
         self.devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
         for self.device in self.devices:
             print('device:', self.device)
@@ -565,7 +567,7 @@ class Scanner:
         return None
 
     def barcode_reader_evdev(self):
-        
+        print(30)
         self.barcode_string_output = ''
         # barcode can have a 'shift' character; this switches the character set
         # from the lower to upper case variant for the next character only.
@@ -588,6 +590,7 @@ class Scanner:
         return self.barcode_string_output
     
     def read_barcode(self):
+        print(50)
         try:
             self.upcnumber = self.barcode_reader_evdev()
             print(self.upcnumber)
@@ -747,7 +750,7 @@ class Counter:
                             ts = time.time()
                             a ,b ,c, d ,dps = self.arduino.read_GPIO()
                             if abs(a - a_initial) >= 1:
-                                print("run > a ,b ,c, d ,dps", a ,b ,c, d ,dps)
+                                print("\n\n run > a ,b ,c, d ,dps", a ,b ,c, d ,dps)
                                 a_initial = a
                                 box_scanned_barcode = 0
                                 # Reading the box barcode
