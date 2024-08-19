@@ -652,6 +652,7 @@ class Counter:
         read_order_once = False
         db_checking_flag = False
         while not self.stop_thread:
+            b_1 = 0
             if True:
                 # Checking order list on the order DB to catch actual main quantity value
                 if not read_order_once:
@@ -682,15 +683,17 @@ class Counter:
                             if counted_batch['quantity'] != 0:
                                 main_quantity = main_order_dict[counted_batch['batch_uuid']]['quantity']
                                 current_quantity = counted_batch['quantity']
+                                print(b_1 "main_quantity, current_quantity")
                                 if abs(main_quantity - current_quantity) >= 2:
                                     print("\n db_order_checker > start post requests")
+                                    b_1 = b_1 + 2
                                     main_order_dict[counted_batch['batch_uuid']]['quantity'] = current_quantity
                                     # Post requests
                                     # Sendin batch to batch URL
                                     batch_report_body = {"batch_uuid":counted_batch['batch_uuid'], "assigned_id":counted_batch['assigned_id'],
                                                             "type": "new", "station": int(stationID),
                                                             "order_id": int(self.scanned_sales_order),
-                                                            "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
+                                                            "defected_qty": 0, "added_quantity": b_1, 
                                                             "defect_image":[], "action_type": "stop"}  
                                     send_batch_response = requests.post(self.sendbatch_url, json=batch_report_body, headers=self.headers)
 
