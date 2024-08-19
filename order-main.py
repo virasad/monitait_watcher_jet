@@ -756,14 +756,19 @@ class Counter:
                                 waiting_start_time = time.time()
                                 print("Order list before decreasing", json.dumps(order_batches))
                                 while not scanned_box_barcode_flag:
-                                    a ,b ,c, d ,dps = self.arduino.read_GPIO()
+                                    
                                     print("run > a ,b ,c, d ,dps n", a ,b ,c, d ,dps)
-                                    while box_scanned_barcode != 0:
-                                        print(23)
-                                        box_scanned_barcode = self.scanner.read_barcode()
+                                    ng_flag = False
+                                    while not ng_flag:
+                                        a ,b ,c, d ,dps = self.arduino.read_GPIO()
+                                        if abs(b - b_initial) >= 1:
+                                            ng_flag = True
+                                            pass
                                     print("run > scanned barcoded of the box", box_scanned_barcode)
+                                    box_scanned_barcode = self.scanner.read_barcode()
                                     # Check if 10 seconds have passed
                                     if abs(b - b_initial) < 1 or box_scanned_barcode != 0:
+                                        b_initial = b
                                         print("run > inner loop")
                                         for batch in order_batches:
                                             if batch['assigned_id']==str(box_scanned_barcode):
