@@ -573,7 +573,6 @@ class Scanner:
         # from the lower to upper case variant for the next character only.
         self.shift_active = False
         for self.event in self.dev.read_loop():
-            print(2, self.event, self.event.code)
             if self.event.code == evdev.ecodes.KEY_ENTER and self.event.value == self.VALUE_DOWN:
                 #print('KEY_ENTER -> return')
                 # all barcodes end with a carriage return
@@ -590,7 +589,6 @@ class Scanner:
         return self.barcode_string_output
     
     def read_barcode(self):
-        print(50)
 
         try:
             self.upcnumber = self.barcode_reader_evdev()
