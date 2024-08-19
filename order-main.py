@@ -541,7 +541,6 @@ class Scanner:
         self.ERROR_CHARACTER = '?'
         self.VALUE_UP = 0
         self.VALUE_DOWN = 1
-        self.stop_event = threading.Event()
         self.barcode_string_output = ''
         for path in evdev.list_devices():
             print('path:', path)
@@ -607,17 +606,17 @@ class Scanner:
         
         return self.upcnumber
 
-    def run_with_timeout(self, timeout):
-        thread = Thread(target=self.read_barcode)
-        thread.start()
-        thread.join(timeout)  # Wait for the thread to finish or timeout
-        print("thread checker")
-        if thread.is_alive():
-            print("Task timed out!")
-            return False
-        else:
-            print("Task finished within the timeout.")
-            return True
+    # def run_with_timeout(self, timeout):
+    #     thread = Thread(target=self.read_barcode)
+    #     thread.start()
+    #     thread.join(timeout)  # Wait for the thread to finish or timeout
+    #     print("thread checker")
+    #     if thread.is_alive():
+    #         print("Task timed out!")
+    #         return False
+    #     else:
+    #         print("Task finished within the timeout.")
+    #         return True
         
         
 
@@ -682,7 +681,7 @@ class Counter:
                             main_quantity = main_order_dict[counted_batch['uniq_id']]['quantity']
                             current_quantity = counted_batch['quantity']
                             if abs(main_quantity - current_quantity) >= 2:
-                                print("db_order_checker > start post requests")
+                                print("\n db_order_checker > start post requests")
                                 main_order_dict[counted_batch['uniq_id']]['quantity'] = current_quantity
                                 # Post requests
                                 # Sendin batch to batch URL
@@ -741,9 +740,7 @@ class Counter:
                         
                         # Waiting to start by scanning "ORXXX" 
                         order_counting_start_flag = False
-                        sd = True
-                        while not order_counting_start_flag and sd:
-                            sd = self.scanner.run_with_timeout(30)
+                        while not order_counting_start_flag:
                             operator_scaning_barcode = self.scanner.read_barcode()
                             if "OR" in operator_scaning_barcode:
                                 # separating OR scanned barcode
@@ -761,7 +758,6 @@ class Counter:
                                                             batches_text= json.dumps(order_batches))
                             else:
                                 pass
-                        print("G")
                         # Starting to count the boxes
                         finished_order_flag = False
                         while (not finished_order_flag) and order_counting_start_flag:
@@ -779,15 +775,6 @@ class Counter:
                                 print("Order list before decreasing", json.dumps(order_batches))
                                 while not scanned_box_barcode_flag:
                                     
-                                    print("run > a ,b ,c, d ,dps n", a ,b ,c, d ,dps)
-                                    ng_flag = False
-                                    s_t = time.time
-                                    while not ng_flag:
-                                        print("b")
-                                        box_scanned_barcode = self.scanner.read_barcode()
-                                        if time.time()  - s_t  >= 10:
-                                            ng_flag = True
-                                            pass
                                     print("run > scanned barcoded of the box", box_scanned_barcode)
                                     box_scanned_barcode = self.scanner.read_barcode()
                                     # Check if 10 seconds have passed
