@@ -541,6 +541,7 @@ class Scanner:
         self.ERROR_CHARACTER = '?'
         self.VALUE_UP = 0
         self.VALUE_DOWN = 1
+        self.stop_event = threading.Event()
         self.barcode_string_output = ''
         for path in evdev.list_devices():
             print('path:', path)
@@ -573,7 +574,7 @@ class Scanner:
         # from the lower to upper case variant for the next character only.
         self.shift_active = False
         for self.event in self.dev.read_loop():
-            print(2)
+            print(2, self.event, self.event.code)
             if self.event.code == evdev.ecodes.KEY_ENTER and self.event.value == self.VALUE_DOWN:
                 #print('KEY_ENTER -> return')
                 # all barcodes end with a carriage return
@@ -613,10 +614,10 @@ class Scanner:
         print("thread checker")
         if thread.is_alive():
             print("Task timed out!")
-            # Optionally, you can handle the timeout case here
-            # e.g., setting result to None or cleaning up resources
+            return False
         else:
             print("Task finished within the timeout.")
+            return True
         
         
 
@@ -740,8 +741,9 @@ class Counter:
                         
                         # Waiting to start by scanning "ORXXX" 
                         order_counting_start_flag = False
-                        while not order_counting_start_flag:
-                            sd = self.scanner.run_with_timeout()
+                        sd = True
+                        while not order_counting_start_flag and sd:
+                            sd = self.scanner.run_with_timeout(30)
                             operator_scaning_barcode = self.scanner.read_barcode()
                             if "OR" in operator_scaning_barcode:
                                 # separating OR scanned barcode
@@ -759,7 +761,7 @@ class Counter:
                                                             batches_text= json.dumps(order_batches))
                             else:
                                 pass
-                        
+                        print("G")
                         # Starting to count the boxes
                         finished_order_flag = False
                         while (not finished_order_flag) and order_counting_start_flag:
