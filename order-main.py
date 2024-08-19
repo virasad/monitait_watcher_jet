@@ -651,8 +651,9 @@ class Counter:
     def db_order_checker(self):
         read_order_once = False
         db_checking_flag = False
+        
+        b_1 = 0
         while not self.stop_thread:
-            b_1 = 0
             if True:
                 # Checking order list on the order DB to catch actual main quantity value
                 if not read_order_once:
@@ -683,7 +684,7 @@ class Counter:
                             if counted_batch['quantity'] != 0:
                                 main_quantity = main_order_dict[counted_batch['batch_uuid']]['quantity']
                                 current_quantity = counted_batch['quantity']
-                                print(b_1 "main_quantity, current_quantity")
+                                print(current_quantity, main_quantity, main_order_dict[counted_batch['batch_uuid']]['assigned_id'])
                                 if abs(main_quantity - current_quantity) >= 2:
                                     print("\n db_order_checker > start post requests")
                                     b_1 = b_1 + 2
