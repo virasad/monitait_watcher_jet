@@ -679,7 +679,7 @@ class Counter:
                     if len(counted_order_data) != 0:
                         counted_order_data_json = json.loads(counted_order_data[5])
                         for counted_batch in counted_order_data_json:
-                            if counted_order_data_json['quantity'] != 0:
+                            if counted_batch['quantity'] != 0:
                                 main_quantity = main_order_dict[counted_batch['batch_uuid']]['quantity']
                                 current_quantity = counted_batch['quantity']
                                 if abs(main_quantity - current_quantity) >= 2:
