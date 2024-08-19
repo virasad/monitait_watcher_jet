@@ -679,21 +679,22 @@ class Counter:
                     if len(counted_order_data) != 0:
                         counted_order_data_json = json.loads(counted_order_data[5])
                         for counted_batch in counted_order_data_json:
-                            main_quantity = main_order_dict[counted_batch['batch_uuid']]['quantity']
-                            current_quantity = counted_batch['quantity']
-                            if abs(main_quantity - current_quantity) >= 2:
-                                print("\n db_order_checker > start post requests")
-                                main_order_dict[counted_batch['batch_uuid']]['quantity'] = current_quantity
-                                # Post requests
-                                # Sendin batch to batch URL
-                                batch_report_body = {"batch_uuid":counted_batch['batch_uuid'], "assigned_id":counted_batch['assigned_id'],
-                                                        "type": "new", "station": int(stationID),
-                                                        "order_id": int(self.scanned_sales_order),
-                                                        "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
-                                                        "defect_image":[], "action_type": "stop"}  
-                                send_batch_response = requests.post(self.sendbatch_url, json=batch_report_body, headers=self.headers)
+                            if counted_order_data_json['quantity'] != 0:
+                                main_quantity = main_order_dict[counted_batch['batch_uuid']]['quantity']
+                                current_quantity = counted_batch['quantity']
+                                if abs(main_quantity - current_quantity) >= 2:
+                                    print("\n db_order_checker > start post requests")
+                                    main_order_dict[counted_batch['batch_uuid']]['quantity'] = current_quantity
+                                    # Post requests
+                                    # Sendin batch to batch URL
+                                    batch_report_body = {"batch_uuid":counted_batch['batch_uuid'], "assigned_id":counted_batch['assigned_id'],
+                                                            "type": "new", "station": int(stationID),
+                                                            "order_id": int(self.scanned_sales_order),
+                                                            "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
+                                                            "defect_image":[], "action_type": "stop"}  
+                                    send_batch_response = requests.post(self.sendbatch_url, json=batch_report_body, headers=self.headers)
 
-                                print("db_order_checker > Send batch status code", send_batch_response.status_code)
+                                    print("db_order_checker > Send batch status code", send_batch_response.status_code)
                     else:
                         pass
                 else:
