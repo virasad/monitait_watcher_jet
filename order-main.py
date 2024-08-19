@@ -571,7 +571,7 @@ class Scanner:
         # from the lower to upper case variant for the next character only.
         self.shift_active = False
         for self.event in self.dev.read_loop():
-
+            print(2)
             if self.event.code == evdev.ecodes.KEY_ENTER and self.event.value == self.VALUE_DOWN:
                 #print('KEY_ENTER -> return')
                 # all barcodes end with a carriage return
@@ -757,6 +757,7 @@ class Counter:
                                 print("Order list before decreasing", json.dumps(order_batches))
                                 while not scanned_box_barcode_flag:
                                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
+                                    print("run > a ,b ,c, d ,dps n", a ,b ,c, d ,dps)
                                     box_scanned_barcode = self.scanner.read_barcode()
                                     print("run > scanned barcoded of the box", box_scanned_barcode)
                                     # Check if 10 seconds have passed
