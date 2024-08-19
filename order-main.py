@@ -554,9 +554,6 @@ class Scanner:
             self.dev.grab()
             pass
 
-    def handler(self, signum, frame):
-        raise TimeoutError("Barcode reading timed out")
-    
     def get_device(self):
         print(45)
         self.devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
@@ -594,30 +591,36 @@ class Scanner:
     
     def read_barcode(self):
         print(50)
-        # Set the timeout handler
-        signal.signal(signal.SIGALRM, self.handler)
-        signal.alarm(30)  # Set a timeout of 30 seconds
+        start_time = time.time()  # Record the start time
 
-        try:
-            self.upcnumber = self.barcode_reader_evdev()
-            print(self.upcnumber)
-        except TimeoutError as e:
-            signal.alarm("TImed out")  # Disable the alarm
-            print(e)
-            self.upcnumber = None  # or handle it as needed
-        except KeyboardInterrupt:
-            print('Keyboard interrupt')
-            self.upcnumber = None
-        except Exception as err:
-            print(err)
-            self.upcnumber = None
-        finally:
-            signal.alarm("Alarm")  # Disable the alarm
-            self.upcnumber = None
-            print(alarm)
+        while True:
+            if time.time() - start_time > 30:  # Check if 30 seconds have passed
+                print("Barcode reading timed out")
+                return None  # Handle the timeout case
 
+            try:
+                self.upcnumber = self.barcode_reader_evdev()
+                if self.upcnumber:  # If a barcode is read, return it
+                    print(self.upcnumber)
+                    return self.upcnumber
+            except KeyboardInterrupt:
+                print('Keyboard interrupt')
+                return None
+            except Exception as err:
+                print(err)
+                return None
+        # try:
+        #     self.upcnumber = self.barcode_reader_evdev()
+        #     print(self.upcnumber)
+        # except KeyboardInterrupt:
+        #     print('Keyboard interrupt')
+        #     pass
+        # except Exception as err:
+        #     print(err)
+        #     pass
+#        self.dev.ungrab()
+        
         return self.upcnumber
-
 
 class Counter:
     def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner:Scanner, batch_url: batch_url, stationID_url: stationID_url,
