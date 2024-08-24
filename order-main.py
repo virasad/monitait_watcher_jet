@@ -276,10 +276,11 @@ try:
     stationID = stationID_list['station']['id']
 except Exception as ex:
     print(f"headers except {ex}")
-arduino = utils.base.Ardiuno()
-camera = utils.base.Camera()
-db = utils.base.DB()
-scanner = utils.base.Scanner()
+    
+arduino = Ardiuno()
+camera = Camera()
+db = DB()
+scanner = Scanner()
 counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, batch_url=batch_url, stationID_url= stationID_url,
                             sendbatch_url=sendbatch_url, register_id=register_id, scanned_sales_order=scanned_sales_order)
 Thread(target=counter.run).start()
