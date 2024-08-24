@@ -15,6 +15,8 @@ from threading import Thread
 import evdev
 
 
+register_id = str(socket.gethostname())
+
 def handler(signal, frame):
     global flag
     print('handler')
@@ -102,7 +104,7 @@ class DB:
             print(f"DB > init {e}")
             pass
 
-    def write(self, register_id=hostname, a=0, b=0, extra_info={}, image_name="", timestamp=datetime.datetime.utcnow()):
+    def write(self, register_id=register_id, a=0, b=0, extra_info={}, image_name="", timestamp=datetime.datetime.utcnow()):
         try:
             self.cursor.execute('''insert into monitait_table (register_id, temp_a, temp_b, image_name, extra_info, ts) values (?,?,?,?,?,?)''', (register_id, a, b, image_name, json.dumps(extra_info), timestamp))
             self.dbconnect.commit()

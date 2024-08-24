@@ -1,6 +1,6 @@
 from utils.base import *
-hostname = str(socket.gethostname())
-register_id = hostname
+
+register_id = str(socket.gethostname())
 global stationID
 scanned_sales_order = 0
 ## URLs
@@ -12,7 +12,7 @@ sendbatch_url = 'https://develop-app.monitait.com/api/elastic-search/send-batch-
 
 class Counter:
     def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner:Scanner, batch_url: batch_url, stationID_url: stationID_url,
-                 sendbatch_url: sendbatch_url, register_id: hostname, scanned_sales_order: scanned_sales_order) -> None:
+                 sendbatch_url: sendbatch_url, register_id: register_id, scanned_sales_order: scanned_sales_order) -> None:
         self.arduino = arduino
         self.stop_thread = False
         self.order_list = []
@@ -249,10 +249,10 @@ class Counter:
                         #             extra_info.update({"batch_uuid" : str(self.old_barcode)})
 
                         #         timestamp = datetime.datetime.utcnow()
-                        #         if watcher_update(hostname, quantity=a, defect_quantity=b, send_img=send_image, image_path=image_name, extra_info=extra_info, timestamp=timestamp):
+                        #         if watcher_update(register_id, quantity=a, defect_quantity=b, send_img=send_image, image_path=image_name, extra_info=extra_info, timestamp=timestamp):
                         #             data_saved = True
                         #         else:
-                        #             if self.db.write(register_id=hostname, a=a, b=b, extra_info=extra_info, timestamp=timestamp, image_name=image_name):
+                        #             if self.db.write(register_id=register_id, a=a, b=b, extra_info=extra_info, timestamp=timestamp, image_name=image_name):
                         #                 data_saved = True
                         #         if data_saved:
                         #             self.arduino.minus(a=a, b=b)
