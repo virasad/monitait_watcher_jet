@@ -102,6 +102,16 @@ if (Serial.available() > 0)
         {encoder_counter=0;}
         break;
 
+      case 'a':
+        {int commandIndex = inString.indexOf(',');
+        if (commandIndex != -1){counter_a = counter_a - inString.substring(commandIndex +1).toInt();}}
+        break;
+
+      case 'b':
+        {int commandIndex = inString.indexOf(',');
+        if (commandIndex != -1){counter_b = counter_b - inString.substring(commandIndex +1).toInt();}}
+        break;
+
       case '4':
         {int commandIndex = inString.indexOf(',');
         if (commandIndex != -1){pwmup = inString.substring(commandIndex +1).toInt();}}
@@ -119,6 +129,7 @@ if (Serial.available() > 0)
       case '7':
         {digitalWrite(Ejector, LOW);}
         break;
+        
 
       default: 
       break;
