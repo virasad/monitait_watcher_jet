@@ -129,7 +129,7 @@ class Counter:
                         # Waiting to start by scanning "ORXXX" 
                         order_counting_start_flag = False
                         while not order_counting_start_flag:
-                            operator_scaning_barcode = self.scanner.read_barcode()
+                            # operator_scaning_barcode = self.scanner.read_barcode()
                             if "OR" in operator_scaning_barcode:
                                 # separating OR scanned barcode
                                 _, _, self.scanned_sales_order = operator_scaning_barcode.partition("OR")
@@ -162,8 +162,9 @@ class Counter:
                                 waiting_start_time = time.time()
                                 #print("Order list before decreasing", json.dumps(order_batches))
                                 while not scanned_box_barcode_flag:
-                                    
-                                    box_scanned_barcode = self.scanner.read_barcode()
+                                    while True
+                                    box_scanned_barcode = Thread(target=scanner.read_barcode).start()
+                                    # box_scanned_barcode = self.scanner.read_barcode()
                                     #rint("run > scanned barcoded of the box", box_scanned_barcode)
                                     # Check if 10 seconds have passed
                                     if abs(b - b_initial) < 1 or box_scanned_barcode != 0:
@@ -226,7 +227,7 @@ class Counter:
                                     finished_order_flag = True
                                     break
                             # else:
-                            #     print("Box not counted yet")
+                            #     print("Box not counted yet") 
                             
                             
                         #     print(a, b , dps, barcode, self.old_barcode)
@@ -281,6 +282,7 @@ arduino = Ardiuno()
 camera = Camera()
 db = DB()
 scanner = Scanner()
+
 counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, batch_url=batch_url, stationID_url= stationID_url,
                             sendbatch_url=sendbatch_url, register_id=register_id, scanned_sales_order=scanned_sales_order)
 Thread(target=counter.run).start()
