@@ -171,7 +171,6 @@ class Ardiuno:
         self.get_ts = 1
         self.buffer = b''
         self.open_serial()
-        print(self.gpio16_0, self.gpio18_0)
         Thread(target=self.run_GPIO).start()
         Thread(target=self.run_serial).start()
 
@@ -203,8 +202,10 @@ class Ardiuno:
                 return False
 
     def close_serial(self):
+
         try:
-            self.ser.close()
+            if self.serial_connection:
+                self.ser.close()
             return True
         except Exception as e:
             print(e)
@@ -220,38 +221,41 @@ class Ardiuno:
         self.gpio29_0.value = b_list[0]
         
     def run_serial(self):
-        while not self.stop_thread:
-            try:
-                tmp_serial_data = {}
-                self.buffer += self.ser.read(2000)
-                # self.ser.write("1\n".encode('utf-8'))
-                # time.sleep(1)
-                # self.ser.write("2\n".encode('utf-8'))
-                # time.sleep(1)
-                # self.ser.write("8\n".encode('utf-8'))
-                # time.sleep(0.01)
-                if (b'\r\n' in self.buffer): # find line in serial data
-                    last_received, self.buffer = self.buffer.split(b'\r\n')[-2:]
-                    serial_list = str(last_received).split("'")[1].split(',')
-                    for z in range(len(serial_list)):
-                        tmp_serial_data.update({"d{}".format(z) : int(serial_list[z])})
-                    self.serial_data = tmp_serial_data
-                time.sleep(0.01)
+        if self.serial_connection:
+            while not self.stop_thread:
+                try:
+                    tmp_serial_data = {}
+                    self.buffer += self.ser.read(2000)
+                    # self.ser.write("1\n".encode('utf-8'))
+                    # time.sleep(1)
+                    # self.ser.write("2\n".encode('utf-8'))
+                    # time.sleep(1)
+                    # self.ser.write("8\n".encode('utf-8'))
+                    # time.sleep(0.01)
+                    if (b'\r\n' in self.buffer): # find line in serial data
+                        last_received, self.buffer = self.buffer.split(b'\r\n')[-2:]
+                        serial_list = str(last_received).split("'")[1].split(',')
+                        for z in range(len(serial_list)):
+                            tmp_serial_data.update({"d{}".format(z) : int(serial_list[z])})
+                        self.serial_data = tmp_serial_data
+                    time.sleep(0.01)
 
-            except Exception as e:
-                if "Input/output" in str(e):
-                    try:
-                        self.close_serial()
-                        self.open_serial()
-                    except Exception as er:
-                        print(er)
-                if "fileno" in str(e):
-                    try:
-                        self.close_serial()
-                        self.open_serial()
-                    except Exception as ers:
-                        print(ers)
-                print(f"arduino Serial reader {e}")
+                except Exception as e:
+                    if "Input/output" in str(e):
+                        try:
+                            self.close_serial()
+                            self.open_serial()
+                        except Exception as er:
+                            print(er)
+                    if "fileno" in str(e):
+                        try:
+                            self.close_serial()
+                            self.open_serial()
+                        except Exception as ers:
+                            print(ers)
+                    print(f"arduino Serial reader {e}")
+        else:
+            return False
 
     def run_GPIO(self):
         self.old_start_ts = time.time()
@@ -592,10 +596,15 @@ class Counter:
                 time.sleep(1)
                 print(f"counter > run {e}")
 
-arduino = Ardiuno()
-camera = Camera()
 db = DB()
-scanner = Scanner()
+arduino = Ardiuno()
+
+if arduino.gpio16_0.value:
+    camera = Camera()
+
+if arduino.gpio18_0.value:
+    scanner = Scanner()
+
 counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner)
 Thread(target=counter.run).start()
 time.sleep(10)
