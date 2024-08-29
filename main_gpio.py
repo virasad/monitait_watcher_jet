@@ -171,6 +171,7 @@ class Ardiuno:
         self.get_ts = 1
         self.buffer = b''
         self.open_serial()
+        print(self.gpio16_0, self.gpio16_0)
         Thread(target=self.run_GPIO).start()
         Thread(target=self.run_serial).start()
 
