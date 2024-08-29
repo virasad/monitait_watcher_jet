@@ -469,9 +469,10 @@ class Scanner:
         try:
             self.dev.grab()
         except:
-            self.dev.ungrab()
-            time.sleep(3)
-            self.dev.grab()
+            # self.dev.ungrab()
+            # time.sleep(3)
+            # self.dev.grab()
+            print("couldn't grab scanner")
             pass
 
     def get_device(self):
@@ -483,7 +484,8 @@ class Scanner:
             for vp in self.VENDOR_PRODUCT:
                 if self.device.info.vendor == vp[0] and self.device.info.product == vp[1]:
                     return self.device
-        return None
+                else:
+                    return None
 
     def barcode_reader_evdev(self):
         

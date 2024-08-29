@@ -139,16 +139,16 @@ if (Serial.available() > 0)
     }
 
   
-//  if ( i > 1){
-//    Serial.println(String(encoder_counter) + "," + "-24" + "," + String(counter_a) + "," + String(counter_b) + "," + String(c) + "," + String(battery/10 - 2) + "," + String(elapsed_speed) + "," + String(restart_counter));
-//    i = 0;
-//  }
-  Serial.print("Encoder:"); Serial.print(counter_a); Serial.print(",");
-  Serial.print("Red:0,");
-  Serial.print("Green:0,");
-  Serial.print("Blue:0,");
-  Serial.print("Color:0,");
-  Serial.print("\n");
+  if ( i > 1){
+    Serial.println(String(encoder_counter) + "," + "-24" + "," + String(counter_a) + "," + String(counter_b) + "," + String(c) + "," + String(battery/10 - 2) + "," + String(elapsed_speed) + "," + String(restart_counter));
+    i = 0;
+  }
+//  Serial.print("Encoder:"); Serial.print(counter_a); Serial.print(",");
+//  Serial.print("Red:0,");
+//  Serial.print("Green:0,");
+//  Serial.print("Blue:0,");
+//  Serial.print("Color:0,");
+//  Serial.print("\n");
   
   // check if RPI is signaling the ARDUINO
   if (digitalRead(piPin)==LOW){
