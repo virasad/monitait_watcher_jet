@@ -255,7 +255,7 @@ class Ardiuno:
                             print(ers)
                     print(f"arduino Serial reader {e}")
         else:
-            return False
+            return None
 
     def run_GPIO(self):
         self.old_start_ts = time.time()
@@ -474,9 +474,9 @@ class Scanner:
         try:
             self.dev.grab()
         except:
-            # self.dev.ungrab()
-            # time.sleep(3)
-            # self.dev.grab()
+            self.dev.ungrab()
+            time.sleep(3)
+            self.dev.grab()
             print("couldn't grab scanner")
             pass
 
@@ -531,12 +531,14 @@ class Scanner:
 
 
 class Counter:
-    def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner:Scanner) -> None:
+    def __init__(self, arduino:Ardiuno, db:DB, camera=None, scanner=None) -> None:
         self.arduino = arduino
         self.stop_thread = False
         self.db = db
-        self.camera = camera
-        self.scanner = scanner
+        if camera:
+            self.camera = camera
+        if scanner:
+            self.scanner = scanner
         self.watcher_live_signal = 60 * 5
         self.take_picture_interval = 60 * 5
 
@@ -553,8 +555,10 @@ class Counter:
 
     def run(self):
         self.last_server_signal = time.time()
-        self.last_image = time.time()
-        self.old_barcode = ''
+        if self.camera:
+            self.last_image = time.time()
+        if self.scanner:
+            self.old_barcode = ''
         while not self.stop_thread:
             try:
                 data_saved = False
@@ -563,25 +567,27 @@ class Counter:
                 extra_info = {}
                 ts = time.time()
                 a ,b ,c, d ,dps = self.arduino.read_GPIO()
-                barcode = self.scanner.read_barcode()
-                print(a, b , dps, barcode, self.old_barcode)
+                if self.scanner:
+                    barcode = self.scanner.read_barcode()
+                print(a, b, c, d , dps)
                 if a + b > dps or ts - self.last_server_signal > self.watcher_live_signal:
-                    print("check")
                     self.last_server_signal = ts
-                    if ts - self.last_image > self.take_picture_interval:
-                        captured, image_name = self.camera.capture_and_save()
-                        print(captured, image_name)
-                        if captured:
-                            send_image = True
-                            self.last_image = ts
-                        else:
-                            send_image = False
+                    if self.camera:
+                        if ts - self.last_image > self.take_picture_interval:
+                            captured, image_name = self.camera.capture_and_save()
+                            print(captured, image_name)
+                            if captured:
+                                send_image = True
+                                self.last_image = ts
+                            else:
+                                send_image = False
                     extra_info = self.arduino.read_serial()
-                    if barcode != '' and barcode != self.old_barcode:
-                        self.old_barcode = barcode
+                    if self.scanner:
+                        if barcode != '' and barcode != self.old_barcode:
+                            self.old_barcode = barcode
 
-                    if self.old_barcode != '':
-                        extra_info.update({"batch_uuid" : str(self.old_barcode)})
+                        if self.old_barcode != '':
+                            extra_info.update({"batch_uuid" : str(self.old_barcode)})
 
                     timestamp = datetime.datetime.utcnow()
                     if watcher_update(hostname, quantity=a, defect_quantity=b, send_img=send_image, image_path=image_name, extra_info=extra_info, timestamp=timestamp):
@@ -599,13 +605,23 @@ class Counter:
 db = DB()
 arduino = Ardiuno()
 
-if arduino.gpio16_0.value:
+if (arduino.gpio16_0.value and arduino.gpio18_0.value):
     camera = Camera()
-
-if arduino.gpio18_0.value:
     scanner = Scanner()
+    counter = Counter(arduino=arduino, db=db, camera=camera)
 
-counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner)
+elif arduino.gpio16_0.value:
+    camera = Camera()
+    counter = Counter(arduino=arduino, db=db, camera=camera)
+
+elif arduino.gpio18_0.value:
+    scanner = Scanner()
+    counter = Counter(arduino=arduino, db=db, scanner=scanner)
+
+else: 
+    counter = Counter(arduino=arduino, db=db)
+
+
 Thread(target=counter.run).start()
 time.sleep(10)
 Thread(target=counter.db_checker).start()
