@@ -299,7 +299,7 @@ class Ardiuno:
                     self.d = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2
                 else:                       # read arduino data c (A7 in 8 levels [0..7])
                     self.c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2
-                
+                print(a,b,c,d)
                 time.sleep(0.01)
             except Exception as e:
                 print(f"arduino GPIO reader {e}")
@@ -612,14 +612,17 @@ if (arduino.gpio16_0.value and arduino.gpio18_0.value):
     camera = Camera()
     scanner = Scanner()
     counter = Counter(arduino=arduino, db=db, camera=camera)
+    print("Camera+Scanner")
 
 elif arduino.gpio16_0.value:
     camera = Camera()
     counter = Counter(arduino=arduino, db=db, camera=camera)
+    print("Camera")
 
 elif arduino.gpio18_0.value:
     scanner = Scanner()
     counter = Counter(arduino=arduino, db=db, scanner=scanner)
+    print("Scanner")
 
 else: 
     counter = Counter(arduino=arduino, db=db)
