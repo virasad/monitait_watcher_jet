@@ -170,7 +170,7 @@ class Ardiuno:
         self.gpio26_d.on() # identify as the default there is no read from RPI
         self.get_ts = 1
         self.buffer = b''
-        self.open_serial()
+        self.serial_connection = self.open_serial()
         Thread(target=self.run_GPIO).start()
         Thread(target=self.run_serial).start()
 
@@ -178,7 +178,6 @@ class Ardiuno:
         try:
             self.ser = serial.Serial(
                     port='/dev/serial0', baudrate = 9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=1)
-            self.serial_connection = True
             self.serial_list = []
             self.buffer = b''
             self.last_received = ''
@@ -189,15 +188,14 @@ class Ardiuno:
             try:
                 self.ser = serial.Serial(
                     port='/dev/serial1', baudrate = 9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=1)
-                self.serial_connection = True
                 self.serial_list = []
                 self.buffer = b''
                 self.last_received = ''
                 self.ser.flushInput()
                 self.extra_info = {}
+                return True
             except Exception as ee:
                 err_msg = err_msg + "-ser_init"
-                self.serial_connection = False
                 print(e)
                 return False
 
@@ -581,7 +579,8 @@ class Counter:
                                 self.last_image = ts
                             else:
                                 send_image = False
-                    extra_info = self.arduino.read_serial()
+                    if self.arduino.serial_connection:
+                        extra_info = self.arduino.read_serial()
                     if self.scanner:
                         if barcode != '' and barcode != self.old_barcode:
                             self.old_barcode = barcode
