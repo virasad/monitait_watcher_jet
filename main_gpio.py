@@ -535,8 +535,12 @@ class Counter:
         self.db = db
         if camera:
             self.camera = camera
+        else:
+            self.camera = None
         if scanner:
             self.scanner = scanner
+        else:
+            self.scanner = None
         self.watcher_live_signal = 60 * 5
         self.take_picture_interval = 60 * 5
 
