@@ -270,6 +270,7 @@ class Ardiuno:
                 b = 0
                 if in_bit_a and not(in_bit_b): # read arduino data a (OK)
                     a = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2
+                    print("a selected:{}".format(a))
                 if (a > 0):
                     self.set_gpio_value(a)
                     self.gpio26_d.off()
@@ -283,6 +284,7 @@ class Ardiuno:
 
                 elif not(in_bit_a) and in_bit_b: # read arduino data b (NG)
                     b = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2
+                    print("b selected:{}".format(b))
                 if (b > 0):
                     self.set_gpio_value(b)
                     self.gpio37_c.off() # identify it is b
@@ -297,8 +299,10 @@ class Ardiuno:
                     self.old_start_ts = start_ts
                 elif in_bit_a and in_bit_b: # read arduino battery (A6 in 8 levels [0..7])
                     self.d = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2
+                    print("d selected:{}".format(self.d))
                 else:                       # read arduino data c (A7 in 8 levels [0..7])
                     self.c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2
+                    print("c selected:{}".format(self.c))
                 print(self.last_a,self.last_b,self.c,self.d)
                 time.sleep(0.01)
             except Exception as e:
