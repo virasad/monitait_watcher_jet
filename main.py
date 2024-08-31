@@ -64,7 +64,6 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
         if send_img:
             try:
                 response = session.post(URL_DATA, data=json.dumps(DATA), headers={"content-type": "application/json"}, timeout=150)
-                # print(response.text)
                 result = response.json()
                 _id = result.get('_id', None)
                 time.sleep(1)
@@ -76,12 +75,16 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
                     try:
                         response = session.post(URL_IMAGE, files={"image": open(image_path, "rb")}, data=DATA, timeout=250)
                         session.close()
-                        os.remove(image_path)
-                        return True
+                        if (response.status_code == requests.codes.ok):
+                            os.remove(image_path)
+                            return True
+                        else:
+                            return False    
                     except Exception as e:
-                        return True
-                session.close
-                return True
+                        return False
+                else:
+                    session.close()
+                    return False
             except Exception as e:
                 print(f"watcher update image {e}")
                 return False
@@ -89,7 +92,10 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
             try:
                 response = requests.post(URL, data=json.dumps(DATA), headers={"content-type": "application/json"})
                 # print(response.text)
-                return True
+                if (response.status_code == requests.codes.ok):
+                    return True
+                else:
+                    return False
             except Exception as e:
                 print(f"watcher update no image {e}")
                 return False
@@ -282,6 +288,7 @@ class Ardiuno:
                 b = 0
                 if in_bit_a and not(in_bit_b): # read arduino data a (OK)
                     a = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2
+                    print()
                 if (a > 0):
                     self.set_gpio_value(a)
                     self.gpio37_c.on() # identify it is a
