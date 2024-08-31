@@ -582,7 +582,7 @@ class Counter:
         if self.scanner:
             self.old_barcode = ''
         old_local_ip = get_ip_address()
-
+        print(old_local_ip)
         while not self.stop_thread:
             try:
                 data_saved = False
