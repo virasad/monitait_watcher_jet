@@ -53,7 +53,7 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
         "timestamp":timestamp, 
         "product_info":product_info
         }
-    # print(DATA)
+    print(DATA)
     session = requests.Session()
 
     URL = "https://app.monitait.com/api/factory/update-watcher/" # send data without waiting for elastic id
@@ -91,7 +91,7 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
         else:
             try:
                 response = requests.post(URL, data=json.dumps(DATA), headers={"content-type": "application/json"})
-                # print(response.text)
+                print(response.text, "code:", response.status_code)
                 if (response.status_code == requests.codes.ok):
                     return True
                 else:
