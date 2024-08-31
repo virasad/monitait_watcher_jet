@@ -581,8 +581,8 @@ class Counter:
             self.last_image = time.time()
         if self.scanner:
             self.old_barcode = ''
-        old_local_ip = get_ip_address()
-        print(old_local_ip)
+        old_local_ip = None
+        
         while not self.stop_thread:
             try:
                 data_saved = False
@@ -611,6 +611,7 @@ class Counter:
                     
                     if (get_ip_address() != old_local_ip):
                         old_local_ip = get_ip_address()
+                        print(old_local_ip)
                         extra_info.update({"local_ip" : old_local_ip})
 
                     if self.scanner:
