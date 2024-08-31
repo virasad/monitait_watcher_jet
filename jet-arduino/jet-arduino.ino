@@ -78,7 +78,6 @@ void loop() {
 
 if (Serial.available() > 0)
   {
-    wdt_reset();
 //    // read the incoming byte:
     String inString = Serial.readStringUntil('\n');
     char inChar=inString[0];
