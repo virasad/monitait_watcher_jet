@@ -15,6 +15,8 @@ import evdev
 
 hostname = str(socket.gethostname())
 
+err_msg = ""
+
 def get_ip_address():
   try:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -553,6 +555,7 @@ class Counter:
         self.arduino = arduino
         self.stop_thread = False
         self.db = db
+        self.old_local_ip = None
         if camera:
             self.camera = camera
         else:
@@ -581,7 +584,7 @@ class Counter:
             self.last_image = time.time()
         if self.scanner:
             self.old_barcode = ''
-        old_local_ip = None
+        
         
         while not self.stop_thread:
             try:
@@ -609,10 +612,11 @@ class Counter:
                         extra_info = self.arduino.read_serial()
                     
                     
-                    if (get_ip_address() != old_local_ip):
-                        old_local_ip = get_ip_address()
-                        print(old_local_ip)
-                        extra_info.update({"local_ip" : old_local_ip})
+                    if (get_ip_address() != self.old_local_ip ):
+                        self.old_local_ip  = get_ip_address()
+                        extra_info.update({"local_ip" : self.old_local_ip })
+                    #   if not("-db_insrt" in err_msg):
+                    # err_msg = err_msg + "-db_insrt-" + str(e)
 
                     if self.scanner:
                         if barcode != '' and barcode != self.old_barcode:

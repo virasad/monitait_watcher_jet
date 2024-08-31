@@ -144,7 +144,7 @@ void loop() {
   elapsed_speed =  long(50/(now_millis - a_capture_time) + 50/(now_millis - b_capture_time) + elapsed_speed*999/1000) ;
   counter_rpi_reboot = (elapsed_speed+1000)*restart_counter;
   counter_a_b = abs(counter_a + counter_b);
-  if (battery < 800 or counter_a_b > counter_rpi_reboot/2)
+  if ( (battery > 100 and battery < 800) or counter_a_b > counter_rpi_reboot/2)
     digitalWrite(Warning, HIGH);
   else
     digitalWrite(Warning, LOW);
@@ -159,7 +159,7 @@ void loop() {
         counter_rpi_reboot = (elapsed_speed+1000)*restart_counter;
       }
     else{
-        restart_counter = 500;
+        restart_counter = 499;
         resetFunc();
         }
     delay(1000);
