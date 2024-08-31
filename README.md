@@ -11,6 +11,8 @@ we have been working on it whithin 4 years and try to make it as reliable as pos
 
 - if you want to build watcher by youself follow the instruction in [initilize documentation](docs/README.md)
 
+- need wiring and pinout? visit [Watcher Jet docs](https://monitait.com/docs)
+
 - An external 12.6v 2A for `PS` (to recharge the internal battries, a regulated power is needed, polarity is important) 
 - An Access Point with a SSID like: `monitait` and a password like: `p@ssword`
 - Connect the Signals:
