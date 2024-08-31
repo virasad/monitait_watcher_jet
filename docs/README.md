@@ -37,7 +37,7 @@ Watcher Jet is a set of an Arduino, a RaspberryPi Zero W and some Electorinc com
 ```
 sudo apt-get install git -y
 cd ~
-sudo git clone https://github.com/virasad/monitait_watcher_jet.git
+git clone https://github.com/virasad/monitait_watcher_jet.git
 bash /home/pi/monitait_watcher_jet/init/init.sh
 sudo reboot now
 ```
