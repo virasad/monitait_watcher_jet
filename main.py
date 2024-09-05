@@ -393,6 +393,11 @@ while flag:
                             
                     # Estimation the tank height
                     estimated_tank_volume = abs(-19.95 + (1.062*radius) - 0.0034 * (radius**2))
+                    
+                    if estimated_tank_volume > 42.5:
+                      estimated_tank_volume = 0
+                    else:
+                      pass 
                   else:
                     pass
           else:
