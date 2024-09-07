@@ -93,7 +93,7 @@ class Counter:
     def run(self):
         self.last_server_signal = time.time()
         self.last_image = time.time()
-        order_request_time_interval = 5 # Every "order_request_time_interval" secends, the order is requested from Monitait
+        order_request_time_interval = 500 # Every "order_request_time_interval" secends, the order is requested from Monitait
         self.old_barcode = ''
         a_initial = 0
         b_initial = 0
@@ -117,10 +117,12 @@ class Counter:
             order_batches = {}  
             
             # Getting order from batch API
+            batch_reuest_s_t = time.time()
             while not or_barcode_scanned_flag:
-                batch_reuest_s_t = time.time()
                 # Every the defined time interval, the watcher updates his order DB until OR is scanned
                 if time.time() - batch_reuest_s_t > order_request_time_interval:
+                    print("start to adding the data")
+                    batch_reuest_s_t = time.time()
                     try:
                         batch_resp = requests.get(self.batch_url, headers=self.headers) 
                         # Added all batches to a list
@@ -276,8 +278,6 @@ class Counter:
             else:
                 print("The orders list are empty, waiting to fill the order list")
                 
-            else:
-                print(f"request error in the requests, batch status code {batch_resp.status_code}")
             
             time.sleep(1)
 
