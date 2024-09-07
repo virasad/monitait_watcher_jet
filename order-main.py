@@ -125,9 +125,8 @@ class Counter:
             batch_reuest_s_t = time.time()
             while not or_barcode_scanned_flag:
                 # Every the defined time interval, the watcher updates his order DB until OR is scanned
-                print(time.time() - batch_reuest_s_t, order_request_time_interval)
                 if time.time() - batch_reuest_s_t > order_request_time_interval:
-                    print("start to adding the data")
+                    print("\n start to adding the data")
                     batch_reuest_s_t = time.time()
                     try:
                         batch_resp = requests.get(self.batch_url, headers=self.headers) 
@@ -137,7 +136,7 @@ class Counter:
                         
                         # Added the order batches to the order DB
                         for order in orders:
-                            print("Getting to add order DB")
+                            print(order["sales_order"])
                             order_batches = order['batches']
                             # Save the orders to database
                             self.db.order_write(sales_order=order["sales_order"], product=order["product"], factory=order["factory"], 
