@@ -8,6 +8,11 @@ batch_url = 'https://develop-app.monitait.com/api/elastic-search/batch/'
 stationID_url = f'https://develop-app.monitait.com/api/factory/watcher/{register_id}/'
 sendbatch_url = 'https://develop-app.monitait.com/api/elastic-search/send-batch-report/'
 
+try:
+    os.system('./rm_py.sh')
+except Exception as ex0:
+    print(f"\n There are an error in openening the CPU version of watcher script, the error is {ex0}")  
+
 
 
 class Counter:
@@ -132,11 +137,11 @@ class Counter:
                         # Added the order batches to the order DB
                         for order in orders:
                             if order["sales_order"] == int(self.scanned_sales_order):
-                                print("Getting to add order DB")
-                                order_batches = order['batches']
-                                # Save the orders to database
-                                self.db.order_write(sales_order=order["sales_order"], product=order["product"], factory=order["factory"], 
-                                                    is_done = 0, batches_text= json.dumps(order_batches))
+                            print("Getting to add order DB")
+                            order_batches = order['batches']
+                            # Save the orders to database
+                            self.db.order_write(sales_order=order["sales_order"], product=order["product"], factory=order["factory"], 
+                                                is_done = 0, batches_text= json.dumps(order_batches))
                     except Exception as ex1:
                         print(f"run > waiting to the OR barcode {ex1}")
                 else:
