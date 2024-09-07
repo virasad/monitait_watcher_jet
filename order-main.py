@@ -136,7 +136,6 @@ class Counter:
                         
                         # Added the order batches to the order DB
                         for order in orders:
-                            if order["sales_order"] == int(self.scanned_sales_order):
                             print("Getting to add order DB")
                             order_batches = order['batches']
                             # Save the orders to database
