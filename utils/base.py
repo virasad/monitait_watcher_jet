@@ -116,7 +116,6 @@ class DB:
     def order_write(self, sales_order=0, product=0, batches_text={}, factory=0, is_done=0):
         try:
             self.cursor.execute('SELECT * FROM watcher_order_table WHERE sales_order = ?', (sales_order,))
-            print(self.cursor.fetchone())
             if self.cursor.fetchone() is None:
                 self.cursor.execute('''insert into watcher_order_table (sales_order, product, factory, is_done, batches_text) values (?,?,?,?,?)''', (sales_order, product, factory, is_done, batches_text))
                 self.dbconnect.commit()
