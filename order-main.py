@@ -12,7 +12,7 @@ sendbatch_url = 'https://develop-app.monitait.com/api/elastic-search/send-batch-
 
 class Counter:
     def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner:Scanner, batch_url: batch_url, stationID_url: stationID_url,
-                 sendbatch_url: sendbatch_url, register_id: register_id, scanned_sales_order: scanned_sales_order) -> None:
+                 sendbatch_url: sendbatch_url, register_id: register_id, stationID: stationID, scanned_sales_order: scanned_sales_order) -> None:
         self.arduino = arduino
         self.stop_thread = False
         self.order_list = []
@@ -21,6 +21,7 @@ class Counter:
         self.scanner = scanner
         self.batch_url = batch_url
         self.stationID_url = stationID_url
+        self.stationID = stationID
         self.sendbatch_url = sendbatch_url
         self.register_id = register_id
         self.scanned_sales_order = scanned_sales_order
@@ -74,7 +75,7 @@ class Counter:
                                     # Post requests
                                     # Sendin batch to batch URL
                                     batch_report_body = {"batch_uuid":counted_batch['batch_uuid'], "assigned_id":counted_batch['assigned_id'],
-                                                            "type": "new", "station": int(stationID),
+                                                            "type": "new", "station": int(self.stationID),
                                                             "order_id": int(109),
                                                             "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
                                                             "defect_image":[], "action_type": "stop"}  
@@ -95,6 +96,16 @@ class Counter:
         self.old_barcode = ''
         a_initial = 0
         b_initial = 0
+        
+        # Getting the stationID from API 
+        try:
+            stationID_resp = requests.get(self.stationID_url, headers=self.headers)
+            stationID_json = stationID_resp.json()
+                                
+            self.stationID = stationID_json['station']['id']
+        except Exception as ex:
+            print(f"headers except {ex}")
+        
         ## Setting the regiester ID in header
         while not self.stop_thread:
             if True:
@@ -103,27 +114,16 @@ class Counter:
                 image_name = ""
                 extra_info = {}
                 order_batches = {}  
-                # Getting order from URL
-                batch_resp = requests.get(self.batch_url, headers=self.headers)
+                batch_resp = requests.get(self.batch_url, headers=self.headers) # Getting order from batch API
                 
                 # Getting the station-id of watcher with watcher-reg-id
                 if batch_resp.status_code == 200:
-                    order_list = batch_resp.json()
-                    
-                    
-                    orders = [entry["_source"]["batch"] for entry in order_list]
+                    order_list = batch_resp.json()  # Convert order response to JSON file
+                
+                    orders = [entry["_source"]["batch"] for entry in order_list] # Added all batches to a list
                     ## Checking the headers resp
                     if orders != []:
-                        print("run > The order catched successfully", stationID, stationID)
-                        # while True:
-                        #     # Ejection process
-                            
-                        #     print("The barcode is not on the order list")
-                        #     # The detected barcode is not on the order list
-                        #     self.arduino.gpio32_0.off()
-                        #     time.sleep(1)
-                        #     self.arduino.gpio32_0.on()
-                        #     time.sleep(1)
+                        print("run > The order catched successfully", self.stationID)
                         # Sending batch report data (in the main while loop)
                         
                         # Waiting to start by scanning "ORXXX" 
@@ -269,22 +269,15 @@ class Counter:
             #     time.sleep(1)
             #     print(f"counter > run {e}")
 
-headers = {'Register-ID': register_id, 'Content-Type': 'application/json'}
-try:
-    stationID_resp = requests.get(stationID_url, headers=headers)
-    stationID_list = stationID_resp.json()
-                        
-    stationID = stationID_list['station']['id']
-except Exception as ex:
-    print(f"headers except {ex}")
-    
+
 arduino = Ardiuno()
 camera = Camera()
 db = DB()
 scanner = Scanner()
 
 counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, batch_url=batch_url, stationID_url= stationID_url,
-                            sendbatch_url=sendbatch_url, register_id=register_id, scanned_sales_order=scanned_sales_order)
+                            sendbatch_url=sendbatch_url, register_id=register_id, stationID = stationID, 
+                            scanned_sales_order=scanned_sales_order)
 Thread(target=counter.run).start()
 # time.sleep(10)
 # Thread(target=counter.db_checker).start()
