@@ -94,6 +94,9 @@ class Counter:
                 time.sleep(1)
             # except Exception as e_orc:
             #     print(f"counter > db_order_checker {e_orc}")
+
+    def barcode(self):
+        
     
     def run(self):
         self.last_server_signal = time.time()
@@ -146,6 +149,11 @@ class Counter:
                     pass
                 
                 # Reading the scanner to detect OR and start the counting process
+                Thread(target=scanner.read_barcode).start()
+                print("start to scan the OR code")
+                time.sleep(10)
+                print("stop to scan the OR code")
+                Thread(target=scanner.read_barcode).stop()
                 
             ## Checking the headers resp
             if orders != []:
