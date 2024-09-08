@@ -148,7 +148,7 @@ class Counter:
                 
                 # Reading the scanner to detect OR and start the counting process
                 # Start the scanning thread
-                scan_thread = threading.Thread(target=self.scanner.read_barcode)
+                scan_thread = Thread(target=self.scanner.read_barcode)
                 scan_thread.start()
                 print("Start to scan the QR code")
 
@@ -161,6 +161,10 @@ class Counter:
 
                 # Wait for the thread to finish
                 scan_thread.join()
+                
+                # Access the scanned value
+                scanned_value = scanner.barcode_string_output
+                print(f"Final Scanned Value: {scanned_value}")
                 
             ## Checking the headers resp
             if orders != []:
