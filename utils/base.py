@@ -545,7 +545,6 @@ class Scanner:
         evdev.ecodes.KEY_SLASH: ['/', '?'],
         evdev.ecodes.KEY_SPACE: [' ', ' '],
         }
-        self.running = True  # Control flag for running
         self.ERROR_CHARACTER = '?'
         self.VALUE_UP = 0
         self.VALUE_DOWN = 1
@@ -563,7 +562,6 @@ class Scanner:
             pass
 
     def get_device(self):
-        print(45)
         self.devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
         for self.device in self.devices:
             print('device:', self.device)
@@ -580,8 +578,6 @@ class Scanner:
         # from the lower to upper case variant for the next character only.
         self.shift_active = False
         for self.event in self.dev.read_loop():
-            if not self.running:  # Check if we should stop
-                return None
             if self.event.code == evdev.ecodes.KEY_ENTER and self.event.value == self.VALUE_DOWN:
                 #print('KEY_ENTER -> return')
                 # all barcodes end with a carriage return
@@ -602,7 +598,6 @@ class Scanner:
         try:
             self.upcnumber = self.barcode_reader_evdev()
             if self.upcnumber:  # If a barcode is read, return it
-                print(self.upcnumber)
                 return self.upcnumber
         except KeyboardInterrupt:
             print('Keyboard interrupt')
@@ -612,8 +607,6 @@ class Scanner:
             return None
         
         return self.upcnumber
-    def stop(self):
-        self.running = False  # Set the flag to stop the reading process
 
     # def run_with_timeout(self, timeout):
     #     thread = Thread(target=self.read_barcode)

@@ -126,6 +126,7 @@ class Counter:
             batch_reuest_s_t = time.time()
             while not or_barcode_scanned_flag:
                 # Every the defined time interval, the watcher updates his order DB until OR is scanned
+                time.sleep(5)
                 if time.time() - batch_reuest_s_t > order_request_time_interval:
                     print("\n start to adding the data")
                     batch_reuest_s_t = time.time()
@@ -151,7 +152,7 @@ class Counter:
                 scan_thread = Thread(target=self.scanner.read_barcode)
                 scan_thread.start()
                 print("Start to scan the QR code")
-
+                
                 # Let it scan for 10 seconds
                 time.sleep(10)
 
@@ -163,8 +164,8 @@ class Counter:
                 scan_thread.join()
                 
                 # Access the scanned value
-                scanned_value = scanner.barcode_string_output
-                print(f"Final Scanned Value: {scanned_value}")
+                upcnumber = self.scanner.read_barcode()
+                print(f"Final Scanned Value: {upcnumber}")
                 
             ## Checking the headers resp
             if orders != []:
