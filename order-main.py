@@ -36,67 +36,62 @@ class Counter:
         self.order_product = 0
         self.order_factory = 0
         self.order_batches = ""
+        self.db_order_checking_interval = 10
         self.watcher_live_signal = 60 * 5
         self.take_picture_interval = 60 * 5
     
-    # def db_order_checker(self):
-    #     read_order_once = False
-    #     db_checking_flag = False
-        
-    #     b_1 = 0
-    #     while not self.stop_thread:
-    #         if True:
-    #             # Checking order list on the order DB to catch actual main quantity value
-    #             if not read_order_once:
-    #                 order_data = self.db.order_read()
-    #                 main_order_dict = {}
-    #                 if len(order_data) != 0:
-    #                     read_order_once = True
-    #                     db_checking_flag = True
-    #                     print("db_order_checker order_data", order_data)
-    #                     batches_json = json.loads(order_data[5]) # Convert batches json dumps to json
-    #                     for batch in batches_json:
-    #                         if batch['quantity'] != 0:
-    #                             main_order_dict[batch['batch_uuid']]={
-    #                                                             'quantity': batch['quantity'],
-    #                                                             'assigned_id': batch['assigned_id']}
-    #                         else:
-    #                             pass
-    #                 else:
-    #                     db_checking_flag = False
-    #                     read_order_once = False
-                
-    #             if db_checking_flag:
-    #                 # Read the order to see is the quantity decreased
-    #                 counted_order_data = self.db.order_read()
-    #                 if len(counted_order_data) != 0:
-    #                     counted_order_data_json = json.loads(counted_order_data[5])
-    #                     for counted_batch in counted_order_data_json:
-    #                         if counted_batch['quantity'] != 0:
-    #                             main_quantity = main_order_dict[counted_batch['batch_uuid']]['quantity']
-    #                             current_quantity = counted_batch['quantity']
-    #                             if abs(main_quantity - current_quantity) >= 2:
-    #                                 print(current_quantity, main_quantity, main_order_dict[counted_batch['batch_uuid']]['assigned_id'], self.sales_order)
-    #                                 print("\n db_order_checker > start post requests")
-    #                                 b_1 = b_1 + 2
-    #                                 main_order_dict[counted_batch['batch_uuid']]['quantity'] = current_quantity
-    #                                 # Post requests
-    #                                 # Sendin batch to batch URL
-    #                                 batch_report_body = {"batch_uuid":counted_batch['batch_uuid'], "assigned_id":counted_batch['assigned_id'],
-    #                                                         "type": "new", "station": int(self.stationID),
-    #                                                         "order_id": int(109),
-    #                                                         "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
-    #                                                         "defect_image":[], "action_type": "stop"}  
-    #                                 send_batch_response = requests.post(self.sendbatch_url, json=batch_report_body, headers=self.headers)
+    def db_order_checker(self):
+        read_order_once = False
+        db_checking_flag = False
+        previus_sales_order = ""
+        b_1 = 0
+        st = time.time() 
+        while not self.stop_thread:
+            try:
+                # Checking order db every {self.db_order_checking_interval} second
+                if time.time() - st > self.db_order_checking_interval:
+                    st = time.time() 
+                    # Checking order list on the order DB to catch the quantity value
+                    if self.sales_order != previus_sales_order:
+                        main_order_dict = {}
+                        # The sales order changed, so all data 
+                        previus_sales_order = self.sales_order
+                        main_salse_order_data = self.db.order_read(self.sales_order)
+                        main_batches = json.loads(main_salse_order_data[5])
+                        for batch in batches_json:
+                            if batch['quantity'] != 0:
+                                main_order_dict[batch['batch_uuid']]={
+                                                                'quantity': batch['quantity'],
+                                                                'assigned_id': batch['assigned_id']}
+                            else:
+                                pass
+                    # Getting the scanned order list from order DB
+                    print(f"DB function, the sales order is {self.sales_order} and the previus one is {previus_sales_order}")
+                    
+                    # Getting to detect in which batch changes is happend
+                    updated_salse_order_data = self.db.order_read(self.sales_order)
+                    updated_batches = json.loads(updated_salse_order_data[5])
+                    for batches in updated_batches:
+                        # Check if the order finished or not
+                        is_done_value = updated_salse_order_data[4]
+                        if is_done_value == 0:
+                            main_quantity = main_order_dict[batches['batch_uuid']]['quantity']
+                            current_quantity = counted_batch['quantity']
+                            if main_quantity != current_quantity:
+                                # Post requests
+                                # Sending batch to batch URL
+                                batch_report_body = {"batch_uuid":counted_batch['batch_uuid'], "assigned_id":counted_batch['assigned_id'],
+                                                        "type": "new", "station": int(self.stationID),
+                                                        "order_id": int(self.sales_order),
+                                                        "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
+                                                        "defect_image":[], "action_type": "stop"}  
+                                send_batch_response = requests.post(self.sendbatch_url, json=batch_report_body, headers=self.headers)
 
-    #                                 print("db_order_checker > Send batch status code", send_batch_response.status_code)
-    #                 else:
-    #                     pass
-    #             else:
-    #                 pass
-    #             time.sleep(1)
-    #         # except Exception as e_orc:
-    #         #     print(f"counter > db_order_checker {e_orc}")
+                                print("db_order_checker > Send batch status code", send_batch_response.status_code)
+                        else:
+                            pass
+            except Exception as e_orc:
+                print(f"counter > db_order_checker {e_orc}")
 
     
     def run(self):
@@ -152,7 +147,7 @@ class Counter:
                         
                         # Getting the scanned order list from order DB
                         self.order = self.db.order_read(self.sales_order)
-                        
+                        print("Wait 5 seconds to start the counting")
                         # Checking is the scanned order in the order DB or not
                         if self.order != []:
                             order_counting_start_flag = True
@@ -172,6 +167,7 @@ class Counter:
             while order_counting_start_flag:
                 try:
                     # Reading the box entrance signal
+                    ts = time.time()
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
                     # If a box entered 
                     if abs(a - a_initial) >= 1:
@@ -184,7 +180,6 @@ class Counter:
                             for batch in self.order_batches:
                                 if batch['assigned_id']==str(self.scanned_box_barcode):
                                     # Getting to update the order DB
-                                    # Extract batch_uuid
                                     batch_uuid = batch['batch_uuid']
                                     # Decrease quantity by 1 if it's greater than 0, else eject it
                                     if batch['quantity'] > 0:
@@ -209,36 +204,36 @@ class Counter:
                         pass
                 except Exception as ex3:
                     print(f"run > reading scanner to detect OR {ex3}")
+                # ##
+                # # Send counted data to Monitait
+                # if a + b > dps or ts - self.last_server_signal > self.watcher_live_signal:
+                #     print("check")
+                #     self.last_server_signal = ts
+                #     if ts - self.last_image > self.take_picture_interval:
+                #         captured, image_name = self.camera.capture_and_save()
+                #         print(captured, image_name)
+                #         if captured:
+                #             send_image = True
+                #             self.last_image = ts
+                #         else:
+                #             send_image = False
+                #     extra_info = self.arduino.read_serial()
+                #     if barcode != '' and barcode != self.old_barcode:
+                #         self.old_barcode = barcode
 
-                if a + b > dps or ts - self.last_server_signal > self.watcher_live_signal:
-                    print("check")
-                    self.last_server_signal = ts
-                    if ts - self.last_image > self.take_picture_interval:
-                        captured, image_name = self.camera.capture_and_save()
-                        print(captured, image_name)
-                        if captured:
-                            send_image = True
-                            self.last_image = ts
-                        else:
-                            send_image = False
-                    extra_info = self.arduino.read_serial()
-                    if barcode != '' and barcode != self.old_barcode:
-                        self.old_barcode = barcode
+                #     if self.old_barcode != '':
+                #         extra_info.update({"batch_uuid" : str(self.old_barcode)})
 
-                    if self.old_barcode != '':
-                        extra_info.update({"batch_uuid" : str(self.old_barcode)})
-
-                    timestamp = datetime.datetime.utcnow()
-                    if watcher_update(register_id, quantity=a, defect_quantity=b, send_img=send_image, image_path=image_name, extra_info=extra_info, timestamp=timestamp):
-                        data_saved = True
-                    else:
-                        if self.db.write(register_id=register_id, a=a, b=b, extra_info=extra_info, timestamp=timestamp, image_name=image_name):
-                            data_saved = True
-                    if data_saved:
-                        self.arduino.minus(a=a, b=b)
-                
-            else:
-                print("The orders list are empty, waiting to fill the order list")
+                #     timestamp = datetime.datetime.utcnow()
+                #     if watcher_update(register_id, quantity=a, defect_quantity=b, send_img=send_image, image_path=image_name, extra_info=extra_info, timestamp=timestamp):
+                #         data_saved = True
+                #     else:
+                #         if self.db.write(register_id=register_id, a=a, b=b, extra_info=extra_info, timestamp=timestamp, image_name=image_name):
+                #             data_saved = True
+                #     if data_saved:
+                #         self.arduino.minus(a=a, b=b)
+                # else:
+                #     print("The orders list are empty, waiting to fill the order list")
                 
             
             time.sleep(1)
@@ -250,10 +245,11 @@ camera = Camera()
 db = DB()
 scanner = Scanner()
 
-counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, batch_url=batch_url, stationID_url= stationID_url,
-                            sendbatch_url=sendbatch_url, register_id=register_id)
+counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, batch_url=batch_url,
+                  stationID_url= stationID_url, sendbatch_url=sendbatch_url, register_id=register_id)
+
 Thread(target=counter.run).start()
 # time.sleep(10)
 # Thread(target=counter.db_checker).start()
 time.sleep(10)
-# Thread(target=counter.db_order_checker).start()
+Thread(target=counter.db_order_checker).start()

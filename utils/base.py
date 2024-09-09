@@ -120,7 +120,6 @@ class DB:
                 self.cursor.execute('''insert into watcher_order_table (sales_order, product, factory, is_done, batches_text) values (?,?,?,?,?)''', (sales_order, product, factory, is_done, batches_text))
                 self.dbconnect.commit()
             else:
-                print("is exists")
                 pass
             return True
         except Exception as  e_ow:
@@ -139,9 +138,12 @@ class DB:
             print(f"DB > read {e}")
             return []
     
-    def order_read(self, sales_order):
+    def order_read(self, sales_order=None, status="onetable"):
         try:
-            self.cursor.execute('SELECT * FROM watcher_order_table WHERE sales_order = ?', (sales_order,))
+            if status == "total":
+                self.cursor.execute('SELECT * FROM watcher_order_table')
+            elif status == "onetable":
+                self.cursor.execute('SELECT * FROM watcher_order_table WHERE sales_order = ?', (sales_order,))
             rows = self.cursor.fetchall()
             if len(rows) == 0:
                 return []
