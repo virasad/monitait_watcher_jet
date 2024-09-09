@@ -49,7 +49,7 @@ class Counter:
         while not self.stop_thread:
             try:
                 # Checking order db every {self.db_order_checking_interval} second
-                if time.time() - st > self.db_order_checking_interval:
+                if time.time() - st > self.db_order_checking_interval and self.sales_order != 0:
                     st = time.time() 
                     # Checking order list on the order DB to catch the quantity value
                     if self.sales_order != previus_sales_order:
@@ -58,7 +58,7 @@ class Counter:
                         previus_sales_order = self.sales_order
                         main_salse_order_data = self.db.order_read(self.sales_order)
                         main_batches = json.loads(main_salse_order_data[5])
-                        for batch in batches_json:
+                        for batch in main_batches:
                             if batch['quantity'] != 0:
                                 main_order_dict[batch['batch_uuid']]={
                                                                 'quantity': batch['quantity'],
@@ -91,7 +91,7 @@ class Counter:
                         else:
                             pass
             except Exception as e_orc:
-                print(f"counter > db_order_checker {e_orc}")
+                print(f"counter > db_order_checker error {e_orc}")
 
     
     def run(self):
