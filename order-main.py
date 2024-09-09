@@ -78,6 +78,9 @@ class Counter:
                             main_quantity = main_order_dict[batches['batch_uuid']]['quantity']
                             current_quantity = batches['quantity']
                             if main_quantity != current_quantity:
+                                # Update the quantity of the scanned box 
+                                main_order_dict[batches['batch_uuid']]['quantity'] = current_quantity
+                                
                                 # Post requests
                                 # Sending batch to batch URL
                                 batch_report_body = {"batch_uuid":batches['batch_uuid'], "assigned_id":batches['assigned_id'],
