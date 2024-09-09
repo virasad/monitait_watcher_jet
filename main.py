@@ -15,24 +15,7 @@ import evdev
 
 hostname = str(socket.gethostname())
 
-def get_ip_address():
-  try:
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 80))  # Google's public DNS server
-    ip_address = s.getsockname()[0]  # Get the IP address
-  except Exception as e:
-    err_msg = err_msg + "-unable-to-get-IP-address"
-  finally:
-    s.close()
-  return ip_address
 
-
-def handler(signal, frame):
-    global flag
-    print('handler')
-    flag = False
-
-signal.signal(signal.SIGINT, handler)
 
 def watcher_update(register_id, quantity, defect_quantity, send_img, image_path="scene_image.jpg", product_id=0, lot_info=0, extra_info=None, timestamp=datetime.datetime.utcnow(), *args, **kwargs):
     quantity = quantity
@@ -53,7 +36,7 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
         "timestamp":timestamp, 
         "product_info":product_info
         }
-    print(DATA)
+    # print(DATA)
     session = requests.Session()
 
     URL = "https://app.monitait.com/api/factory/update-watcher/" # send data without waiting for elastic id
@@ -86,18 +69,18 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
                     session.close()
                     return False
             except Exception as e:
-                print(f"watcher update image {e}")
+                # print(f"watcher update image {e}")
                 return False
         else:
             try:
                 response = requests.post(URL, data=json.dumps(DATA), headers={"content-type": "application/json"})
-                print(response.text, "code:", response.status_code)
+                # print(response.text, "code:", response.status_code)
                 if (response.status_code == requests.codes.ok):
                     return True
                 else:
                     return False
             except Exception as e:
-                print(f"watcher update no image {e}")
+                # print(f"watcher update no image {e}")
                 return False
     except Exception as e:
         session.close()
@@ -113,7 +96,7 @@ class DB:
             self.dbconnect.commit()
         except Exception as e:
             pass
-            print(f"DB > init {e}")
+            # print(f"DB > init {e}")
 
 
     def write(self, register_id=hostname, a=0, b=0, extra_info={}, image_name="", timestamp=datetime.datetime.utcnow()):
@@ -153,6 +136,7 @@ class Ardiuno:
         self.i = 0 # iterator for send a dummy 0 request
         self.j = 0
         self.k = 0
+        self.retry_timeout_connect_serial = 1
         self.restart_counter = 0
         self.gpio16_0 = InputDevice(23) # Address pin for DIP switch 3
         self.gpio18_0 = InputDevice(24) # Address pin for DIP switch 4
@@ -213,8 +197,7 @@ class Ardiuno:
                 self.extra_info = {}
                 return True
             except Exception as ee:
-                err_msg = err_msg + "-ser_init"
-                print(e)
+                # print(e)
                 return False
 
     def close_serial(self):
@@ -224,7 +207,7 @@ class Ardiuno:
                 self.ser.close()
             return True
         except Exception as e:
-            print(e)
+            # print(e)
             return False
 
     def int_to_bool_list(self, num):
@@ -262,15 +245,22 @@ class Ardiuno:
                             self.close_serial()
                             self.open_serial()
                         except Exception as er:
-                            print(er)
+                            pass
+                            # print(er)
                     if "fileno" in str(e):
                         try:
                             self.close_serial()
                             self.open_serial()
                         except Exception as ers:
-                            print(ers)
-                    print(f"arduino Serial reader {e}")
+                            pass
+                            # print(ers)
+                    # print(f"arduino Serial reader {e}")
         else:
+            if self.retry_timeout_connect_serial < 3600:
+                self.retry_timeout_connect_serial = self.retry_timeout_connect_serial * 2
+                self.serial_connection = self.open_serial()
+            else:
+                self.retry_timeout_connect_serial = 3600
             return None
 
     def run_GPIO(self):
@@ -288,7 +278,7 @@ class Ardiuno:
                 b = 0
                 if in_bit_a and not(in_bit_b): # read arduino data a (OK)
                     a = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2
-                    print()
+
                 if (a > 0):
                     self.set_gpio_value(a)
                     self.gpio37_c.on() # identify it is a
@@ -322,7 +312,8 @@ class Ardiuno:
                 # print(self.last_a,self.last_b,self.c,self.d)
                 time.sleep(0.01)
             except Exception as e:
-                print(f"arduino GPIO reader {e}")
+                pass
+                # print(f"arduino GPIO reader {e}")
 
 
     def read_GPIO(self):
@@ -488,22 +479,22 @@ class Scanner:
         # for path in evdev.list_devices():
             # print('path:', path)
         self.dev = self.get_device()
-        print('selected device:', self.dev)
+        # print('selected device:', self.dev)
         try:
             self.dev.grab()
         except:
             self.dev.ungrab()
             time.sleep(3)
             self.dev.grab()
-            print("couldn't grab scanner")
+            # print("couldn't grab scanner")
             pass
 
     def get_device(self):
         self.devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
         for self.device in self.devices:
-            print('device:', self.device)
-            print('info:', self.device.info)
-            print(self.device.path, self.device.name, self.device.phys)
+            # print('device:', self.device)
+            # print('info:', self.device.info)
+            # print(self.device.path, self.device.name, self.device.phys)
             for vp in self.VENDOR_PRODUCT:
                 if self.device.info.vendor == vp[0] and self.device.info.product == vp[1]:
                     return self.device
@@ -538,10 +529,10 @@ class Scanner:
             self.upcnumber = self.barcode_reader_evdev()
             # print(self.upcnumber)
         except KeyboardInterrupt:
-            print('Keyboard interrupt')
+            # print('Keyboard interrupt')
             pass
         except Exception as err:
-            print(err)
+            # print(err)
             pass
 #        self.dev.ungrab()
         
@@ -553,6 +544,10 @@ class Counter:
         self.arduino = arduino
         self.stop_thread = False
         self.db = db
+        self.old_local_ip = None
+        self.old_err_msg = ""
+
+        signal.signal(signal.SIGINT, self.handler)
         if camera:
             self.camera = camera
         else:
@@ -564,6 +559,22 @@ class Counter:
         self.watcher_live_signal = 60 * 5
         self.take_picture_interval = 60 * 5
 
+    def handler(self, signal, frame):
+        self.stop_thread = True
+        return True
+
+    def get_ip_address(self):
+      try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))  # Google's public DNS server
+        ip_address = s.getsockname()[0]  # Get the IP address
+      except Exception as e:
+        if not("-IP-address-" in self.err_msg):
+            self.err_msg = self.err_msg + "-IP-address-" + str(e)
+      finally:
+        s.close()
+      return ip_address
+
     def db_checker(self):
         while not self.stop_thread:
             try:
@@ -573,7 +584,8 @@ class Counter:
                         self.db.delete(data[0])
                 time.sleep(1)
             except Exception as e:
-                print(f"counter > db_checker {e}")
+                if not("db_checker" in self.err_msg):
+                    self.err_msg = self.err_msg + "db_checker" + str(e)
 
     def run(self):
         self.last_server_signal = time.time()
@@ -581,7 +593,7 @@ class Counter:
             self.last_image = time.time()
         if self.scanner:
             self.old_barcode = ''
-        old_local_ip = None
+        
         
         while not self.stop_thread:
             try:
@@ -593,13 +605,13 @@ class Counter:
                 a ,b ,c, d ,dps = self.arduino.read_GPIO()
                 if self.scanner:
                     barcode = self.scanner.read_barcode()
-                print(a, b, c, d , dps)
+                # print(a, b, c, d , dps)
                 if a + b > dps or ts - self.last_server_signal > self.watcher_live_signal:
                     self.last_server_signal = ts
                     if self.camera:
                         if ts - self.last_image > self.take_picture_interval:
                             captured, image_name = self.camera.capture_and_save()
-                            print(captured, image_name)
+                            # print(captured, image_name)
                             if captured:
                                 send_image = True
                                 self.last_image = ts
@@ -608,11 +620,16 @@ class Counter:
                     if self.arduino.serial_connection:
                         extra_info = self.arduino.read_serial()
                     
-                    
-                    if (get_ip_address() != old_local_ip):
-                        old_local_ip = get_ip_address()
-                        print(old_local_ip)
-                        extra_info.update({"local_ip" : old_local_ip})
+                    self.local_ip = self.get_ip_address()
+                    if (self.local_ip != self.old_local_ip ):
+                        self.old_local_ip  = self.local_ip
+                        extra_info.update({"local_ip" : self.old_local_ip })
+
+
+                    if (self.err_msg != self.old_err_msg):
+                        self.old_err_msg = self.err_msg
+                        extra_info.update({"err_msg" : self.old_err_msg })
+
 
                     if self.scanner:
                         if barcode != '' and barcode != self.old_barcode:
@@ -622,17 +639,25 @@ class Counter:
                             extra_info.update({"batch_uuid" : str(self.old_barcode)})
 
                     timestamp = datetime.datetime.utcnow()
+
                     if watcher_update(hostname, quantity=a, defect_quantity=b, send_img=send_image, image_path=image_name, extra_info=extra_info, timestamp=timestamp):
                         data_saved = True
                     else:
-                        if self.db.write(register_id=hostname, a=a, b=b, extra_info=extra_info, timestamp=timestamp, image_name=image_name):
-                            data_saved = True
+                        try:
+                            if self.db.write(register_id=hostname, a=a, b=b, extra_info=extra_info, timestamp=timestamp, image_name=image_name):
+                                data_saved = True
+                        except Exception as e:
+                            if not("db_write" in self.err_msg):
+                                self.err_msg = self.err_msg + "db_write" + str(e)
                     if data_saved:
                         self.arduino.minus(a=a, b=b)
+
                 time.sleep(1)
             except Exception as e:
                 time.sleep(1)
-                print(f"counter > run {e}")
+                if not("counter_run" in self.err_msg):
+                    self.err_msg = self.err_msg + "counter_run" + str(e)
+
 
 db = DB()
 arduino = Ardiuno()
