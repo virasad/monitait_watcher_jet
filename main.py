@@ -35,6 +35,7 @@ gauge_snapshot_url = f"rtsp://{ip_camera_username}:{ip_camera_pass}@{gauge_ip_ca
 
 initial_tank_volume = 0
 estimated_tank_volume = -1
+radius = -1
 tank_volume_thresholds = 20
 
 initial_psi = 0
@@ -394,17 +395,19 @@ while flag:
                     # Estimation the tank height
                     estimated_tank_volume = abs(-19.95 + (1.062*radius) - 0.0034 * (radius**2))
                     
-                    if estimated_tank_volume > 42.5:
+                    if estimated_tank_volume > 50:
                       estimated_tank_volume = 0
+                      radius = 0
                     else:
                       pass 
                   else:
                     pass
           else:
             estimated_tank_volume = 1
+            radius = 1
           
           # Writing the output image
-          extra_info_volume.update({"tank_volume" : estimated_tank_volume})  
+          extra_info_volume.update({"tank_volume" : estimated_tank_volume, "circle_radius": radius})  
           cv2.imwrite(f"{image_path}.jpg", src)
           initial_tank_volume = estimated_tank_volume
           
