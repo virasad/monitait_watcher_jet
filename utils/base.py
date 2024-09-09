@@ -141,7 +141,7 @@ class DB:
     
     def order_read(self, sales_order):
         try:
-            self.cursor.execute("""SELECT * FROM watcher_order_table WHERE sales_order = {}""".format(sales_order))
+            self.cursor.execute('SELECT * FROM watcher_order_table WHERE sales_order = ?', (sales_order,))
             rows = self.cursor.fetchall()
             if len(rows) == 0:
                 return []
