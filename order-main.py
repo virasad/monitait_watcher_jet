@@ -251,8 +251,7 @@ db = DB()
 scanner = Scanner()
 
 counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, batch_url=batch_url, stationID_url= stationID_url,
-                            sendbatch_url=sendbatch_url, register_id=register_id, stationID = stationID, 
-                            sales_order=sales_order)
+                            sendbatch_url=sendbatch_url, register_id=register_id)
 Thread(target=counter.run).start()
 # time.sleep(10)
 # Thread(target=counter.db_checker).start()
