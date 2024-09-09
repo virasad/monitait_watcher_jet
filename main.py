@@ -245,14 +245,14 @@ class Ardiuno:
                             self.close_serial()
                             self.open_serial()
                         except Exception as er:
-                            err = er
+                            pass
                             # print(er)
                     if "fileno" in str(e):
                         try:
                             self.close_serial()
                             self.open_serial()
                         except Exception as ers:
-                            err = ers
+                            pass
                             # print(ers)
                     # print(f"arduino Serial reader {e}")
         else:
@@ -312,6 +312,7 @@ class Ardiuno:
                 # print(self.last_a,self.last_b,self.c,self.d)
                 time.sleep(0.01)
             except Exception as e:
+                pass
                 # print(f"arduino GPIO reader {e}")
 
 
