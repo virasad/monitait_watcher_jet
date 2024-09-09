@@ -545,7 +545,8 @@ class Counter:
         self.stop_thread = False
         self.db = db
         self.old_local_ip = None
-        self.err_msg = ""
+        self.old_err_msg = ""
+
         signal.signal(signal.SIGINT, self.handler)
         if camera:
             self.camera = camera
@@ -623,6 +624,11 @@ class Counter:
                     if (self.local_ip != self.old_local_ip ):
                         self.old_local_ip  = self.local_ip
                         extra_info.update({"local_ip" : self.old_local_ip })
+
+
+                    if (self.err_msg != self.old_err_msg):
+                        self.old_err_msg = self.err_msg
+                        extra_info.update({"err_msg" : self.old_err_msg })
 
 
                     if self.scanner:
