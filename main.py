@@ -547,6 +547,8 @@ class Counter:
         self.old_local_ip = None
         self.old_err_msg = ""
         self.err_msg = ""
+        self.old_c = 0 # analog input of watcher
+        self.old_d = 0 # battery value
 
         signal.signal(signal.SIGINT, self.handler)
         if camera:
@@ -621,6 +623,14 @@ class Counter:
                     if self.arduino.serial_connection:
                         extra_info = self.arduino.read_serial()
                     
+                    if (c != self.old_c):
+                        self.old_c  = c
+                        extra_info.update({"analog" : self.old_c })
+
+                    if (d != self.old_d):
+                        self.old_d  = d
+                        extra_info.update({"battery" : self.old_d })
+
                     self.local_ip = self.get_ip_address()
                     if (self.local_ip != self.old_local_ip ):
                         self.old_local_ip  = self.local_ip
