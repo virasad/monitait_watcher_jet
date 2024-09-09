@@ -3,9 +3,9 @@ from utils.base import *
 register_id = str(socket.gethostname())
 
 ## URLs
-batch_url = 'https://develop-app.monitait.com/api/elastic-search/batch/'
-stationID_url = f'https://develop-app.monitait.com/api/factory/watcher/{register_id}/'
-sendbatch_url = 'https://develop-app.monitait.com/api/elastic-search/send-batch-report/'
+batch_url = 'https://console.monitait.com/api/elastic-search/batch/'
+stationID_url = f'https://console.monitait.com/api/factory/watcher/{register_id}/'
+sendbatch_url = 'https://console.monitait.com/api/elastic-search/send-batch-report/'
 
 try:
     os.system('./rm_py.sh')
@@ -135,6 +135,7 @@ class Counter:
                     
                     # Added the order batches to the order DB
                     for order in orders:
+                        
                         # Save the orders to database
                         self.db.order_write(sales_order=order["sales_order"], product=order["product"], factory=order["factory"], 
                                             is_done = 0, batches_text= json.dumps(order['batches']))
