@@ -243,6 +243,7 @@ class Ardiuno:
                     if "Input/output" in str(e):
                         try:
                             self.close_serial()
+                            time.sleep()
                             self.open_serial()
                         except Exception as er:
                             pass
@@ -256,11 +257,12 @@ class Ardiuno:
                             # print(ers)
                     # print(f"arduino Serial reader {e}")
         else:
-            if self.retry_timeout_connect_serial < 3600:
+            if self.retry_timeout_connect_serial < 4096:
                 self.retry_timeout_connect_serial = self.retry_timeout_connect_serial * 2
                 self.serial_connection = self.open_serial()
             else:
-                self.retry_timeout_connect_serial = 3600
+                self.retry_timeout_connect_serial = 4096
+            time.sleep(self.retry_timeout_connect_serial)
             return None
 
     def run_GPIO(self):
