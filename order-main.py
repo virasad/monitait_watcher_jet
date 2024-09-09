@@ -76,11 +76,11 @@ class Counter:
                         is_done_value = updated_salse_order_data[4]
                         if is_done_value == 0:
                             main_quantity = main_order_dict[batches['batch_uuid']]['quantity']
-                            current_quantity = counted_batch['quantity']
+                            current_quantity = batches['quantity']
                             if main_quantity != current_quantity:
                                 # Post requests
                                 # Sending batch to batch URL
-                                batch_report_body = {"batch_uuid":counted_batch['batch_uuid'], "assigned_id":counted_batch['assigned_id'],
+                                batch_report_body = {"batch_uuid":batches['batch_uuid'], "assigned_id":batches['assigned_id'],
                                                         "type": "new", "station": int(self.stationID),
                                                         "order_id": int(self.sales_order),
                                                         "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
