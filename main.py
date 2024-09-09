@@ -15,8 +15,6 @@ import evdev
 
 hostname = str(socket.gethostname())
 
-
-
 def watcher_update(register_id, quantity, defect_quantity, send_img, image_path="scene_image.jpg", product_id=0, lot_info=0, extra_info=None, timestamp=datetime.datetime.utcnow(), *args, **kwargs):
     quantity = quantity
     defect_quantity = defect_quantity
@@ -548,6 +546,7 @@ class Counter:
         self.db = db
         self.old_local_ip = None
         self.old_err_msg = ""
+        self.err_msg = ""
 
         signal.signal(signal.SIGINT, self.handler)
         if camera:
