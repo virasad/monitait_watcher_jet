@@ -198,12 +198,15 @@ class Counter:
                     if abs(a - a_initial) >= 1:
                         print("A box entered to the zone")
                         a_initial = a
+                        box_in_order_batch = False
                         # Waiting to read the box barcode 
                         self.scanned_box_barcode = self.scanner.read_barcode()
                         if self.scanned_box_barcode != 0:
                             # Checking is the scanned box barcode is in the order batches or not
                             for batch in self.order_batches:
                                 if batch['assigned_id']==str(self.scanned_box_barcode):
+                                    # The box barcode is in the order
+                                    box_in_order_batch = True
                                     # Getting to update the order DB
                                     batch_uuid = batch['batch_uuid']
                                     # Decrease quantity by 1 if it's greater than 0, else eject it
@@ -225,6 +228,14 @@ class Counter:
                                         time.sleep(1)
                                         self.arduino.gpio32_0.on()
                                         time.sleep(1)
+                            
+                            # If the scanned barcode is not in the batches, eject it 
+                            if not box_in_order_batch:
+                                # The detected barcode is not on the order list
+                                self.arduino.gpio32_0.off()
+                                time.sleep(1)
+                                self.arduino.gpio32_0.on()
+                                time.sleep(1)
                     else:
                         pass
                 except Exception as ex3:
