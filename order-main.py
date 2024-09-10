@@ -71,13 +71,15 @@ class Counter:
             # Checking order db every {self.db_order_checking_interval} second
             if time.time() - st > self.db_order_checking_interval and self.sales_order != 0:
                 st = time.time() 
-                try:
+                if True:
                     # Checking order list on the order DB to catch the quantity value
                     if self.sales_order != previus_sales_order:
                         main_order_dict = {}
                         # The sales order changed, so all data 
                         previus_sales_order = self.sales_order
                         main_salse_order_data = self.db.order_read(self.sales_order)
+                        print(f"DB, {previus_sales_order}, main_salse_order_data, {main_salse_order_data}")
+                        print("\n main_salse_order_data", main_salse_order_data)
                         main_batches = json.loads(main_salse_order_data[5])
                         for batch in main_batches:
                             if batch['quantity'] != 0:
@@ -114,8 +116,8 @@ class Counter:
                                 print("db_order_checker > Send batch status code", send_batch_response.status_code)
                         else:
                             pass
-                except Exception as ex2:
-                    print(f"db_order_checker > checking the database {ex2}")
+                # except Exception as ex2:
+                #     print(f"db_order_checker > checking the database {ex2}")
 
     
     def run(self):
@@ -156,7 +158,7 @@ class Counter:
                     
                     # Added the order batches to the order DB
                     for order in orders:
-                        print("sales_order", order["sales_order"], "quantity", order["quantity"])
+                        print("sales_order", order["sales_order"])
                         # Save the orders to database
                         self.db.order_write(sales_order=order["sales_order"], product=order["product"], factory=order["factory"], 
                                             is_done = 0, batches_text= json.dumps(order['batches']))
