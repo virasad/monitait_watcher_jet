@@ -36,9 +36,10 @@ class Counter:
         self.order_product = 0
         self.order_factory = 0
         self.order_batches = ""
-        self.db_order_checking_interval = 10
+        self.db_order_checking_interval = 10 # Seconda
         self.watcher_live_signal = 60 * 5
         self.take_picture_interval = 60 * 5
+        self.order_db_remove_interval = 12 * 3600  # Convert hours to seconds
     
     def db_order_checker(self):
         read_order_once = False
@@ -46,11 +47,31 @@ class Counter:
         previus_sales_order = ""
         b_1 = 0
         st = time.time() 
+        db_st = time.time()
         while not self.stop_thread:
-            try:
-                # Checking order db every {self.db_order_checking_interval} second
-                if time.time() - st > self.db_order_checking_interval and self.sales_order != 0:
-                    st = time.time() 
+            # Removing the order DB every specific time interval
+            if time.time() - db_st > self.order_db_remove_interval:
+                db_st = time.time()
+                try:
+                    # Removed all datafrom table
+                    table_delete = self.db.order_delete(status="total")
+                    # Getting update the watcher db
+                    batch_resp = requests.get(self.batch_url, headers=self.headers) 
+                    # Added all batches to a list
+                    order_list = batch_resp.json()  
+                    orders = [entry["_source"]["batch"] for entry in order_list] 
+                    # Added the order batches to the order DB
+                    for order in orders:
+                        # Save the orders to database
+                        self.db.order_write(sales_order=order["sales_order"], product=order["product"], factory=order["factory"], 
+                                            is_done = 0, batches_text= json.dumps(order['batches']))
+                except Exception as ex1:
+                    print(f"db_order_checker > removing database {ex1}")
+                
+            # Checking order db every {self.db_order_checking_interval} second
+            if time.time() - st > self.db_order_checking_interval and self.sales_order != 0:
+                st = time.time() 
+                try:
                     # Checking order list on the order DB to catch the quantity value
                     if self.sales_order != previus_sales_order:
                         main_order_dict = {}
@@ -93,8 +114,8 @@ class Counter:
                                 print("db_order_checker > Send batch status code", send_batch_response.status_code)
                         else:
                             pass
-            except Exception as e_orc:
-                print(f"counter > db_order_checker error {e_orc}")
+                except Exception as ex2:
+                    print(f"db_order_checker > checking the database {ex1}")
 
     
     def run(self):
