@@ -115,7 +115,7 @@ class Counter:
                         else:
                             pass
                 except Exception as ex2:
-                    print(f"db_order_checker > checking the database {ex1}")
+                    print(f"db_order_checker > checking the database {ex2}")
 
     
     def run(self):
@@ -156,7 +156,7 @@ class Counter:
                     
                     # Added the order batches to the order DB
                     for order in orders:
-                        print("Order", order)
+                        print("sales_order", order["sales_order"])
                         # Save the orders to database
                         self.db.order_write(sales_order=order["sales_order"], product=order["product"], factory=order["factory"], 
                                             is_done = 0, batches_text= json.dumps(order['batches']))
