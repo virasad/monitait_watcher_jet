@@ -666,6 +666,7 @@ class Counter:
                 time.sleep(1)
             except Exception as e:
                 time.sleep(1)
+                print(e)
                 if not("counter_run" in self.err_msg):
                     self.err_msg = self.err_msg + "counter_run" + str(e)
 
