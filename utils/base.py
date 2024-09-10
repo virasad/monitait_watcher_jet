@@ -555,6 +555,7 @@ class Scanner:
         self.VALUE_UP = 0
         self.VALUE_DOWN = 1
         self.barcode_string_output = ''
+        self.upcnumber = None
         for path in evdev.list_devices():
             print('path:', path)
         self.dev = self.get_device()

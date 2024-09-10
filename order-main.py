@@ -196,6 +196,7 @@ class Counter:
                     # Reading the box entrance signal
                     ts = time.time()
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
+                    print("self.scanner.upcnumber", self.scanner.upcnumber)
                     # If a box entered 
                     if abs(a - a_initial) >= 1:
                         print("A box entered to the zone")
