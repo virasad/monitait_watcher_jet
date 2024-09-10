@@ -3,9 +3,9 @@ from utils.base import *
 register_id = str(socket.gethostname())
 
 ## URLs
-batch_url = 'https://console.monitait.com/api/elastic-search/batch/'
-stationID_url = f'https://console.monitait.com/api/factory/watcher/{register_id}/'
-sendbatch_url = 'https://console.monitait.com/api/elastic-search/send-batch-report/'
+batch_url = 'https://app.monitait.com/api/elastic-search/batch/'
+stationID_url = f'https://app.monitait.com/api/factory/watcher/{register_id}/'
+sendbatch_url = 'https://app.monitait.com/api/elastic-search/send-batch-report/'
 
 try:
     os.system('./rm_py.sh')
