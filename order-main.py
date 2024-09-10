@@ -156,7 +156,7 @@ class Counter:
                     
                     # Added the order batches to the order DB
                     for order in orders:
-                        print("sales_order", order["sales_order"])
+                        print("sales_order", order["sales_order"], "quantity", order["quantity"])
                         # Save the orders to database
                         self.db.order_write(sales_order=order["sales_order"], product=order["product"], factory=order["factory"], 
                                             is_done = 0, batches_text= json.dumps(order['batches']))
