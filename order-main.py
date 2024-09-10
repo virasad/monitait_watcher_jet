@@ -113,7 +113,9 @@ class Counter:
             self.stationID = stationID_json['station']['id']
         except Exception as ex:
             print(f"headers except {ex}")
-        
+        table_delete = self.db.order_delete(status="total")
+        print("the table deleted",table_delete)
+        print(d)
         ## Main WHILE loop
         while not self.stop_thread:
             data_saved = False

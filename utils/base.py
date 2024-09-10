@@ -162,9 +162,12 @@ class DB:
             print(f"DB > delete {e}")
             return False
     
-    def order_delete(self, sales_order):
+    def order_delete(self, sales_order=None, status="onetable"):
         try:
-            self.cursor.execute("""DELETE from watcher_order_table where  sales_order = {}""".format(sales_order))
+            if status == "onetable":
+                self.cursor.execute("""DELETE from watcher_order_table where  sales_order = {}""".format(sales_order))
+            elif status == "total":
+                self.cursor.execute("""DELETE from watcher_order_table""")
             self.dbconnect.commit()
             return True
         except Exception as e_od:
