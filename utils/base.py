@@ -567,7 +567,6 @@ class Scanner:
             pass
 
     def get_device(self):
-        print(45)
         self.devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
         for self.device in self.devices:
             print('device:', self.device)
@@ -604,6 +603,7 @@ class Scanner:
         try:
             self.upcnumber = self.barcode_reader_evdev()
             if self.upcnumber:  # If a barcode is read, return it
+                print("self.upcnumber", self.upcnumber)
                 return self.upcnumber
         except KeyboardInterrupt:
             print('Keyboard interrupt')
