@@ -134,9 +134,7 @@ class Counter:
             self.stationID = stationID_json['station']['id']
         except Exception as ex:
             print(f"headers except {ex}")
-        table_delete = self.db.order_delete(status="total")
-        print("the table deleted",table_delete)
-        print(d)
+        ##
         ## Main WHILE loop
         while not self.stop_thread:
             data_saved = False
@@ -158,7 +156,7 @@ class Counter:
                     
                     # Added the order batches to the order DB
                     for order in orders:
-                        
+                        print("Order", order)
                         # Save the orders to database
                         self.db.order_write(sales_order=order["sales_order"], product=order["product"], factory=order["factory"], 
                                             is_done = 0, batches_text= json.dumps(order['batches']))
