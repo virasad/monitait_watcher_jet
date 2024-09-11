@@ -167,7 +167,8 @@ class Counter:
                 ##
                 # Reading the scanner to detect OR and start the counting process
                 try:
-                    operator_scaning_barcode = self.scanner.read_barcode()
+                    # operator_scaning_barcode = self.scanner.read_barcode()
+                    print("\n before scanning OR", self.scanner.upcnumber)
                     if "OR" in operator_scaning_barcode:
                         # separating OR scanned barcode
                         _, _, self.sales_order = operator_scaning_barcode.partition("OR")
@@ -196,14 +197,14 @@ class Counter:
                     # Reading the box entrance signal
                     ts = time.time()
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
-                    print("self.scanner.upcnumber", self.scanner.upcnumber)
+                    print("box entered zone", self.scanner.upcnumber)
                     # If a box entered 
                     if abs(a - a_initial) >= 1:
                         print("A box entered to the zone")
                         a_initial = a
                         box_in_order_batch = False
                         # Waiting to read the box barcode 
-                        self.scanned_box_barcode = self.scanner.read_barcode()
+                        print("Waiting to read the box barcode ", self.scanner.upcnumber)
                         if self.scanned_box_barcode != 0:
                             # Checking is the scanned box barcode is in the order batches or not
                             for batch in self.order_batches:
