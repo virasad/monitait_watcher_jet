@@ -601,19 +601,20 @@ class Scanner:
         return self.barcode_string_output
     
     def read_barcode(self):
-
-        try:
-            self.upcnumber = self.barcode_reader_evdev()
-            if self.upcnumber:  # If a barcode is read, return it
-                return self.upcnumber
-        except KeyboardInterrupt:
-            print('Keyboard interrupt')
-            return None
-        except Exception as err:
-            print(err)
-            return None
+        while True:
+            try:
+                self.upcnumber = self.barcode_reader_evdev()
+                print("A", self.scanner.upcnumber)
+                if self.upcnumber:  # If a barcode is read, return it
+                    return self.upcnumber
+            except KeyboardInterrupt:
+                print('Keyboard interrupt')
+                return None
+            except Exception as err:
+                print(err)
+                return None
         
-        return self.upcnumber
+            return self.upcnumber
 
     # def run_with_timeout(self, timeout):
     #     thread = Thread(target=self.read_barcode)
