@@ -120,7 +120,6 @@ class DB:
                 self.cursor.execute('''insert into watcher_order_table (sales_order, product, factory, is_done, batches_text) values (?,?,?,?,?)''', (sales_order, product, factory, is_done, batches_text))
                 self.dbconnect.commit()
             else:
-                print("Is exists")
                 pass
             return True
         except Exception as  e_ow:
@@ -555,7 +554,6 @@ class Scanner:
         self.VALUE_UP = 0
         self.VALUE_DOWN = 1
         self.barcode_string_output = ''
-        self.upcnumber = None
         for path in evdev.list_devices():
             print('path:', path)
         self.dev = self.get_device()
@@ -604,7 +602,6 @@ class Scanner:
         while True:
             try:
                 self.upcnumber = self.barcode_reader_evdev()
-                print("A", self.upcnumber)
                 if self.upcnumber:  # If a barcode is read, return it
                     return self.upcnumber
             except KeyboardInterrupt:

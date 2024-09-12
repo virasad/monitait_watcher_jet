@@ -36,6 +36,7 @@ class Counter:
         self.order_product = 0
         self.order_factory = 0
         self.order_batches = ""
+        self.is_done = 0
         self.db_order_checking_interval = 10 # Seconda
         self.watcher_live_signal = 60 * 5
         self.take_picture_interval = 60 * 5
@@ -167,7 +168,7 @@ class Counter:
                 ##
                 # Reading the scanner to detect OR and start the counting process
                 try:
-                    # operator_scaning_barcode = self.scanner.read_barcode()
+                    operator_scaning_barcode = self.scanner.read_barcode()
                     print("\n before scanning OR", self.scanner.upcnumber)
                     operator_scaning_barcode = self.scanner.upcnumber
                     if "OR" in operator_scaning_barcode:
@@ -198,15 +199,13 @@ class Counter:
                     # Reading the box entrance signal
                     ts = time.time()
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
-                    print("box entered zone", self.scanner.upcnumber)
                     # If a box entered 
                     if abs(a - a_initial) >= 1:
                         print("A box entered to the zone")
                         a_initial = a
                         box_in_order_batch = False
                         # Waiting to read the box barcode 
-                        print("Waiting to read the box barcode ", self.scanner.upcnumber)
-                        self.scanned_box_barcode = self.scanner.upcnumber
+                        self.scanned_box_barcode = self.scanner.read_barcode()
                         if self.scanned_box_barcode != 0:
                             # Checking is the scanned box barcode is in the order batches or not
                             for batch in self.order_batches:
@@ -246,36 +245,36 @@ class Counter:
                         pass
                 except Exception as ex3:
                     print(f"run > reading scanner to detect OR {ex3}")
-                # ##
-                # # Send counted data to Monitait
-                # if a + b > dps or ts - self.last_server_signal > self.watcher_live_signal:
-                #     print("check")
-                #     self.last_server_signal = ts
-                #     if ts - self.last_image > self.take_picture_interval:
-                #         captured, image_name = self.camera.capture_and_save()
-                #         print(captured, image_name)
-                #         if captured:
-                #             send_image = True
-                #             self.last_image = ts
-                #         else:
-                #             send_image = False
-                #     extra_info = self.arduino.read_serial()
-                #     if barcode != '' and barcode != self.old_barcode:
-                #         self.old_barcode = barcode
+                ##
+                # Send counted data to Monitait
+                if a + b > dps or ts - self.last_server_signal > self.watcher_live_signal:
+                    print("check")
+                    self.last_server_signal = ts
+                    if ts - self.last_image > self.take_picture_interval:
+                        captured, image_name = self.camera.capture_and_save()
+                        print(captured, image_name)
+                        if captured:
+                            send_image = True
+                            self.last_image = ts
+                        else:
+                            send_image = False
+                    extra_info = self.arduino.read_serial()
+                    if barcode != '' and barcode != self.old_barcode:
+                        self.old_barcode = barcode
 
-                #     if self.old_barcode != '':
-                #         extra_info.update({"batch_uuid" : str(self.old_barcode)})
+                    if self.old_barcode != '':
+                        extra_info.update({"batch_uuid" : str(self.old_barcode)})
 
-                #     timestamp = datetime.datetime.utcnow()
-                #     if watcher_update(register_id, quantity=a, defect_quantity=b, send_img=send_image, image_path=image_name, extra_info=extra_info, timestamp=timestamp):
-                #         data_saved = True
-                #     else:
-                #         if self.db.write(register_id=register_id, a=a, b=b, extra_info=extra_info, timestamp=timestamp, image_name=image_name):
-                #             data_saved = True
-                #     if data_saved:
-                #         self.arduino.minus(a=a, b=b)
-                # else:
-                #     print("The orders list are empty, waiting to fill the order list")
+                    timestamp = datetime.datetime.utcnow()
+                    if watcher_update(register_id, quantity=a, defect_quantity=b, send_img=send_image, image_path=image_name, extra_info=extra_info, timestamp=timestamp):
+                        data_saved = True
+                    else:
+                        if self.db.write(register_id=register_id, a=a, b=b, extra_info=extra_info, timestamp=timestamp, image_name=image_name):
+                            data_saved = True
+                    if data_saved:
+                        self.arduino.minus(a=a, b=b)
+                else:
+                    print("The orders list are empty, waiting to fill the order list")
                 
             
             time.sleep(1)
@@ -295,5 +294,3 @@ Thread(target=counter.run).start()
 # Thread(target=counter.db_checker).start()
 time.sleep(10)
 Thread(target=counter.db_order_checker).start()
-time.sleep(10)
-Thread(target=scanner.read_barcode).start()
