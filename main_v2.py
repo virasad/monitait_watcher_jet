@@ -1,4 +1,5 @@
-from periphery import GPIO
+from gpiozero import InputDevice
+from gpiozero import LED
 import sqlite3
 import time
 import datetime
@@ -130,38 +131,38 @@ k = 0
 restart_counter = 0
 
 signal.signal(signal.SIGINT, handler)
-gpio07_0 = GPIO(4, "in")
-gpio16_1 = GPIO(23, "in")
-gpio18_2 = GPIO(24, "in")
-gpio19_3 = GPIO(10, "in")
+gpio07_0 = InputDevice(4)
+gpio16_1 = InputDevice(23)
+gpio18_2 = InputDevice(24)
+gpio19_3 = InputDevice(10)
 
-gpio29_0 = GPIO(5, "out")
-gpio31_1 = GPIO(6, "out")
-gpio33_2 = GPIO(13, "out")
-gpio35_3 = GPIO(19, "out")
+gpio29_0 = LED(5)
+gpio31_1 = LED(6)
+gpio33_2 = LED(13)
+gpio35_3 = LED(19)
 
-gpio29_0.write(False)
-gpio31_1.write(False)
-gpio33_2.write(False)
-gpio35_3.write(False)
+gpio29_0.off()
+gpio31_1.off()
+gpio33_2.off()
+gpio35_3.off()
 
-gpio21_a = GPIO(9, "in")
-gpio23_b = GPIO(11, "in")
+gpio21_a = InputDevice(9)
+gpio23_b = InputDevice(11)
 
-gpio37_c = GPIO(26, "out")
-gpio26_d = GPIO(8, "out")
-gpio37_c.write(True) # identify default is a
-gpio26_d.write(True) # identify the default there is no read from RPI
+gpio37_c = LED(26)
+gpio26_d = LED(8)
+gpio37_c.on() # identify default is a
+gpio26_d.on() # identify the default there is no read from RPI
 
 def int_to_bool_list(num):
   return [bool(num & (1<<n)) for n in range(4)]
 
 def set_gpio_value(x):
   b_list = int_to_bool_list(x)
-  gpio35_3.write(b_list[3])
-  gpio33_2.write(b_list[2])
-  gpio31_1.write(b_list[1])
-  gpio29_0.write(b_list[0])
+  gpio35_3.value = b_list[3]
+  gpio33_2.value = b_list[2]
+  gpio31_1.value = b_list[1]
+  gpio29_0.value = b_list[0]
   return
 
 temp_a = 0
@@ -214,21 +215,21 @@ while flag:
               extra_info.update({"d{}".format(z) : int(serial_list[z])})
             k = 0
             i = i + 1
-        in_bit_a = gpio21_a.read() # read arduino data
-        in_bit_b = gpio23_b.read()
-        in_bit_0 = gpio07_0.read()
-        in_bit_1 = gpio16_1.read()
-        in_bit_2 = gpio18_2.read()
-        in_bit_3 = gpio19_3.read()
+        in_bit_a = gpio21_a.value # read arduino data
+        in_bit_b = gpio23_b.value
+        in_bit_0 = gpio07_0.value
+        in_bit_1 = gpio16_1.value
+        in_bit_2 = gpio18_2.value
+        in_bit_3 = gpio19_3.value
 
         if in_bit_a and not(in_bit_b): # read arduino data a (OK)
           a = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
           if (a > 0):
             set_gpio_value(a)
-            gpio26_d.write(False)
-            while (gpio21_a.read() != gpio23_b.read()):
+            gpio26_d.off()
+            while (gpio21_a.value != gpio23_b.value):
               time.sleep(0.001)
-            gpio26_d.write(True)
+            gpio26_d.on()
             temp_a = temp_a + a
             start_ts = time.time()
             get_ts = 1/(start_ts - old_start_ts)+0.9*get_ts
@@ -238,12 +239,12 @@ while flag:
           b = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2 + 8*in_bit_3
           if (b > 0):
             set_gpio_value(b)
-            gpio37_c.write(False) # identify it is b
-            gpio26_d.write(False)
-            while (gpio21_a.read() != gpio23_b.read()):
+            gpio37_c.off() # identify it is b
+            gpio26_d.off()
+            while (gpio21_a.value != gpio23_b.value):
               time.sleep(0.001)
-            gpio37_c.write(True) # identify default is a
-            gpio26_d.write(True)
+            gpio37_c.on() # identify default is a
+            gpio26_d.on()
             temp_b = temp_b + b
             start_ts = time.time()
             get_ts = 1/(start_ts - old_start_ts)+0.9*get_ts
