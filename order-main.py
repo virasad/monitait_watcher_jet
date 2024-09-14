@@ -274,7 +274,7 @@ class Counter:
                             data_saved = True
                     if data_saved:
                         self.arduino.minus(a=a, b=b)
-                else:
+                # else:
                     # print("The orders list are empty, waiting to fill the order list")
                 
             

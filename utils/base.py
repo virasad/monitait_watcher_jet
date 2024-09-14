@@ -498,7 +498,7 @@ class Camera:
 class Scanner:
     def __init__(self, fps=30, exposure=100, gain=1, gamma=1, contrast=3, roi=[0,0,1920,1080], temperature=5000, brightness=1, step=10, auto_exposure=3) -> None:
         self.VENDOR_PRODUCT = [
-        [0xac90, 0x3002], # [vendor, product]
+        [0x24ea, 0x0198], # [vendor, product]
         ]
         self.CHARMAP = {
         evdev.ecodes.KEY_1: ['1', '!'],
