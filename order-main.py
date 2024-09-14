@@ -186,6 +186,7 @@ class Counter:
                             self.order_product = self.order[2]
                             self.order_factory = self.order[3]
                             print(f"The sales order {self.sales_order} is in the DB, the order is {self.order}")
+                            print("The batches", self.order_batches)
                         else:
                             print(f"The sales order {self.sales_order} is not in the DB")
                     else:
@@ -274,7 +275,7 @@ class Counter:
                     if data_saved:
                         self.arduino.minus(a=a, b=b)
                 else:
-                    print("The orders list are empty, waiting to fill the order list")
+                    # print("The orders list are empty, waiting to fill the order list")
                 
             
             time.sleep(1)
