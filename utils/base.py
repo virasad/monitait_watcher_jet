@@ -639,8 +639,10 @@ class UARTscanner:
             self.ser.open()
             if self.ser.is_open:
                 print("Serial is open")
+                self.ser.open()
                 return self.ser
             else:
+                self.ser.open()
                 print("The serial scanner is also close")
                 return False
                 
