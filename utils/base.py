@@ -636,16 +636,7 @@ class UARTscanner:
         try:
             self.ser = serial.Serial(port = self.port, baudrate = self.baudrate,
                                         parity = serial.PARITY_NONE, timeout = self.timeout)
-            self.ser.open()
-            if self.ser.is_open:
-                print("Serial is open")
-                self.ser.open()
-                return self.ser
-            else:
-                self.ser.open()
-                print("The serial scanner is also close")
-                return False
-                
+            return self.ser 
         except Exception as ex1:
             return None
             print(f"UARTscanner > get scanner {ex1}")
@@ -653,8 +644,10 @@ class UARTscanner:
     def read_data(self):
         try:
             self.output = self.serial.readline()
+            return self.output
         except Exception as ex2:
             print(f"UARTscanner > read data {ex2}")
+            return None
            
         
         
