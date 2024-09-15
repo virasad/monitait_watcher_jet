@@ -44,17 +44,17 @@ class Counter:
         self.order_db_remove_interval = 12 * 3600  # Convert hours to seconds
     
     def db_order_checker(self):
-        read_order_once = False
+        read_order_once = True
         db_checking_flag = False
         previus_sales_order = ""
         b_1 = 0
         st = time.time() 
         db_st = time.time()
         while not self.stop_thread:
-            # Removing the order DB every specific time interval
+            # Removing the order DB every 12 hours
             if time.time() - db_st > self.order_db_remove_interval:
                 db_st = time.time()
-                try:
+                if True:
                     # Removed all datafrom table
                     table_delete = self.db.order_delete(status="total")
                     # Getting update the watcher db
@@ -67,8 +67,8 @@ class Counter:
                         # Save the orders to database
                         self.db.order_write(sales_order=order["sales_order"], product=order["product"], factory=order["factory"], 
                                             is_done = 0, batches_text= json.dumps(order['batches']))
-                except Exception as ex1:
-                    print(f"db_order_checker > removing database {ex1}")
+                # except Exception as ex1:
+                #     print(f"db_order_checker > removing database {ex1}")
                 
             # Checking order db every {self.db_order_checking_interval} second
             if time.time() - st > self.db_order_checking_interval and self.sales_order != 0:
@@ -152,7 +152,7 @@ class Counter:
                 ##
                 # The watcher updates his order DB until OR is scanned
                 print("\n start to adding the data")
-                try:
+                if True:
                     batch_resp = requests.get(self.batch_url, headers=self.headers) 
                     # Added all batches to a list
                     order_list = batch_resp.json()  
@@ -163,14 +163,13 @@ class Counter:
                         # Save the orders to database
                         self.db.order_write(sales_order=order["sales_order"], product=order["product"], factory=order["factory"], 
                                             is_done = 0, batches_text= json.dumps(order['batches']))
-                except Exception as ex1:
-                    print(f"run > waiting to the OR barcode {ex1}")
+                # except Exception as ex1:
+                #     print(f"run > waiting to the OR barcode {ex1}")
                 ##
                 # Reading the scanner to detect OR and start the counting process
-                try:
+                if True:
                     operator_scaning_barcode = self.scanner.read_barcode()
                     print("\n before scanning OR", operator_scaning_barcode)
-                    operator_scaning_barcode = operator_scaning_barcode
                     if "OR" in operator_scaning_barcode:
                         # separating OR scanned barcode
                         _, _, self.sales_order = operator_scaning_barcode.partition("OR")
@@ -191,12 +190,12 @@ class Counter:
                             print(f"The sales order {self.sales_order} is not in the DB")
                     else:
                         pass
-                except Exception as ex2:
-                    print(f"run > reading scanner to detect OR {ex2}")
+                # except Exception as ex2:
+                #     print(f"run > reading scanner to detect OR {ex2}")
             ##
             # Start counting process
             while order_counting_start_flag:
-                try:
+                if True:
                     # Reading the box entrance signal
                     ts = time.time()
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
@@ -250,8 +249,8 @@ class Counter:
                         time.sleep(1)
                         self.arduino.gpio32_0.on()
                         time.sleep(1)
-                except Exception as ex3:
-                    print(f"run > reading scanner to detect OR {ex3}")
+                # except Exception as ex3:
+                #     print(f"run > reading scanner to detect OR {ex3}")
                 ##
                 # Send counted data to Monitait
                 if a + b > dps or ts - self.last_server_signal > self.watcher_live_signal:
