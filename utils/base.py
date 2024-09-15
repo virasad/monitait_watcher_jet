@@ -635,7 +635,8 @@ class UARTscanner:
     def get_scanner(self):
         try:
             self.ser = serial.Serial(port = self.port, baudrate = self.baudrate,
-                                        parity = serial.PARITY_NONE, timeout = self.timeout)
+                                    bytesize=serial.EIGHTBITS, stopbits=serial.STOPBITS_ONE,
+                                    parity = serial.PARITY_NONE, timeout = self.timeout)         
             return self.ser 
         except Exception as ex1:
             return None

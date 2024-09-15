@@ -242,8 +242,14 @@ class Counter:
                                 time.sleep(1)
                                 self.arduino.gpio32_0.on()
                                 time.sleep(1)
-                    else:
-                        pass
+                    elif abs(b - b_initial) >= 1:
+                        print("Recived NG signal")
+                        b_initial = b
+                        # Duo to reciving NG signal, the box should be ejected
+                        self.arduino.gpio32_0.off()
+                        time.sleep(1)
+                        self.arduino.gpio32_0.on()
+                        time.sleep(1)
                 except Exception as ex3:
                     print(f"run > reading scanner to detect OR {ex3}")
                 ##
