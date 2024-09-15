@@ -168,7 +168,7 @@ class Counter:
                 ##
                 # Reading the scanner to detect OR and start the counting process
                 try:
-                    operator_scaning_barcode = self.scanner.read_data()
+                    operator_scaning_barcode = self.scanner.read_barcode()
                     print("\n before scanning OR", operator_scaning_barcode)
                     operator_scaning_barcode = operator_scaning_barcode
                     if "OR" in operator_scaning_barcode:
@@ -206,7 +206,7 @@ class Counter:
                         a_initial = a
                         box_in_order_batch = False
                         # Waiting to read the box barcode 
-                        self.scanned_box_barcode = self.scanner.read_data()
+                        self.scanned_box_barcode = self.scanner.read_barcode()
                         if self.scanned_box_barcode != 0:
                             # Checking is the scanned box barcode is in the order batches or not
                             for batch in self.order_batches:
