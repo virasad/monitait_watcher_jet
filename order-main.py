@@ -294,7 +294,7 @@ db = DB()
 # Connected to the found scanner 
 # List all ttyUSB devices
 ttyUSB_devices = glob.glob('/dev/ttyUSB*')
-if ttyUSB_devices[0] != []:
+if ttyUSB_devices!= []:
     print(f"The found UART ttyyUSB: {ttyUSB_devices}")
     scanner = UARTscanner(port=ttyUSB_devices[0], baudrate = 9600, timeout = 1)
 else:
