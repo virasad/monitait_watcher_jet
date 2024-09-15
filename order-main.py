@@ -1,4 +1,5 @@
 from utils.base import *
+import glob
 
 register_id = str(socket.gethostname())
 
@@ -284,7 +285,12 @@ class Counter:
 arduino = Ardiuno()
 camera = Camera()
 db = DB()
-UARTscanner = UARTscanner(port="/dev/ttyUSB0", baudrate = 9600, timeout = 1)
+
+# Connected to the found 
+# List all ttyUSB devices
+ttyUSB_devices = glob.glob('/dev/ttyUSB*')
+print(f"The found UART ttyyUSB: {ttyUSB_devices}")
+UARTscanner = UARTscanner(port=ttyUSB_devices[0], baudrate = 9600, timeout = 1)
 
 counter = Counter(arduino=arduino, db=db, camera=camera, scanner=UARTscanner, batch_url=batch_url,
                   stationID_url= stationID_url, sendbatch_url=sendbatch_url, register_id=register_id)
