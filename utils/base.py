@@ -275,6 +275,7 @@ class Ardiuno:
             self.buffer = b''
             self.last_received = ''
             self.ser.flushInput()
+            self.extra_info = {}
             self.serial_data = {}
             return True
         except Exception as e:
@@ -287,6 +288,8 @@ class Ardiuno:
                 self.last_received = ''
                 self.ser.flushInput()
                 self.extra_info = {}
+                self.serial_data = {}
+                return True
             except Exception as ee:
                 err_msg = err_msg + "-ser_init"
                 self.serial_connection = False
