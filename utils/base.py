@@ -636,8 +636,8 @@ class UARTscanner:
         try:
             self.ser = serial.Serial(port = self.port, baudrate = self.baudrate,
                                         parity = serial.PARITY_NONE, timeout = self.timeout)
-            self.serial.open()
-            if self.serial.is_open:
+            self.ser.open()
+            if self.ser.is_open:
                 print("Serial is open")
                 return self.ser
             else:
