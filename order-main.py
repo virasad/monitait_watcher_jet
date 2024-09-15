@@ -241,6 +241,10 @@ class Counter:
                                 time.sleep(1)
                                 self.arduino.gpio32_0.on()
                                 time.sleep(1)
+                        elif "OR" in self.scanned_box_barcode:
+                            # The exit barcode scanned
+                            print("The exit barcode scanned")
+                            order_counting_start_flag = False
                     elif abs(b - b_initial) >= 1:
                         print("Recived NG signal")
                         b_initial = b
