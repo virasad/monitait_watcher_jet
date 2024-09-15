@@ -207,44 +207,44 @@ class Counter:
                         # Waiting to read the box barcode 
                         self.scanned_box_barcode = self.scanner.read_barcode()
                         if self.scanned_box_barcode != 0:
-                            # Checking is the scanned box barcode is in the order batches or not
-                            for batch in self.order_batches:
-                                if batch['assigned_id']==str(self.scanned_box_barcode):
-                                    # The box barcode is in the order
-                                    box_in_order_batch = True
-                                    # Getting to update the order DB
-                                    batch_uuid = batch['batch_uuid']
-                                    # Decrease quantity by 1 if it's greater than 0, else eject it
-                                    if batch['quantity'] > 0:
-                                        batch['quantity'] -= 1
-                                        # Update the order list
-                                        self.db.order_update(sales_order=int(self.sales_order), product=self.order_product,
-                                                            batches_text= json.dumps(self.order_batches), 
-                                                            factory=self.order_factory, is_done = 0)
-                                        print("run > The current assigned id quantity value (remainded value):", batch['quantity'])
-                                    elif batch['quantity'] == 0:
-                                        print("run > Counted value from this assined is has been finished")
-                                        # Update the order list
-                                        self.db.order_update(sales_order=int(self.sales_order), product=self.order_product,
-                                                            batches_text= json.dumps(self.order_batches), 
-                                                            factory=self.order_factory, is_done = 1)
-                                        # The detected barcode is not on the order list
-                                        self.arduino.gpio32_0.off()
-                                        time.sleep(1)
-                                        self.arduino.gpio32_0.on()
-                                        time.sleep(1)
-                            
-                            # If the scanned barcode is not in the batches, eject it 
-                            if not box_in_order_batch:
-                                # The detected barcode is not on the order list
-                                self.arduino.gpio32_0.off()
-                                time.sleep(1)
-                                self.arduino.gpio32_0.on()
-                                time.sleep(1)
-                        elif "OR" in self.scanned_box_barcode:
-                            # The exit barcode scanned
-                            print("The exit barcode scanned")
-                            order_counting_start_flag = False
+                            if "OR" in self.scanned_box_barcode:
+                                # The exit barcode scanned
+                                print("The exit barcode scanned")
+                                order_counting_start_flag = False
+                            else:
+                                # Checking is the scanned box barcode is in the order batches or not
+                                for batch in self.order_batches:
+                                    if batch['assigned_id']==str(self.scanned_box_barcode):
+                                        # The box barcode is in the order
+                                        box_in_order_batch = True
+                                        # Getting to update the order DB
+                                        batch_uuid = batch['batch_uuid']
+                                        # Decrease quantity by 1 if it's greater than 0, else eject it
+                                        if batch['quantity'] > 0:
+                                            batch['quantity'] -= 1
+                                            # Update the order list
+                                            self.db.order_update(sales_order=int(self.sales_order), product=self.order_product,
+                                                                batches_text= json.dumps(self.order_batches), 
+                                                                factory=self.order_factory, is_done = 0)
+                                            print("run > The current assigned id quantity value (remainded value):", batch['quantity'])
+                                        elif batch['quantity'] == 0:
+                                            print("run > Counted value from this assined is has been finished")
+                                            # Update the order list
+                                            self.db.order_update(sales_order=int(self.sales_order), product=self.order_product,
+                                                                batches_text= json.dumps(self.order_batches), 
+                                                                factory=self.order_factory, is_done = 1)
+                                            # The detected barcode is not on the order list
+                                            self.arduino.gpio32_0.off()
+                                            time.sleep(1)
+                                            self.arduino.gpio32_0.on()
+                                            time.sleep(1)
+                                # If the scanned barcode is not in the batches, eject it 
+                                if not box_in_order_batch:
+                                    # The detected barcode is not on the order list
+                                    self.arduino.gpio32_0.off()
+                                    time.sleep(1)
+                                    self.arduino.gpio32_0.on()
+                                    time.sleep(1)
                     elif abs(b - b_initial) >= 1:
                         print("Recived NG signal")
                         b_initial = b
