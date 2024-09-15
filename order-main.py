@@ -15,7 +15,7 @@ except Exception as ex0:
 
 
 class Counter:
-    def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner:Scanner, batch_url: batch_url, stationID_url: stationID_url,
+    def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner, batch_url: batch_url, stationID_url: stationID_url,
                  sendbatch_url: sendbatch_url, register_id: register_id) -> None:
         self.arduino = arduino
         self.stop_thread = False
@@ -169,8 +169,8 @@ class Counter:
                 # Reading the scanner to detect OR and start the counting process
                 try:
                     operator_scaning_barcode = self.scanner.read_data()
-                    print("\n before scanning OR", self.scanner.upcnumber)
-                    operator_scaning_barcode = self.scanner.upcnumber
+                    print("\n before scanning OR", operator_scaning_barcode)
+                    operator_scaning_barcode = operator_scaning_barcode
                     if "OR" in operator_scaning_barcode:
                         # separating OR scanned barcode
                         _, _, self.sales_order = operator_scaning_barcode.partition("OR")

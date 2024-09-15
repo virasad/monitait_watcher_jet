@@ -625,12 +625,12 @@ class Camera:
 #     #         print("Task finished within the timeout.")
 #     #         return True
 
-class UARTscanner(port, baudrate, timeout):
-    def __init__(self, port=port, baudrate=baudrate, timeout=timeout):
-        seld.port = port
+class UARTscanner:
+    def __init__(self, port, baudrate, timeout):
+        self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
-        self.serial = get_scanner()
+        self.serial = self.get_scanner()
         self.output = ""
     def get_scanner(self):
         try:
@@ -638,10 +638,12 @@ class UARTscanner(port, baudrate, timeout):
                                         parity = serial.PARITY_NONE, timeout = self.timeout)
             self.serial.open()
             if self.serial.is_open:
+                print("Serial is open")
                 return self.ser
             else:
-                return False
                 print("The serial scanner is also close")
+                return False
+                
         except Exception as ex1:
             return None
             print(f"UARTscanner > get scanner {ex1}")
