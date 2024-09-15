@@ -291,13 +291,16 @@ arduino = Ardiuno()
 camera = Camera()
 db = DB()
 
-# Connected to the found 
+# Connected to the found scanner 
 # List all ttyUSB devices
 ttyUSB_devices = glob.glob('/dev/ttyUSB*')
-print(f"The found UART ttyyUSB: {ttyUSB_devices}")
-UARTscanner = UARTscanner(port=ttyUSB_devices[0], baudrate = 9600, timeout = 1)
+if ttyUSB_devices[0] != []:
+    print(f"The found UART ttyyUSB: {ttyUSB_devices}")
+    scanner = UARTscanner(port=ttyUSB_devices[0], baudrate = 9600, timeout = 1)
+else:
+    scanner = Scanner()
 
-counter = Counter(arduino=arduino, db=db, camera=camera, scanner=UARTscanner, batch_url=batch_url,
+counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, batch_url=batch_url,
                   stationID_url= stationID_url, sendbatch_url=sendbatch_url, register_id=register_id)
 
 Thread(target=counter.run).start()
