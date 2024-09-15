@@ -495,134 +495,163 @@ class Camera:
     def release_camera(self):
         self.video_cap.release()
     
-class Scanner:
-    def __init__(self, fps=30, exposure=100, gain=1, gamma=1, contrast=3, roi=[0,0,1920,1080], temperature=5000, brightness=1, step=10, auto_exposure=3) -> None:
-        self.VENDOR_PRODUCT = [
-        [0x24ea, 0x0198], # [vendor, product]
-        ]
-        self.CHARMAP = {
-        evdev.ecodes.KEY_1: ['1', '!'],
-        evdev.ecodes.KEY_2: ['2', '@'],
-        evdev.ecodes.KEY_3: ['3', '#'],
-        evdev.ecodes.KEY_4: ['4', '$'],
-        evdev.ecodes.KEY_5: ['5', '%'],
-        evdev.ecodes.KEY_6: ['6', '^'],
-        evdev.ecodes.KEY_7: ['7', '&'],
-        evdev.ecodes.KEY_8: ['8', '*'],
-        evdev.ecodes.KEY_9: ['9', '('],
-        evdev.ecodes.KEY_0: ['0', ')'],
-        evdev.ecodes.KEY_MINUS: ['-', '_'],
-        evdev.ecodes.KEY_EQUAL: ['=', '+'],
-        evdev.ecodes.KEY_TAB: ['\t', '\t'],
-        evdev.ecodes.KEY_Q: ['q', 'Q'],
-        evdev.ecodes.KEY_W: ['w', 'W'],
-        evdev.ecodes.KEY_E: ['e', 'E'],
-        evdev.ecodes.KEY_R: ['r', 'R'],
-        evdev.ecodes.KEY_T: ['t', 'T'],
-        evdev.ecodes.KEY_Y: ['y', 'Y'],
-        evdev.ecodes.KEY_U: ['u', 'U'],
-        evdev.ecodes.KEY_I: ['i', 'I'],
-        evdev.ecodes.KEY_O: ['o', 'O'],
-        evdev.ecodes.KEY_P: ['p', 'P'],
-        evdev.ecodes.KEY_LEFTBRACE: ['[', '{'],
-        evdev.ecodes.KEY_RIGHTBRACE: [']', '}'],
-        evdev.ecodes.KEY_A: ['a', 'A'],
-        evdev.ecodes.KEY_S: ['s', 'S'],
-        evdev.ecodes.KEY_D: ['d', 'D'],
-        evdev.ecodes.KEY_F: ['f', 'F'],
-        evdev.ecodes.KEY_G: ['g', 'G'],
-        evdev.ecodes.KEY_H: ['h', 'H'],
-        evdev.ecodes.KEY_J: ['j', 'J'],
-        evdev.ecodes.KEY_K: ['k', 'K'],
-        evdev.ecodes.KEY_L: ['l', 'L'],
-        evdev.ecodes.KEY_SEMICOLON: [';', ':'],
-        evdev.ecodes.KEY_APOSTROPHE: ['\'', '"'],
-        evdev.ecodes.KEY_BACKSLASH: ['\\', '|'],
-        evdev.ecodes.KEY_Z: ['z', 'Z'],
-        evdev.ecodes.KEY_X: ['x', 'X'],
-        evdev.ecodes.KEY_C: ['c', 'C'],
-        evdev.ecodes.KEY_V: ['v', 'V'],
-        evdev.ecodes.KEY_B: ['b', 'B'],
-        evdev.ecodes.KEY_N: ['n', 'N'],
-        evdev.ecodes.KEY_M: ['m', 'M'],
-        evdev.ecodes.KEY_COMMA: [',', '<'],
-        evdev.ecodes.KEY_DOT: ['.', '>'],
-        evdev.ecodes.KEY_SLASH: ['/', '?'],
-        evdev.ecodes.KEY_SPACE: [' ', ' '],
-        }
-        self.ERROR_CHARACTER = '?'
-        self.VALUE_UP = 0
-        self.VALUE_DOWN = 1
-        self.barcode_string_output = ''
-        for path in evdev.list_devices():
-            print('path:', path)
-        self.dev = self.get_device()
-        print('selected device:', self.dev)
-        try:
-            self.dev.grab()
-        except:
-            self.dev.ungrab()
-            time.sleep(3)
-            self.dev.grab()
-            pass
+# class Scanner:
+#     def __init__(self, fps=30, exposure=100, gain=1, gamma=1, contrast=3, roi=[0,0,1920,1080], temperature=5000, brightness=1, step=10, auto_exposure=3) -> None:
+#         self.VENDOR_PRODUCT = [
+#         [0x24ea, 0x0198], # [vendor, product]
+#         ]
+#         self.CHARMAP = {
+#         evdev.ecodes.KEY_1: ['1', '!'],
+#         evdev.ecodes.KEY_2: ['2', '@'],
+#         evdev.ecodes.KEY_3: ['3', '#'],
+#         evdev.ecodes.KEY_4: ['4', '$'],
+#         evdev.ecodes.KEY_5: ['5', '%'],
+#         evdev.ecodes.KEY_6: ['6', '^'],
+#         evdev.ecodes.KEY_7: ['7', '&'],
+#         evdev.ecodes.KEY_8: ['8', '*'],
+#         evdev.ecodes.KEY_9: ['9', '('],
+#         evdev.ecodes.KEY_0: ['0', ')'],
+#         evdev.ecodes.KEY_MINUS: ['-', '_'],
+#         evdev.ecodes.KEY_EQUAL: ['=', '+'],
+#         evdev.ecodes.KEY_TAB: ['\t', '\t'],
+#         evdev.ecodes.KEY_Q: ['q', 'Q'],
+#         evdev.ecodes.KEY_W: ['w', 'W'],
+#         evdev.ecodes.KEY_E: ['e', 'E'],
+#         evdev.ecodes.KEY_R: ['r', 'R'],
+#         evdev.ecodes.KEY_T: ['t', 'T'],
+#         evdev.ecodes.KEY_Y: ['y', 'Y'],
+#         evdev.ecodes.KEY_U: ['u', 'U'],
+#         evdev.ecodes.KEY_I: ['i', 'I'],
+#         evdev.ecodes.KEY_O: ['o', 'O'],
+#         evdev.ecodes.KEY_P: ['p', 'P'],
+#         evdev.ecodes.KEY_LEFTBRACE: ['[', '{'],
+#         evdev.ecodes.KEY_RIGHTBRACE: [']', '}'],
+#         evdev.ecodes.KEY_A: ['a', 'A'],
+#         evdev.ecodes.KEY_S: ['s', 'S'],
+#         evdev.ecodes.KEY_D: ['d', 'D'],
+#         evdev.ecodes.KEY_F: ['f', 'F'],
+#         evdev.ecodes.KEY_G: ['g', 'G'],
+#         evdev.ecodes.KEY_H: ['h', 'H'],
+#         evdev.ecodes.KEY_J: ['j', 'J'],
+#         evdev.ecodes.KEY_K: ['k', 'K'],
+#         evdev.ecodes.KEY_L: ['l', 'L'],
+#         evdev.ecodes.KEY_SEMICOLON: [';', ':'],
+#         evdev.ecodes.KEY_APOSTROPHE: ['\'', '"'],
+#         evdev.ecodes.KEY_BACKSLASH: ['\\', '|'],
+#         evdev.ecodes.KEY_Z: ['z', 'Z'],
+#         evdev.ecodes.KEY_X: ['x', 'X'],
+#         evdev.ecodes.KEY_C: ['c', 'C'],
+#         evdev.ecodes.KEY_V: ['v', 'V'],
+#         evdev.ecodes.KEY_B: ['b', 'B'],
+#         evdev.ecodes.KEY_N: ['n', 'N'],
+#         evdev.ecodes.KEY_M: ['m', 'M'],
+#         evdev.ecodes.KEY_COMMA: [',', '<'],
+#         evdev.ecodes.KEY_DOT: ['.', '>'],
+#         evdev.ecodes.KEY_SLASH: ['/', '?'],
+#         evdev.ecodes.KEY_SPACE: [' ', ' '],
+#         }
+#         self.ERROR_CHARACTER = '?'
+#         self.VALUE_UP = 0
+#         self.VALUE_DOWN = 1
+#         self.barcode_string_output = ''
+#         for path in evdev.list_devices():
+#             print('path:', path)
+#         self.dev = self.get_device()
+#         print('selected device:', self.dev)
+#         try:
+#             self.dev.grab()
+#         except:
+#             self.dev.ungrab()
+#             time.sleep(3)
+#             self.dev.grab()
+#             pass
 
-    def get_device(self):
-        self.devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
-        for self.device in self.devices:
-            print('device:', self.device)
-            print('info:', self.device.info)
-            print(self.device.path, self.device.name, self.device.phys)
-            for vp in self.VENDOR_PRODUCT:
-                if self.device.info.vendor == vp[0] and self.device.info.product == vp[1]:
-                    return self.device
-        return None
+#     def get_device(self):
+#         self.devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
+#         for self.device in self.devices:
+#             print('device:', self.device)
+#             print('info:', self.device.info)
+#             print(self.device.path, self.device.name, self.device.phys)
+#             for vp in self.VENDOR_PRODUCT:
+#                 if self.device.info.vendor == vp[0] and self.device.info.product == vp[1]:
+#                     return self.device
+#         return None
 
-    def barcode_reader_evdev(self):
-        self.barcode_string_output = ''
-        # barcode can have a 'shift' character; this switches the character set
-        # from the lower to upper case variant for the next character only.
-        self.shift_active = False
-        for self.event in self.dev.read_loop():
-            if self.event.code == evdev.ecodes.KEY_ENTER and self.event.value == self.VALUE_DOWN:
-                #print('KEY_ENTER -> return')
-                # all barcodes end with a carriage return
-                return self.barcode_string_output
-            elif self.event.code == evdev.ecodes.KEY_LEFTSHIFT or self.event.code == evdev.ecodes.KEY_RIGHTSHIFT:
-                #print('SHIFT')
-                self.shift_active = self.event.value == self.VALUE_DOWN
-            elif self.event.value == self.VALUE_DOWN:
-                ch = self.CHARMAP.get(self.event.code, self.ERROR_CHARACTER)[1 if self.shift_active else 0]
-                #print('ch:', ch)
-                # if the charcode isn't recognized, use ?
-                self.barcode_string_output += ch
+#     def barcode_reader_evdev(self):
+#         self.barcode_string_output = ''
+#         # barcode can have a 'shift' character; this switches the character set
+#         # from the lower to upper case variant for the next character only.
+#         self.shift_active = False
+#         for self.event in self.dev.read_loop():
+#             if self.event.code == evdev.ecodes.KEY_ENTER and self.event.value == self.VALUE_DOWN:
+#                 #print('KEY_ENTER -> return')
+#                 # all barcodes end with a carriage return
+#                 return self.barcode_string_output
+#             elif self.event.code == evdev.ecodes.KEY_LEFTSHIFT or self.event.code == evdev.ecodes.KEY_RIGHTSHIFT:
+#                 #print('SHIFT')
+#                 self.shift_active = self.event.value == self.VALUE_DOWN
+#             elif self.event.value == self.VALUE_DOWN:
+#                 ch = self.CHARMAP.get(self.event.code, self.ERROR_CHARACTER)[1 if self.shift_active else 0]
+#                 #print('ch:', ch)
+#                 # if the charcode isn't recognized, use ?
+#                 self.barcode_string_output += ch
         
-        return self.barcode_string_output
+#         return self.barcode_string_output
     
-    def read_barcode(self):
-        while True:
-            try:
-                self.upcnumber = self.barcode_reader_evdev()
-                if self.upcnumber:  # If a barcode is read, return it
-                    return self.upcnumber
-            except KeyboardInterrupt:
-                print('Keyboard interrupt')
-                return None
-            except Exception as err:
-                print(err)
-                return None
+#     def read_barcode(self):
+#         while True:
+#             try:
+#                 self.upcnumber = self.barcode_reader_evdev()
+#                 if self.upcnumber:  # If a barcode is read, return it
+#                     return self.upcnumber
+#             except KeyboardInterrupt:
+#                 print('Keyboard interrupt')
+#                 return None
+#             except Exception as err:
+#                 print(err)
+#                 return None
         
-            return self.upcnumber
+#             return self.upcnumber
 
-    # def run_with_timeout(self, timeout):
-    #     thread = Thread(target=self.read_barcode)
-    #     thread.start()
-    #     thread.join(timeout)  # Wait for the thread to finish or timeout
-    #     print("thread checker")
-    #     if thread.is_alive():
-    #         print("Task timed out!")
-    #         return False
-    #     else:
-    #         print("Task finished within the timeout.")
-    #         return True
+#     # def run_with_timeout(self, timeout):
+#     #     thread = Thread(target=self.read_barcode)
+#     #     thread.start()
+#     #     thread.join(timeout)  # Wait for the thread to finish or timeout
+#     #     print("thread checker")
+#     #     if thread.is_alive():
+#     #         print("Task timed out!")
+#     #         return False
+#     #     else:
+#     #         print("Task finished within the timeout.")
+#     #         return True
+
+class UARTscanner(port, baudrate, timeout):
+    def __init__(self):
+        seld.port = port
+        self.baudrate = baudrate
+        self.timeout = timeout
+        self.serial = get_scanner()
+        self.output = ""
+    def get_scanner(self):
+        try:
+            self.ser = serial.Serial(port = self.port, baudrate = self.baudrate,
+                                        ser.parity = serial.PARITY_NONE, timeout = self.timeout)
+            self.serial.open()
+            if self.serial.is_open:
+                return True
+            else:
+                return False
+                print("The serial scanner is also close")
+        except Exception as ex1:
+            return None
+            print(f"UARTscanner > get scanner {ex1}")
+                
+    def read_data(self):
+        try:
+            self.output = self.serial.readline()
+        except Exception as ex2:
+            print(f"UARTscanner > read data {ex2}")
+           
+        
         
         

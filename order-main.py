@@ -168,7 +168,7 @@ class Counter:
                 ##
                 # Reading the scanner to detect OR and start the counting process
                 try:
-                    operator_scaning_barcode = self.scanner.read_barcode()
+                    operator_scaning_barcode = self.scanner.read_data()
                     print("\n before scanning OR", self.scanner.upcnumber)
                     operator_scaning_barcode = self.scanner.upcnumber
                     if "OR" in operator_scaning_barcode:
@@ -206,7 +206,7 @@ class Counter:
                         a_initial = a
                         box_in_order_batch = False
                         # Waiting to read the box barcode 
-                        self.scanned_box_barcode = self.scanner.read_barcode()
+                        self.scanned_box_barcode = self.scanner.read_data()
                         if self.scanned_box_barcode != 0:
                             # Checking is the scanned box barcode is in the order batches or not
                             for batch in self.order_batches:
@@ -264,7 +264,7 @@ class Counter:
                         self.old_barcode = barcode
 
                     if self.old_barcode != '':
-                        extra_info.update({"batch_uuid" : str(self.old_barcode)})
+                        extra_i nfo.update({"batch_uuid" : str(self.old_barcode)})
 
                     timestamp = datetime.datetime.utcnow()
                     if watcher_update(register_id, quantity=a, defect_quantity=b, send_img=send_image, image_path=image_name, extra_info=extra_info, timestamp=timestamp):
@@ -276,7 +276,6 @@ class Counter:
                         self.arduino.minus(a=a, b=b)
                 # else:
                     # print("The orders list are empty, waiting to fill the order list")
-                
             
             time.sleep(1)
 
@@ -285,9 +284,9 @@ class Counter:
 arduino = Ardiuno()
 camera = Camera()
 db = DB()
-scanner = Scanner()
+UARTscanner = UARTscanner(port="/dev/ttyUSB0", baudrate = 9600, timeout = 1)
 
-counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, batch_url=batch_url,
+counter = Counter(arduino=arduino, db=db, camera=camera, scanner=UARTscanner, batch_url=batch_url,
                   stationID_url= stationID_url, sendbatch_url=sendbatch_url, register_id=register_id)
 
 Thread(target=counter.run).start()
