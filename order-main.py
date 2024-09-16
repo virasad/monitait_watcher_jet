@@ -125,7 +125,7 @@ class Counter:
     def run(self):
         self.last_server_signal = time.time()
         self.last_image = time.time()
-        order_request_time_interval = 7 # Every "order_request_time_interval" secends, the order is requested from Monitait
+        order_request_time_interval = 15 # Every "order_request_time_interval" secends, the order is requested from Monitait
         self.old_barcode = ''
         a_initial = 0
         b_initial = 0
