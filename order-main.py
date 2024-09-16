@@ -125,7 +125,7 @@ class Counter:
     def run(self):
         self.last_server_signal = time.time()
         self.last_image = time.time()
-        order_request_time_interval = 5 # Every "order_request_time_interval" secends, the order is requested from Monitait
+        order_request_time_interval = 7 # Every "order_request_time_interval" secends, the order is requested from Monitait
         self.old_barcode = ''
         a_initial = 0
         b_initial = 0
@@ -146,25 +146,27 @@ class Counter:
             order_counting_start_flag = False # To start counting process, this flag set as True when OR detected
             image_name = ""
             extra_info = {}
-            
+            st_1 = time.time()
             # Getting order from batch API
             while not order_counting_start_flag:
                 ##
                 # The watcher updates his order DB until OR is scanned
-                print("\n start to adding the data")
                 if True:
-                    batch_resp = requests.get(self.batch_url, headers=self.headers) 
-                    # Added all batches to a list
-                    order_list = batch_resp.json()  
-                    orders = [entry["_source"]["batch"] for entry in order_list] 
-                    
-                    # Added the order batches to the order DB
-                    for order in orders:
-                        # Save the orders to database
-                        self.db.order_write(sales_order=order["sales_order"], product=order["product"], factory=order["factory"], 
-                                            is_done = 0, batches_text= json.dumps(order['batches']))
-                    
-                    time.sleep(1)
+                    if time.time() - st_1 > order_request_time_interval:
+                        st_1 = time.time()
+                        print("\n start to adding the data")
+                        batch_resp = requests.get(self.batch_url, headers=self.headers) 
+                        # Added all batches to a list
+                        order_list = batch_resp.json()  
+                        orders = [entry["_source"]["batch"] for entry in order_list] 
+                        
+                        # Added the order batches to the order DB
+                        for order in orders:
+                            # Save the orders to database
+                            self.db.order_write(sales_order=order["sales_order"], product=order["product"], factory=order["factory"], 
+                                                is_done = 0, batches_text= json.dumps(order['batches']))
+                    else:
+                        pass
                 # except Exception as ex1:
                 #     print(f"run > waiting to the OR barcode {ex1}")
                 ##
@@ -178,7 +180,7 @@ class Counter:
                         
                         # Getting the scanned order list from order DB
                         self.order = self.db.order_read(self.sales_order)
-                        print(f"Wait 5 seconds to start the counting, the sales order is {self.sales_order}")
+                        print(f"\n Wait 5 seconds to start the counting, the sales order is {self.sales_order}")
                         # Checking is the scanned order in the order DB or not
                         if self.order != []:
                             order_counting_start_flag = True
@@ -189,7 +191,7 @@ class Counter:
                             print("The batches", self.order_batches)
                         else:
                             order_counting_start_flag = False
-                            print(f"The sales order {self.sales_order} is not in the DB, going to read data from API")
+                            print(f"The sales order {self.sales_order} is not in the DB, waiting to read valid data")
                     else:
                         pass
                 # except Exception as ex2:
