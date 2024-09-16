@@ -172,7 +172,7 @@ class Counter:
                 if True:
                     operator_scaning_barcode = self.scanner.read_barcode()
                     print("\n before scanning OR", operator_scaning_barcode)
-                    if "OR" in operator_scaning_barcode:
+                    if "OR" in str(operator_scaning_barcode):
                         # separating OR scanned barcode
                         _, _, self.sales_order = operator_scaning_barcode.partition("OR")
                         
