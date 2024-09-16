@@ -80,7 +80,7 @@ class Counter:
                             # The sales order changed, so all data 
                             previus_sales_order = self.sales_order
                             main_salse_order_data = self.db.order_read(self.sales_order)
-                            if main_salse_order_data != []
+                            if main_salse_order_data != []:
                                 checking_order_db = True
                                 print(f"DB, {previus_sales_order}, main_salse_order_data, {main_salse_order_data}")
                                 print("\n main_salse_order_data", main_salse_order_data)
