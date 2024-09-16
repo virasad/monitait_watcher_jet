@@ -44,7 +44,6 @@ class Counter:
         self.order_db_remove_interval = 12 * 3600  # Convert hours to seconds
     
     def db_order_checker(self):
-        read_order_once = True
         previus_sales_order = ""
         b_1 = 0
         st = time.time() 
@@ -71,24 +70,30 @@ class Counter:
                 
             # Checking order db every {self.db_order_checking_interval} second
             if time.time() - st > self.db_order_checking_interval and self.sales_order != 0:
+                checking_order_db = False
                 st = time.time() 
                 if True:
                     # Checking order list on the order DB to catch the quantity value
                     if self.sales_order != previus_sales_order:
-                        main_order_dict = {}
-                        # The sales order changed, so all data 
-                        previus_sales_order = self.sales_order
-                        main_salse_order_data = self.db.order_read(self.sales_order)
-                        print(f"DB, {previus_sales_order}, main_salse_order_data, {main_salse_order_data}")
-                        print("\n main_salse_order_data", main_salse_order_data)
-                        main_batches = json.loads(main_salse_order_data[5])
-                        for batch in main_batches:
-                            if batch['quantity'] != 0:
-                                main_order_dict[batch['batch_uuid']]={
-                                                                'quantity': batch['quantity'],
-                                                                'assigned_id': batch['assigned_id']}
-                            else:
-                                pass
+                        while not checking_order_db:
+                            main_order_dict = {}
+                            # The sales order changed, so all data 
+                            previus_sales_order = self.sales_order
+                            main_salse_order_data = self.db.order_read(self.sales_order)
+                            if main_salse_order_data != []
+                                checking_order_db = True
+                                print(f"DB, {previus_sales_order}, main_salse_order_data, {main_salse_order_data}")
+                                print("\n main_salse_order_data", main_salse_order_data)
+                                main_batches = json.loads(main_salse_order_data[5])
+                                for batch in main_batches:
+                                    if batch['quantity'] != 0:
+                                        main_order_dict[batch['batch_uuid']]={
+                                                                        'quantity': batch['quantity'],
+                                                                        'assigned_id': batch['assigned_id']}
+                                    else:
+                                        pass
+                            else: 
+                                checking_order_db = False
                     # Getting the scanned order list from order DB
                     print(f"DB function, the sales order is {self.sales_order} and the previus one is {previus_sales_order}")
                     
@@ -205,6 +210,7 @@ class Counter:
                     # Reading the box entrance signal
                     ts = time.time()
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
+                    print("a ,b ,c, d ,dps", a ,b ,c, d ,dps)
                     # If the OK signal triggered
                     if abs(a - a_initial) >= 1:
                         print("Catched the OK signal")
@@ -212,6 +218,7 @@ class Counter:
                         # Waiting to read the box barcode 
                         scanned_box_barcode_byte_string = self.scanner.read_barcode()
                         self.scanned_box_barcode = scanned_box_barcode_byte_string.decode().strip()
+                        print("self.scanned_box_barcode", self.scanned_box_barcode)
                         box_in_order_batch = False
                         if self.scanned_box_barcode != 0:
                             if "OR" in self.scanned_box_barcode:
