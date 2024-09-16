@@ -172,7 +172,8 @@ class Counter:
                 ##
                 # Reading the scanner to detect OR and start the counting process
                 if True:
-                    operator_scaning_barcode = self.scanner.read_barcode()
+                    operator_scaning_barcode_byte_string  = self.scanner.read_barcode()
+                    operator_scaning_barcode = operator_scaning_barcode_byte_string.decode().strip()
                     print("\n before scanning OR", operator_scaning_barcode)
                     if "OR" in str(operator_scaning_barcode):
                         # separating OR scanned barcode
@@ -208,7 +209,8 @@ class Counter:
                         print("Catched the OK signal")
                         a_initial = a
                         # Waiting to read the box barcode 
-                        self.scanned_box_barcode = self.scanner.read_barcode()
+                        scanned_box_barcode_byte_string = self.scanner.read_barcode()
+                        self.scanned_box_barcode = scanned_box_barcode_byte_string.decode().strip()
                         box_in_order_batch = False
                         if self.scanned_box_barcode != 0:
                             if "OR" in self.scanned_box_barcode:
