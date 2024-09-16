@@ -210,6 +210,7 @@ class Counter:
                     # Reading the box entrance signal
                     ts = time.time()
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
+                    print(a ,b ,c, d ,dps)
                     # If the OK signal triggered
                     if abs(a - a_initial) >= 1:
                         print("Catched the OK signal")
@@ -253,6 +254,7 @@ class Counter:
                                             time.sleep(1)
                                 # If the scanned barcode is not in the batches, eject it 
                                 if not box_in_order_batch:
+                                    print("The barcode is not on the list")
                                     # The detected barcode is not on the order list
                                     self.arduino.gpio32_0.off()
                                     time.sleep(1)
