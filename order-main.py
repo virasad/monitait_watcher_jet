@@ -180,8 +180,8 @@ class Counter:
                 if True:
                     operator_scaning_barcode_byte_string  = self.scanner.read_barcode()
                     operator_scaning_barcode = operator_scaning_barcode_byte_string.decode().strip()
-                    print("\n before scanning OR", operator_scaning_barcode)
                     if "OR" in str(operator_scaning_barcode):
+                        print("\n before scanning OR", operator_scaning_barcode)
                         # separating OR scanned barcode
                         _, _, self.sales_order = operator_scaning_barcode.partition("OR")
                         
@@ -210,7 +210,6 @@ class Counter:
                     # Reading the box entrance signal
                     ts = time.time()
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
-                    print("a ,b ,c, d ,dps", a ,b ,c, d ,dps)
                     # If the OK signal triggered
                     if abs(a - a_initial) >= 1:
                         print("Catched the OK signal")
