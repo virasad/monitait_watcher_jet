@@ -45,7 +45,6 @@ class Counter:
     
     def db_order_checker(self):
         read_order_once = True
-        db_checking_flag = False
         previus_sales_order = ""
         b_1 = 0
         st = time.time() 
@@ -125,6 +124,7 @@ class Counter:
     def run(self):
         self.last_server_signal = time.time()
         self.last_image = time.time()
+        db_checking_flag = True
         order_request_time_interval = 15 # Every "order_request_time_interval" secends, the order is requested from Monitait
         self.old_barcode = ''
         a_initial = 0
@@ -152,7 +152,8 @@ class Counter:
                 ##
                 # The watcher updates his order DB until OR is scanned
                 if True:
-                    if time.time() - st_1 > order_request_time_interval:
+                    if time.time() - st_1 > order_request_time_interval or db_checking_flag:
+                        db_checking_flag = False
                         st_1 = time.time()
                         print("\n start to adding the data")
                         batch_resp = requests.get(self.batch_url, headers=self.headers) 
