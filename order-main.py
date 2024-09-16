@@ -163,6 +163,8 @@ class Counter:
                         # Save the orders to database
                         self.db.order_write(sales_order=order["sales_order"], product=order["product"], factory=order["factory"], 
                                             is_done = 0, batches_text= json.dumps(order['batches']))
+                    
+                    time.sleep(1)
                 # except Exception as ex1:
                 #     print(f"run > waiting to the OR barcode {ex1}")
                 ##
@@ -176,7 +178,7 @@ class Counter:
                         
                         # Getting the scanned order list from order DB
                         self.order = self.db.order_read(self.sales_order)
-                        print("Wait 5 seconds to start the counting")
+                        print(f"Wait 5 seconds to start the counting, the sales order is {self.sales_order}")
                         # Checking is the scanned order in the order DB or not
                         if self.order != []:
                             order_counting_start_flag = True
@@ -184,10 +186,10 @@ class Counter:
                             self.order_batches = json.loads(self.order[5])
                             self.order_product = self.order[2]
                             self.order_factory = self.order[3]
-                            print(f"The sales order {self.sales_order} is in the DB, the order is {self.order}")
                             print("The batches", self.order_batches)
                         else:
-                            print(f"The sales order {self.sales_order} is not in the DB")
+                            order_counting_start_flag = False
+                            print(f"The sales order {self.sales_order} is not in the DB, going to read data from API")
                     else:
                         pass
                 # except Exception as ex2:
@@ -199,13 +201,13 @@ class Counter:
                     # Reading the box entrance signal
                     ts = time.time()
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
-                    # If a box entered 
+                    # If the OK signal triggered
                     if abs(a - a_initial) >= 1:
-                        print("A box entered to the zone")
+                        print("Catched the OK signal")
                         a_initial = a
-                        box_in_order_batch = False
                         # Waiting to read the box barcode 
                         self.scanned_box_barcode = self.scanner.read_barcode()
+                        box_in_order_batch = False
                         if self.scanned_box_barcode != 0:
                             if "OR" in self.scanned_box_barcode:
                                 # The exit barcode scanned
@@ -245,6 +247,7 @@ class Counter:
                                     time.sleep(1)
                                     self.arduino.gpio32_0.on()
                                     time.sleep(1)
+                    # If the NG signal triggered
                     elif abs(b - b_initial) >= 1:
                         print("Recived NG signal")
                         b_initial = b
