@@ -139,16 +139,16 @@ if (Serial.available() > 0)
     }
 
   
-  if ( i > 1){
-    Serial.println(String(encoder_counter) + "," + "-24" + "," + String(counter_a) + "," + String(counter_b) + "," + String(c) + "," + String(battery/10 - 2) + "," + String(elapsed_speed) + "," + String(restart_counter));
-    i = 0;
-  }
-//  Serial.print("Encoder:"); Serial.print(counter_a); Serial.print(",");
-//  Serial.print("Red:0,");
-//  Serial.print("Green:0,");
-//  Serial.print("Blue:0,");
-//  Serial.print("Color:0,");
-//  Serial.print("\n");
+  // if ( i > 1){
+  //   Serial.println(String(encoder_counter) + "," + "-24" + "," + String(counter_a) + "," + String(counter_b) + "," + String(c) + "," + String(battery/10 - 2) + "," + String(elapsed_speed) + "," + String(restart_counter));
+  //   i = 0;
+  // }
+ Serial.print("Encoder:"); Serial.print(encoder_counter); Serial.print(",");
+ Serial.print("Red:0,");
+ Serial.print("Green:0,");
+ Serial.print("Blue:0,");
+ Serial.print("Color:0,");
+ Serial.print("\n");
   
   // check if RPI is signaling the ARDUINO
   if (digitalRead(piPin)==LOW){
@@ -173,8 +173,13 @@ if (Serial.available() > 0)
       digitalWrite(a_identifier, LOW);
       digitalWrite(b_identifier, LOW);
       delay(5);
-      wdt_reset();
-      
+      Serial.print("Encoder:"); Serial.print(encoder_counter); Serial.print(",");
+      Serial.print("Red:0,");
+      Serial.print("Green:0,");
+      Serial.print("Blue:0,");
+      Serial.print("Color:0,");
+      Serial.print("\n");
+      wdt_reset();      
     }
   }
   else {
@@ -227,24 +232,24 @@ if (Serial.available() > 0)
   else
     digitalWrite(DataCapture, LOW);
       
-  if (counter_a_b > counter_rpi_reboot){
-    digitalWrite(rpi_off, HIGH);
-    delay(1000);
-    digitalWrite(rpi_off, LOW);
-    if (restart_counter < 500){
-        restart_counter = restart_counter * 2;
-        counter_rpi_reboot = (elapsed_speed+1000)*restart_counter;
-      }
-    else{
-        restart_counter = 499;
-        resetFunc();
-        }
-    delay(1000);
-  }
+  // if (counter_a_b > counter_rpi_reboot){
+  //   digitalWrite(rpi_off, HIGH);
+  //   delay(1000);
+  //   digitalWrite(rpi_off, LOW);
+  //   if (restart_counter < 500){
+  //       restart_counter = restart_counter * 2;
+  //       counter_rpi_reboot = (elapsed_speed+1000)*restart_counter;
+  //     }
+  //   else{
+  //       restart_counter = 499;
+  //       resetFunc();
+  //       }
+  //   delay(1000);
+  // }
   
-  if ((counter_a_b < counter_rpi_reboot/100) and (restart_counter > 2)){
-    restart_counter = restart_counter/2;
-  }
+  // if ((counter_a_b < counter_rpi_reboot/100) and (restart_counter > 2)){
+  //   restart_counter = restart_counter/2;
+  // }
   
   delay(1);
   wdt_reset();
