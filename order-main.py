@@ -328,7 +328,7 @@ else:
     scanner = Scanner()
 
 counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, batch_url=batch_url,
-                  stationID_url= stationID_url, sendbatch_url=sendbatch_url, register_id=register_id)
+                  stationID_url= stationID_url, sendbatch_url=sendbatch_url, register_id=register_id, usb_serial_flag=usb_serial_flag)
 
 Thread(target=counter.run).start()
 # time.sleep(10)
