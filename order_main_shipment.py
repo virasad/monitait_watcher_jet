@@ -221,9 +221,9 @@ class Counter:
                     # Reading the box entrance signal
                     ts = time.time()
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
-                    print(a ,b ,c, d ,dps)
                     # If the OK signal triggered
                     if abs(a - a_initial) >= 1:
+                        print(a ,b ,c, d ,dps)
                         print("Catched the OK signal")
                         a_initial = a
                         # Waiting to read the box barcode 
@@ -251,8 +251,6 @@ class Counter:
                                             if item['quantity'] > 0:
                                                 item['quantity'] -= 1 # Decreasing the quantity in the shipments order
                                                 batch['quantity'] = str(int(batch['quantity']) - 1) # Decreasing the quantity in the batches list
-                                                
-                                                "order_update(self, shipment_number, orders=None, is_done=None):"
                                                 
                                                 # Update the order list
                                                 self.db.order_update(shipment_number=self.shipment_number,
