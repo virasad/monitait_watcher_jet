@@ -171,7 +171,7 @@ class Counter:
                         # Added the order batches to the order DB
                         for entry in results:
                             is_exist = self.db.order_write(shipment_number=entry["shipment_number"], 
-                                                orders=entry['orders'], is_done=0)
+                                                orders=json.dumps(entry['orders']), is_done=0)
                             if is_exist:
                                 print(f"{entry['shipment_number']} is not exists")
                             else:
@@ -181,7 +181,7 @@ class Counter:
                             if entry['shipment_number'] in self.shipment_numbers:
                                 pass
                             else:
-                                self.shipment_numbers.append[entry['shipment_number']]
+                                self.shipment_numbers.append(entry['shipment_number'])
                     else:
                         pass
                 # except Exception as ex1:
@@ -189,18 +189,18 @@ class Counter:
                 ##
                 # Reading the scanner to detect OR and start the counting process
                 if True:
-                    shipment_scaning_barcode_byte_string  = self.scanner.read_barcode()
+                    shipment_scanned_barcode_byte_string  = self.scanner.read_barcode()
                     # If the scanner output is serial, convert its output to str
                     if self.usb_serial_flag:    
-                        shipment_scaning_barcode = shipment_scaning_barcode_byte_string.decode().strip()
-                        shipment_scaning_barcode = str(shipment_scaning_barcode)
+                        shipment_scanned_barcode = shipment_scanned_barcode_byte_string.decode().strip()
+                        shipment_scanned_barcode = str(shipment_scanned_barcode)
                     else:
-                        shipment_scaning_barcode = shipment_scaning_barcode_byte_string
-                    if shipment_scaning_barcode in self.shipment_numbers:
-                        print(f"The scanned barcode is in the shipment number, {shipment_scaning_barcode}")
+                        shipment_scanned_barcode = shipment_scanned_barcode_byte_string
+                    if shipment_scanned_barcode in self.shipment_numbers:
+                        print(f"The scanned barcode is in the shipment number, {shipment_scanned_barcode}")
                         
                         # Getting the scanned order list from order DB
-                        self.order = self.db.order_read(self.shipment_number)
+                        self.order = self.db.order_read(shipment_scanned_barcode)
                         print(f"\n oRDERS READ RESULTS {self.order}")
                         # Checking is the scanned order in the order DB or not
                         if self.order != []:
@@ -216,7 +216,7 @@ class Counter:
                         
                     else:
                         print()
-                        print(f"There is no such shipment number, {shipment_scaning_barcode}, {type(shipment_scaning_barcode)}")
+                        print(f"There is no such shipment number, {shipment_scanned_barcode}, {type(shipment_scanned_barcode)}")
 
                 # except Exception as ex2:
                 #     print(f"run > reading scanner to detect OR {ex2}")
