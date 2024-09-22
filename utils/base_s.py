@@ -139,7 +139,7 @@ class DB:
     
     def order_read(self, shipment_number=None, status="onetable"):
         try:
-            if status == "total":
+            if status == "total": 
                 self.cursor.execute('SELECT * FROM watcher_order_table')
             elif status == "onetable":
                 self.cursor.execute('SELECT * FROM watcher_order_table WHERE shipment_number = ?', (shipment_number,))
@@ -164,7 +164,7 @@ class DB:
     def order_delete(self, shipment_number=None, status="onetable"):
         try:
             if status == "onetable":
-                self.cursor.execute("""DELETE from watcher_order_table where  shipment_number = {}""".format(shipment_number))
+                self.cursor.execute("""DELETE from watcher_order_table where shipment_number = {}""".format(shipment_number))
             elif status == "total":
                 self.cursor.execute("""DELETE from watcher_order_table""")
             self.dbconnect.commit()
@@ -173,17 +173,14 @@ class DB:
             print(f"DB > delete order {e_od}")
             return False
         
-    def order_update(self, shipment_number, order_id=None, batches_text=None, is_done=None):
+    def order_update(self, shipment_number, orders=None, is_done=None):
         try:
             query = "UPDATE watcher_order_table SET "
             params = []
             # Check which column to updated
-            if order_id is not None:
+            if orders is not None:
                 query += "order_id = ?, "
                 params.append(order_id)
-            if batches_text is not None:
-                query += "batches_text = ?, "
-                params.append(batches_text)
             if is_done is not None:
                 query += "is_done = ?, "
                 params.append(is_done)

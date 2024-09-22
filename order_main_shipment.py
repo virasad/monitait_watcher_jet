@@ -34,11 +34,9 @@ class Counter:
         self.shipment_number = ""
         self.scanned_box_barcode = 0
         self.stationID = 0
-        self.order = ()
-        self.shipment_numbers = []
-        self.order_product = 0
-        self.order_factory = 0
-        self.order_batches = ""
+        self.shipment_db = []
+        self.shipment_numbers_list = []
+        self.shipment_orders = None
         self.is_done = 0
         self.db_order_checking_interval = 10 # Secends
         self.watcher_live_signal = 60 * 5
@@ -178,10 +176,10 @@ class Counter:
                                 print(f"{entry['shipment_number']} is exists")
                             
                             # Added shipment number to the shipment list
-                            if entry['shipment_number'] in self.shipment_numbers:
+                            if entry['shipment_number'] in self.shipment_numbers_list:
                                 pass
                             else:
-                                self.shipment_numbers.append(entry['shipment_number'])
+                                self.shipment_numbers_list.append(entry['shipment_number'])
                     else:
                         pass
                 # except Exception as ex1:
@@ -196,26 +194,22 @@ class Counter:
                         shipment_scanned_barcode = str(shipment_scanned_barcode)
                     else:
                         shipment_scanned_barcode = shipment_scanned_barcode_byte_string
-                    if shipment_scanned_barcode in self.shipment_numbers:
+                    if shipment_scanned_barcode in self.shipment_numbers_list :
                         print(f"The scanned barcode is in the shipment number, {shipment_scanned_barcode}")
                         
                         # Getting the scanned order list from order DB
-                        self.order = self.db.order_read(shipment_scanned_barcode)
-                        print(f"\n oRDERS READ RESULTS {self.order}")
+                        self.shipment_db = self.db.order_read(shipment_scanned_barcode)
+                        print(f"\n oRDERS READ RESULTS {self.shipment_db}")
                         # Checking is the scanned order in the order DB or not
-                        if self.order != []:
+                        if self.shipment_db != []:
                             order_counting_start_flag = True
                             # Getting batches, product, and factory from scanned order
-                            self.order_batches = json.loads(self.order[5])
-                            self.order_product = self.order[2]
-                            self.order_factory = self.order[3]
-                            print("The batches", self.order_batches)
+                            self.shipment_orders = json.loads(self.shipment_db[2])
                         else:
                             order_counting_start_flag = False
                             print(f"The shipment order {self.shipment_number} is not in the DB, waiting to read valid data")
                         
                     else:
-                        print()
                         print(f"There is no such shipment number, {shipment_scanned_barcode}, {type(shipment_scanned_barcode)}")
 
                 # except Exception as ex2:
@@ -242,38 +236,50 @@ class Counter:
                         print("self.scanned_box_barcode", self.scanned_box_barcode)
                         box_in_order_batch = False
                         if self.scanned_box_barcode != 0:
-                            if "OR" in self.scanned_box_barcode:
+                            if self.scanned_box_barcode in self.shipment_numbers_list:
                                 # The exit barcode scanned
                                 print("The exit barcode scanned")
                                 order_counting_start_flag = False
                             else:
                                 # Checking is the scanned box barcode is in the order batches or not
-                                for batch in self.order_batches:
-                                    if batch['assigned_id']==str(self.scanned_box_barcode):
-                                        # The box barcode is in the order
-                                        box_in_order_batch = True
-                                        # Getting to update the order DB
-                                        batch_uuid = batch['batch_uuid']
-                                        # Decrease quantity by 1 if it's greater than 0, else eject it
-                                        if batch['quantity'] > 0:
-                                            batch['quantity'] -= 1
-                                            # Update the order list
-                                            self.db.order_update(shipment_number=int(self.shipment_number), product=self.order_product,
-                                                                batches_text= json.dumps(self.order_batches), 
-                                                                factory=self.order_factory, is_done = 0)
-                                            print("run > The current assigned id quantity value (remainded value):", batch['quantity'])
-                                        elif batch['quantity'] == 0:
-                                            # Remove the shipment number **
-                                            print("run > Counted value from this assined is has been finished")
-                                            # Update the order list
-                                            self.db.order_update(shipment_number=int(self.shipment_number), product=self.order_product,
-                                                                batches_text= json.dumps(self.order_batches), 
-                                                                factory=self.order_factory, is_done = 1)
-                                            # The detected barcode is not on the order list
-                                            self.arduino.gpio32_0.off()
-                                            time.sleep(1)
-                                            self.arduino.gpio32_0.on()
-                                            time.sleep(1)
+                                for item in self.shipment_orders:
+                                    for batch in item['batches']:
+                                        if batch['assigned_id']==str(self.scanned_box_barcode):
+                                            # The box barcode is in the order
+                                            box_in_order_batch = True
+                                            # Decrease quantity by 1 if it's greater than 0, else eject it
+                                            if item['quantity'] > 0:
+                                                item['quantity'] -= 1 # Decreasing the quantity in the shipments order
+                                                batch['quantity'] = str(int(batch['quantity']) - 1) # Decreasing the quantity in the batches list
+                                                
+                                                "order_update(self, shipment_number, orders=None, is_done=None):"
+                                                
+                                                # Update the order list
+                                                self.db.order_update(shipment_number=self.shipment_number,
+                                                                    orders= json.dumps(self.shipment_orders),is_done = 0)
+                                                print("run > The current assigned id quantity value (remainded value):", batch['quantity'])
+                                            elif item['quantity']  == 0:
+                                                print("run > Counted value from this assined is has been finished")
+                                                # The detected barcode is not on the order list
+                                                self.arduino.gpio32_0.off()
+                                                time.sleep(1)
+                                                self.arduino.gpio32_0.on()
+                                                time.sleep(1)
+                                            elif all(item['quantity'] == 0 for item in self.shipment_orders):
+                                                print("run > All value of the quantity is zero")
+                                                # Remove the shipment number **
+                                                if shipment_scanned_barcode in self.shipment_numbers_list:
+                                                    self.shipment_numbers_list.remove(shipment_scanned_barcode)
+                                                else:
+                                                    pass
+                                                # The detected barcode is not on the order list
+                                                self.arduino.gpio32_0.off()
+                                                time.sleep(1)
+                                                self.arduino.gpio32_0.on()
+                                                time.sleep(1)
+                                                # Update the order list
+                                                self.db.order_update(shipment_number=self.shipment_number,
+                                                                    orders= json.dumps(self.shipment_orders),is_done = 1)
                                 # If the scanned barcode is not in the batches, eject it 
                                 if not box_in_order_batch:
                                     print("The barcode is not on the list")
