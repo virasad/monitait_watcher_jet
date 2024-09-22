@@ -3,10 +3,10 @@ import glob
 
 register_id = str(socket.gethostname())
 
-## URLs
-batch_url = 'https://app.monitait.com/api/elastic-search/batch/'
-stationID_url = f'https://app.monitait.com/api/factory/watcher/{register_id}/'
-sendbatch_url = 'https://app.monitait.com/api/elastic-search/send-batch-report/'
+## URLs slack
+shipment_url = 'https://develop-app.monitait.com/api/factory/shipment-orders/'
+stationID_url = f'https://develop-app.monitait.com/api/factory/watcher/{register_id}/'
+sendshipment_url = 'https://develop-app.monitait.com/api/elastic-search/send-batch-report/'
 
 try:
     os.system('./rm_py.sh')
@@ -16,17 +16,17 @@ except Exception as ex0:
 
 
 class Counter:
-    def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner, batch_url: batch_url, stationID_url: stationID_url,
-                 sendbatch_url: sendbatch_url, register_id: register_id, usb_serial_flag) -> None:
+    def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner, shipment_url: shipment_url, stationID_url: stationID_url,
+                 sendshipment_url: sendshipment_url, register_id: register_id, usb_serial_flag) -> None:
         self.arduino = arduino
         self.stop_thread = False
         self.order_list = []
         self.db = db
         self.camera = camera
         self.scanner = scanner
-        self.batch_url = batch_url
+        self.shipment_url = shipment_url
         self.stationID_url = stationID_url
-        self.sendbatch_url = sendbatch_url
+        self.sendshipment_url = sendshipment_url
         self.register_id = register_id
         self.usb_serial_flag = usb_serial_flag
         self.headers = {'Register-ID': self.register_id, 
@@ -42,7 +42,7 @@ class Counter:
         self.db_order_checking_interval = 10 # Secends
         self.watcher_live_signal = 60 * 5
         self.take_picture_interval = 60 * 5
-        self.order_db_remove_interval = 12 * 3600  # Convert hours to seconds
+        self.order_db_remove_interval = 12 * 3600  # Convert hours to secends
     
     def db_order_checker(self):
         previus_sales_order = ""
@@ -57,9 +57,9 @@ class Counter:
                     # Removed all datafrom table
                     table_delete = self.db.order_delete(status="total")
                     # Getting update the watcher db
-                    batch_resp = requests.get(self.batch_url, headers=self.headers) 
+                    shipment_resp = requests.get(self.shipment_url, headers=self.headers) 
                     # Added all batches to a list
-                    order_list = batch_resp.json()  
+                    order_list = shipment_resp.json()  
                     orders = [entry["_source"]["batch"] for entry in order_list] 
                     # Added the order batches to the order DB
                     for order in orders:
@@ -118,9 +118,9 @@ class Counter:
                                                         "order_id": int(self.sales_order),
                                                         "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
                                                         "defect_image":[], "action_type": "stop"}  
-                                send_batch_response = requests.post(self.sendbatch_url, json=batch_report_body, headers=self.headers)
+                                send_shipment_response = requests.post(self.sendshipment_url, json=batch_report_body, headers=self.headers)
 
-                                print("db_order_checker > Send batch status code", send_batch_response.status_code)
+                                print("db_order_checker > Send batch status code", send_shipment_response.status_code)
                         else:
                             pass
                 # except Exception as ex2:
@@ -162,9 +162,10 @@ class Counter:
                         db_checking_flag = False
                         st_1 = time.time()
                         print("\n start to adding the data")
-                        batch_resp = requests.get(self.batch_url, headers=self.headers) 
+                        shipment_resp = requests.get(self.shipment_url, headers=self.headers) 
                         # Added all batches to a list
-                        order_list = batch_resp.json()  
+                        order_list = shipment_resp.json()  
+                        print(f"\n--> order_list: {order_list}")
                         orders = [entry["_source"]["batch"] for entry in order_list] 
                         
                         # Added the order batches to the order DB
@@ -331,8 +332,9 @@ else:
     usb_serial_flag = False
     scanner = Scanner()
 
-counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, batch_url=batch_url,
-                  stationID_url= stationID_url, sendbatch_url=sendbatch_url, register_id=register_id, usb_serial_flag=usb_serial_flag)
+counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, shipment_url=shipment_url,
+                  stationID_url= stationID_url, sendshipment_url=sendshipment_url, register_id=register_id,
+                  usb_serial_flag=usb_serial_flag)
 
 Thread(target=counter.run).start()
 # time.sleep(10)
