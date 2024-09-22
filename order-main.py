@@ -17,7 +17,7 @@ except Exception as ex0:
 
 class Counter:
     def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner, batch_url: batch_url, stationID_url: stationID_url,
-                 sendbatch_url: sendbatch_url, register_id: register_id, usb_serial_flag: usb_serial_flag) -> None:
+                 sendbatch_url: sendbatch_url, register_id: register_id, usb_serial_flag) -> None:
         self.arduino = arduino
         self.stop_thread = False
         self.order_list = []
@@ -223,7 +223,11 @@ class Counter:
                         a_initial = a
                         # Waiting to read the box barcode 
                         scanned_box_barcode_byte_string = self.scanner.read_barcode()
-                        self.scanned_box_barcode = scanned_box_barcode_byte_string.decode().strip()
+                        if self.usb_serial_flag:    
+                            self.scanned_box_barcode = scanned_box_barcode_byte_string.decode().strip()
+                            self.scanned_box_barcode = str(self.scanned_box_barcode)
+                        else:
+                            self.scanned_box_barcode = scanned_box_barcode_byte_string
                         print("self.scanned_box_barcode", self.scanned_box_barcode)
                         box_in_order_batch = False
                         if self.scanned_box_barcode != 0:
