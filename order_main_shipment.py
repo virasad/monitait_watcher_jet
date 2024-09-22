@@ -1,4 +1,4 @@
-from utils.base import *
+from utils.base_s import *
 import glob
 
 register_id = str(socket.gethostname())
@@ -31,10 +31,11 @@ class Counter:
         self.usb_serial_flag = usb_serial_flag
         self.headers = {'Register-ID': self.register_id, 
                         'Content-Type': 'application/json'}
-        self.sales_order = 0
+        self.shipment_number = ""
         self.scanned_box_barcode = 0
         self.stationID = 0
         self.order = ()
+        self.shipment_numbers = []
         self.order_product = 0
         self.order_factory = 0
         self.order_batches = ""
@@ -45,7 +46,7 @@ class Counter:
         self.order_db_remove_interval = 12 * 3600  # Convert hours to secends
     
     def db_order_checker(self):
-        previus_sales_order = ""
+        previus_shipment_number = ""
         b_1 = 0
         st = time.time() 
         db_st = time.time()
@@ -64,28 +65,28 @@ class Counter:
                     # Added the order batches to the order DB
                     for order in orders:
                         # Save the orders to database
-                        self.db.order_write(sales_order=order["sales_order"], product=order["product"], factory=order["factory"], 
+                        self.db.order_write(shipment_number=order["shipment_number"], product=order["product"], factory=order["factory"], 
                                             is_done = 0, batches_text= json.dumps(order['batches']))
                 # except Exception as ex1:
                 #     print(f"db_order_checker > removing database {ex1}")
                 
             # Checking order db every {self.db_order_checking_interval} second
-            if time.time() - st > self.db_order_checking_interval and self.sales_order != 0:
+            if time.time() - st > self.db_order_checking_interval and self.shipment_number != 0:
                 checking_order_db = False
                 st = time.time() 
                 if True:
                     # Checking order list on the order DB to catch the quantity value
-                    if self.sales_order != previus_sales_order:
+                    if self.shipment_number != previus_shipment_number:
                         while not checking_order_db:
                             main_order_dict = {}
-                            # The sales order changed, so all data 
-                            previus_sales_order = self.sales_order
-                            main_salse_order_data = self.db.order_read(self.sales_order)
-                            if main_salse_order_data != []:
+                            # The shaipment changed, so all data 
+                            previus_shipment_number = self.shipment_number
+                            main_shipment_number_data = self.db.order_read(self.shipment_number)
+                            if main_shipment_number_data != []:
                                 checking_order_db = True
-                                print(f"DB, {previus_sales_order}, main_salse_order_data, {main_salse_order_data}")
-                                print("\n main_salse_order_data", main_salse_order_data)
-                                main_batches = json.loads(main_salse_order_data[5])
+                                print(f"DB, {previus_shipment_number}, main_shipment_number_data, {main_shipment_number_data}")
+                                print("\n main_shipment_number_data", main_shipment_number_data)
+                                main_batches = json.loads(main_shipment_number_data[5])
                                 for batch in main_batches:
                                     if batch['quantity'] != 0:
                                         main_order_dict[batch['batch_uuid']]={
@@ -96,14 +97,14 @@ class Counter:
                             else: 
                                 checking_order_db = False
                     # Getting the scanned order list from order DB
-                    print(f"DB function, the sales order is {self.sales_order} and the previus one is {previus_sales_order}")
+                    print(f"DB function, the shipment order is {self.shipment_number} and the previus one is {previus_shipment_number}")
                     
                     # Getting to detect in which batch changes is happend
-                    updated_salse_order_data = self.db.order_read(self.sales_order)
-                    updated_batches = json.loads(updated_salse_order_data[5])
+                    updated_shipment_number_data = self.db.order_read(self.shipment_number)
+                    updated_batches = json.loads(updated_shipment_number_data[5])
                     for batches in updated_batches:
                         # Check if the order finished or not
-                        is_done_value = updated_salse_order_data[4]
+                        is_done_value = updated_shipment_number_data[4]
                         if is_done_value == 0:
                             main_quantity = main_order_dict[batches['batch_uuid']]['quantity']
                             current_quantity = batches['quantity']
@@ -115,7 +116,7 @@ class Counter:
                                 # Sending batch to batch URL
                                 batch_report_body = {"batch_uuid":batches['batch_uuid'], "assigned_id":batches['assigned_id'],
                                                         "type": "new", "station": int(self.stationID),
-                                                        "order_id": int(self.sales_order),
+                                                        "order_id": int(self.shipment_number),
                                                         "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
                                                         "defect_image":[], "action_type": "stop"}  
                                 send_shipment_response = requests.post(self.sendshipment_url, json=batch_report_body, headers=self.headers)
@@ -162,17 +163,21 @@ class Counter:
                         db_checking_flag = False
                         st_1 = time.time()
                         print("\n start to adding the data")
-                        shipment_resp = requests.get(self.shipment_url, headers=self.headers) 
+                        main_dict = requests.get(self.shipment_url, headers=self.headers) 
                         # Added all batches to a list
-                        order_list = shipment_resp.json()  
-                        print(f"\n--> order_list: {order_list}")
-                        orders = [entry["_source"]["batch"] for entry in order_list] 
+                        main_json = main_dict.json()  
+                        print(f"\n--> main_json: {main_json}")
+                        results = main_json['results']
                         
                         # Added the order batches to the order DB
-                        for order in orders:
-                            # Save the orders to database
-                            self.db.order_write(sales_order=order["sales_order"], product=order["product"], factory=order["factory"], 
-                                                is_done = 0, batches_text= json.dumps(order['batches']))
+                        for entry in results:
+                            is_exist = self.db.order_write(shipment_number=entry["shipment_number"], 
+                                                order_id=entry['orders'], is_done=0)
+                            if is_exist:
+                                self.shipment_numbers.append[entry['shipment_number']]
+                                print(f"entry["shipment_number"] is not exists")
+                            else:
+                                print(f"entry["shipment_number"] is exists")
                     else:
                         pass
                 # except Exception as ex1:
@@ -180,21 +185,19 @@ class Counter:
                 ##
                 # Reading the scanner to detect OR and start the counting process
                 if True:
-                    operator_scaning_barcode_byte_string  = self.scanner.read_barcode()
+                    shipment_scaning_barcode_byte_string  = self.scanner.read_barcode()
                     # If the scanner output is serial, convert its output to str
                     if self.usb_serial_flag:    
-                        operator_scaning_barcode = operator_scaning_barcode_byte_string.decode().strip()
-                        operator_scaning_barcode = str(operator_scaning_barcode)
+                        shipment_scaning_barcode = shipment_scaning_barcode_byte_string.decode().strip()
+                        shipment_scaning_barcode = str(shipment_scaning_barcode)
                     else:
-                        operator_scaning_barcode = operator_scaning_barcode_byte_string
-                    if "OR" in operator_scaning_barcode:
-                        print("\n before scanning OR", operator_scaning_barcode)
-                        # separating OR scanned barcode
-                        _, _, self.sales_order = operator_scaning_barcode.partition("OR")
+                        shipment_scaning_barcode = shipment_scaning_barcode_byte_string
+                    if shipment_scaning_barcode is in self.shipment_numbers:
+                        print("The scanned barcode is in the shipment number")
                         
                         # Getting the scanned order list from order DB
-                        self.order = self.db.order_read(self.sales_order)
-                        print(f"\n Wait 5 seconds to start the counting, the sales order is {self.sales_order}")
+                        self.order = self.db.order_read(self.shipment_number)
+                        print(f"\n oRDERS READ RESULTS {self.order}")
                         # Checking is the scanned order in the order DB or not
                         if self.order != []:
                             order_counting_start_flag = True
@@ -205,9 +208,11 @@ class Counter:
                             print("The batches", self.order_batches)
                         else:
                             order_counting_start_flag = False
-                            print(f"The sales order {self.sales_order} is not in the DB, waiting to read valid data")
+                            print(f"The shipment order {self.shipment_number} is not in the DB, waiting to read valid data")
+                        
                     else:
-                        pass
+                        print("There is no such shipment number")
+
                 # except Exception as ex2:
                 #     print(f"run > reading scanner to detect OR {ex2}")
             ##
@@ -248,14 +253,14 @@ class Counter:
                                         if batch['quantity'] > 0:
                                             batch['quantity'] -= 1
                                             # Update the order list
-                                            self.db.order_update(sales_order=int(self.sales_order), product=self.order_product,
+                                            self.db.order_update(shipment_number=int(self.shipment_number), product=self.order_product,
                                                                 batches_text= json.dumps(self.order_batches), 
                                                                 factory=self.order_factory, is_done = 0)
                                             print("run > The current assigned id quantity value (remainded value):", batch['quantity'])
                                         elif batch['quantity'] == 0:
                                             print("run > Counted value from this assined is has been finished")
                                             # Update the order list
-                                            self.db.order_update(sales_order=int(self.sales_order), product=self.order_product,
+                                            self.db.order_update(shipment_number=int(self.shipment_number), product=self.order_product,
                                                                 batches_text= json.dumps(self.order_batches), 
                                                                 factory=self.order_factory, is_done = 1)
                                             # The detected barcode is not on the order list
