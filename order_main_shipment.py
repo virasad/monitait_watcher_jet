@@ -172,7 +172,7 @@ class Counter:
                         # Added the order batches to the order DB
                         for entry in results:
                             is_exist = self.db.order_write(shipment_number=entry["shipment_number"], 
-                                                order_id=entry['orders'], is_done=0)
+                                                orders=entry['orders'], is_done=0)
                             if is_exist:
                                 self.shipment_numbers.append[entry['shipment_number']]
                                 print(f"{entry['shipment_number']} is not exists")
