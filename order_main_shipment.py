@@ -166,7 +166,6 @@ class Counter:
                         main_dict = requests.get(self.shipment_url, headers=self.headers) 
                         # Added all batches to a list
                         main_json = main_dict.json()  
-                        print(f"\n--> main_json: {main_json}")
                         results = main_json['results']
                         
                         # Added the order batches to the order DB
@@ -193,7 +192,7 @@ class Counter:
                     else:
                         shipment_scaning_barcode = shipment_scaning_barcode_byte_string
                     if shipment_scaning_barcode in self.shipment_numbers:
-                        print("The scanned barcode is in the shipment number")
+                        print(f"The scanned barcode is in the shipment number, {shipment_scaning_barcode}")
                         
                         # Getting the scanned order list from order DB
                         self.order = self.db.order_read(self.shipment_number)
@@ -211,7 +210,7 @@ class Counter:
                             print(f"The shipment order {self.shipment_number} is not in the DB, waiting to read valid data")
                         
                     else:
-                        print("There is no such shipment number")
+                        print(f"There is no such shipment number, {shipment_scaning_barcode}, {type(shipment_scaning_barcode)}")
 
                 # except Exception as ex2:
                 #     print(f"run > reading scanner to detect OR {ex2}")
@@ -344,5 +343,5 @@ counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, shipme
 Thread(target=counter.run).start()
 # time.sleep(10)
 # Thread(target=counter.db_checker).start()
-time.sleep(10)
-Thread(target=counter.db_order_checker).start()
+# time.sleep(10)
+# Thread(target=counter.db_order_checker).start()
