@@ -175,9 +175,9 @@ class Counter:
                                                 order_id=entry['orders'], is_done=0)
                             if is_exist:
                                 self.shipment_numbers.append[entry['shipment_number']]
-                                print(f"entry["shipment_number"] is not exists")
+                                print(f"{entry['shipment_number']} is not exists")
                             else:
-                                print(f"entry["shipment_number"] is exists")
+                                print(f"{entry['shipment_number']} is exists")
                     else:
                         pass
                 # except Exception as ex1:
@@ -192,7 +192,7 @@ class Counter:
                         shipment_scaning_barcode = str(shipment_scaning_barcode)
                     else:
                         shipment_scaning_barcode = shipment_scaning_barcode_byte_string
-                    if shipment_scaning_barcode is in self.shipment_numbers:
+                    if shipment_scaning_barcode in self.shipment_numbers:
                         print("The scanned barcode is in the shipment number")
                         
                         # Getting the scanned order list from order DB
