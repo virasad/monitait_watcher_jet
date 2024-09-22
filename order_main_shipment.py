@@ -173,10 +173,15 @@ class Counter:
                             is_exist = self.db.order_write(shipment_number=entry["shipment_number"], 
                                                 orders=entry['orders'], is_done=0)
                             if is_exist:
-                                self.shipment_numbers.append[entry['shipment_number']]
                                 print(f"{entry['shipment_number']} is not exists")
                             else:
                                 print(f"{entry['shipment_number']} is exists")
+                            
+                            # Added shipment number to the shipment list
+                            if entry['shipment_number'] in self.shipment_numbers:
+                                pass
+                            else:
+                                self.shipment_numbers.append[entry['shipment_number']]
                     else:
                         pass
                 # except Exception as ex1:
@@ -210,6 +215,7 @@ class Counter:
                             print(f"The shipment order {self.shipment_number} is not in the DB, waiting to read valid data")
                         
                     else:
+                        print()
                         print(f"There is no such shipment number, {shipment_scaning_barcode}, {type(shipment_scaning_barcode)}")
 
                 # except Exception as ex2:
@@ -257,6 +263,7 @@ class Counter:
                                                                 factory=self.order_factory, is_done = 0)
                                             print("run > The current assigned id quantity value (remainded value):", batch['quantity'])
                                         elif batch['quantity'] == 0:
+                                            # Remove the shipment number **
                                             print("run > Counted value from this assined is has been finished")
                                             # Update the order list
                                             self.db.order_update(shipment_number=int(self.shipment_number), product=self.order_product,
