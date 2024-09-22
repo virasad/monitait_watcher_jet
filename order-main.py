@@ -17,7 +17,7 @@ except Exception as ex0:
 
 class Counter:
     def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner, batch_url: batch_url, stationID_url: stationID_url,
-                 sendbatch_url: sendbatch_url, register_id: register_id) -> None:
+                 sendbatch_url: sendbatch_url, register_id: register_id, usb_serial_flag: usb_serial_flag) -> None:
         self.arduino = arduino
         self.stop_thread = False
         self.order_list = []
@@ -28,6 +28,7 @@ class Counter:
         self.stationID_url = stationID_url
         self.sendbatch_url = sendbatch_url
         self.register_id = register_id
+        self.usb_serial_flag = usb_serial_flag
         self.headers = {'Register-ID': self.register_id, 
                         'Content-Type': 'application/json'}
         self.sales_order = 0
@@ -179,8 +180,13 @@ class Counter:
                 # Reading the scanner to detect OR and start the counting process
                 if True:
                     operator_scaning_barcode_byte_string  = self.scanner.read_barcode()
-                    operator_scaning_barcode = operator_scaning_barcode_byte_string.decode().strip()
-                    if "OR" in str(operator_scaning_barcode):
+                    # If the scanner output is serial, convert its output to str
+                    if self.usb_serial_flag:    
+                        operator_scaning_barcode = operator_scaning_barcode_byte_string.decode().strip()
+                        operator_scaning_barcode = str(operator_scaning_barcode)
+                    else:
+                        operator_scaning_barcode = operator_scaning_barcode_byte_string
+                    if "OR" in operator_scaning_barcode:
                         print("\n before scanning OR", operator_scaning_barcode)
                         # separating OR scanned barcode
                         _, _, self.sales_order = operator_scaning_barcode.partition("OR")
@@ -314,9 +320,11 @@ db = DB()
 # List all ttyUSB devices
 ttyUSB_devices = glob.glob('/dev/ttyUSB*')
 if ttyUSB_devices!= []:
+    usb_serial_flag = True 
     print(f"The found UART ttyyUSB: {ttyUSB_devices}")
     scanner = UARTscanner(port=ttyUSB_devices[0], baudrate = 9600, timeout = 1)
 else:
+    usb_serial_flag = False
     scanner = Scanner()
 
 counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, batch_url=batch_url,
