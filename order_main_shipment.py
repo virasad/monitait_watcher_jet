@@ -81,6 +81,7 @@ class Counter:
                             # The shaipment changed, so all data 
                             previus_shipment_number = self.shipment_number
                             main_shipment_number_data = self.db.order_read(self.shipment_number)
+                            print(main_shipment_number_data, "main_shipment_number_data")
                             if main_shipment_number_data != []:
                                 checking_order_db = True
                                 print(f"DB, {previus_shipment_number}, main_shipment_number_data, {main_shipment_number_data}")
@@ -96,35 +97,36 @@ class Counter:
                                             pass
                             else: 
                                 checking_order_db = False
-                    # Getting the scanned order list from order DB
-                    print(f"DB function, the shipment order is {self.shipment_number} and the previus one is {previus_shipment_number}")
-                    
-                    # Getting to detect in which batch changes is happend
-                    updated_shipment_number_data = self.db.order_read(self.shipment_number)
-                    updated_shipment_number_data = json.loads(updated_shipment_number_data[2])
-                    for item in updated_shipment_number_data:
-                        for batch in item['batches']:
-                            # Check if the order finished or not
-                            is_done_value = updated_shipment_number_data[3]
-                            if is_done_value == 0:
-                                main_quantity = main_order_dict[batch['batch_uuid']]['quantity']
-                                current_quantity = batch['quantity']
-                                if main_quantity != current_quantity:
-                                    # Update the quantity of the scanned box 
-                                    main_order_dict[batch['batch_uuid']]['quantity'] = current_quantity
-                                    
-                                    # Post requests
-                                    # Sending batch to batch URL
-                                    batch_report_body = {"batch_uuid":batch['batch_uuid'], "assigned_id":batch['assigned_id'],
-                                                            "type": "new", "station": int(self.stationID),
-                                                            "order_id": int(self.shipment_number),
-                                                            "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
-                                                            "defect_image":[], "action_type": "stop"}  
-                                    send_shipment_response = requests.post(self.sendshipment_url, json=batch_report_body, headers=self.headers)
+                    if checking_order_db:
+                        # Getting the scanned order list from order DB
+                        print(f"DB function, the shipment order is {self.shipment_number} and the previus one is {previus_shipment_number}")
+                        
+                        # Getting to detect in which batch changes is happend
+                        updated_shipment_number_data = self.db.order_read(self.shipment_number)
+                        updated_shipment_number_data = json.loads(updated_shipment_number_data[2])
+                        for item in updated_shipment_number_data:
+                            for batch in item['batches']:
+                                # Check if the order finished or not
+                                is_done_value = updated_shipment_number_data[3]
+                                if is_done_value == 0:
+                                    main_quantity = main_order_dict[batch['batch_uuid']]['quantity']
+                                    current_quantity = batch['quantity']
+                                    if main_quantity != current_quantity:
+                                        # Update the quantity of the scanned box 
+                                        main_order_dict[batch['batch_uuid']]['quantity'] = current_quantity
+                                        
+                                        # Post requests
+                                        # Sending batch to batch URL
+                                        batch_report_body = {"batch_uuid":batch['batch_uuid'], "assigned_id":batch['assigned_id'],
+                                                                "type": "new", "station": int(self.stationID),
+                                                                "order_id": int(self.shipment_number),
+                                                                "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
+                                                                "defect_image":[], "action_type": "stop"}  
+                                        send_shipment_response = requests.post(self.sendshipment_url, json=batch_report_body, headers=self.headers)
 
-                                    print("db_order_checker > Send batch status code", send_shipment_response.status_code)
-                            else:
-                                pass
+                                        print("db_order_checker > Send batch status code", send_shipment_response.status_code)
+                                else:
+                                    pass
                 # except Exception as ex2:
                 #     print(f"db_order_checker > checking the database {ex2}")
 
