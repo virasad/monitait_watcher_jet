@@ -82,11 +82,10 @@ class Counter:
                             # The shaipment changed, so all data 
                             previus_shipment_number = self.shipment_number
                             main_shipment_number_data = self.db.order_read(self.shipment_number)
-                            print(main_shipment_number_data, "main_shipment_number_data")
                             if main_shipment_number_data != []:
                                 checking_order_db = True
                                 shipment_db_checking_flag = True
-                                print(f"DB, {previus_shipment_number}, main_shipment_number_data, {main_shipment_number_data}")
+                                print(f"DB, {previus_shipment_number}")
                                 main_shipment_orders = json.loads(main_shipment_number_data[2])
                                 for item in main_shipment_orders:
                                     order_id = item['id']
@@ -270,7 +269,7 @@ class Counter:
                                                 # Update the order list
                                                 self.db.order_update(shipment_number=self.shipment_number,
                                                                     orders= json.dumps(self.shipment_orders),is_done = 0)
-                                                print("DB update time", time.time())
+                                                print("DB update time", time.time() - s)
                                                 print("run > The current assigned id quantity value (remainded value):", batch['quantity'])
                                             elif item['quantity']  == 0:
                                                 print("run > Counted value from this assined is has been finished")
