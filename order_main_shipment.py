@@ -31,7 +31,7 @@ class Counter:
         self.usb_serial_flag = usb_serial_flag
         self.headers = {'Register-ID': self.register_id, 
                         'Content-Type': 'application/json'}
-        self.shipment_number = None
+        self.shipment_number = ""
         self.scanned_box_barcode = 0
         self.stationID = 0
         self.shipment_db = []
@@ -69,7 +69,7 @@ class Counter:
                 #     print(f"db_order_checker > removing database {ex1}")
                 
             # Checking order db every {self.db_order_checking_interval} second
-            if time.time() - st > self.db_order_checking_interval and self.shipment_number != None:
+            if time.time() - st > self.db_order_checking_interval and self.shipment_number != "":
                 print("DB order checking flag", shipment_db_checking_flag)
                 checking_order_db = False
                 st = time.time() 
