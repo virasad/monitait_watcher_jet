@@ -127,9 +127,9 @@ class Counter:
                                                                 "order_id": int(order_id_),
                                                                 "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
                                                                 "defect_image":[], "action_type": "stop"}  
+                                        s2 = time.time()
                                         send_shipment_response = requests.post(self.sendshipment_url, json=batch_report_body, headers=self.headers)
-
-                                        print("Send batch status code", send_shipment_response.status_code)
+                                        print("\n Send batch status code", send_shipment_response.status_code, "Post time", time.time()-s2)
                                 else:
                                     pass
                 # except Exception as ex2:
@@ -167,7 +167,6 @@ class Counter:
                 ##
                 # The watcher updates his order DB until OR is scanned
                 if True:
-                    print("time.time() - st_1", time.time() - st_1)
                     if time.time() - st_1 > order_request_time_interval or db_checking_flag:
                         db_checking_flag = False
                         st_1 = time.time()
@@ -178,6 +177,7 @@ class Counter:
                         results = main_json['results']
                         
                         # Added the order batches to the order DB
+                        s3 = time.time()
                         for entry in results:
                             is_exist = self.db.order_write(shipment_number=entry["shipment_number"], 
                                                 orders=json.dumps(entry['orders']), is_done=0)
@@ -191,6 +191,7 @@ class Counter:
                                 pass
                             else:
                                 self.shipment_numbers_list.append(entry['shipment_number'])
+                        print("\n Time of adding shipment to DB", time.time() - s3)
                     else:
                         pass
                 # except Exception as ex1:
@@ -206,10 +207,10 @@ class Counter:
                     else:
                         self.shipment_number = shipment_scanned_barcode_byte_string
                     if self.shipment_number in self.shipment_numbers_list :
-                        print(f"The scanned barcode is in the shipment number, {self.shipment_number}")
                         
                         # Getting the scanned order list from order DB
                         self.shipment_db = self.db.order_read(self.shipment_number)
+                        print(f"Shipments results: shipment number {self.shipment_number}, orders {json.loads(self.shipment_db[2])}")
                         # Checking is the scanned order in the order DB or not
                         if self.shipment_db != []:
                             order_counting_start_flag = True
@@ -267,7 +268,7 @@ class Counter:
                                                 # Update the order list
                                                 self.db.order_update(shipment_number=self.shipment_number,
                                                                     orders= json.dumps(self.shipment_orders),is_done = 0)
-                                                print("DB update time", time.time() - s)
+                                                print("Time of updating order db", time.time() - s)
                                                 print("run > The current assigned id quantity value (remainded value):", batch['quantity'])
                                             elif item['quantity']  == 0:
                                                 print("run > Counted value from this assined is has been finished")
