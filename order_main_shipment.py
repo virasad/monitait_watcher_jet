@@ -204,7 +204,7 @@ class Counter:
                         print(f"The scanned barcode is in the shipment number, {self.shipment_number}")
                         
                         # Getting the scanned order list from order DB
-                        self.shipment_db = self.db.order_read(shipment_scanned_barcode)
+                        self.shipment_db = self.db.order_read(self.shipment_number)
                         print(f"\n oRDERS READ RESULTS {self.shipment_db}")
                         # Checking is the scanned order in the order DB or not
                         if self.shipment_db != []:
