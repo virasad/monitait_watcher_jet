@@ -31,7 +31,7 @@ class Counter:
         self.usb_serial_flag = usb_serial_flag
         self.headers = {'Register-ID': self.register_id, 
                         'Content-Type': 'application/json'}
-        self.shipment_number = ""
+        self.shipment_number = None
         self.scanned_box_barcode = 0
         self.stationID = 0
         self.shipment_db = []
