@@ -71,8 +71,6 @@ class Counter:
             # Checking order db every {self.db_order_checking_interval} second
             if time.time() - st > self.db_order_checking_interval and self.shipment_number != None:
                 checking_order_db = False
-                print("self.shipment_numbe", self.shipment_number)
-                print("Going to check the watcher order DB")
                 st = time.time() 
                 if True:
                     # Checking order list on the order DB to catch the quantity value
@@ -104,7 +102,7 @@ class Counter:
                     
                     if shipment_db_checking_flag:
                         # Getting the scanned order list from order DB
-                        print(f"DB function, the shipment order is {self.shipment_number} and the previus one is {previus_shipment_number}")
+                        print(f"Going to check the watcher order DB, the shipment order is {self.shipment_number} and the previus one is {previus_shipment_number}")
                         
                         # Getting to detect in which batch changes is happend
                         updated_shipment_number_data_ = self.db.order_read(self.shipment_number)
@@ -130,7 +128,7 @@ class Counter:
                                                                 "defect_image":[], "action_type": "stop"}  
                                         send_shipment_response = requests.post(self.sendshipment_url, json=batch_report_body, headers=self.headers)
 
-                                        print("db_order_checker > Send batch status code", send_shipment_response.status_code)
+                                        print("Send batch status code", send_shipment_response.status_code)
                                 else:
                                     pass
                 # except Exception as ex2:
@@ -211,7 +209,6 @@ class Counter:
                         
                         # Getting the scanned order list from order DB
                         self.shipment_db = self.db.order_read(self.shipment_number)
-                        print(f"\n oRDERS READ RESULTS {self.shipment_db}")
                         # Checking is the scanned order in the order DB or not
                         if self.shipment_db != []:
                             order_counting_start_flag = True
@@ -238,7 +235,7 @@ class Counter:
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
                     # If the OK signal triggered
                     if abs(a - a_initial) >= 1:
-                        print("Catched the OK signal")
+                        print("\n ****Catched the OK signal****")
                         a_initial = a
                         # Waiting to read the box barcode 
                         scanned_box_barcode_byte_string = self.scanner.read_barcode()
