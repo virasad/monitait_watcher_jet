@@ -50,6 +50,7 @@ class Counter:
         db_st = time.time()
         while not self.stop_thread:
             # Removing the order DB every 12 hours
+            shipment_db_checking_flag = False
             if time.time() - db_st > self.order_db_remove_interval:
                 db_st = time.time()
                 if True:
@@ -88,12 +89,14 @@ class Counter:
                                 print(f"DB, {previus_shipment_number}, main_shipment_number_data, {main_shipment_number_data}")
                                 main_shipment_orders = json.loads(main_shipment_number_data[2])
                                 for item in main_shipment_orders:
+                                    order_id = item['id']
                                     for batch in item['batches']:
                                         if batch['quantity'] != 0:
                                             # Put all batches of a shipment orders to dictionary
                                             main_shipment_orders_dict[batch['batch_uuid']]={
                                                                             'quantity': batch['quantity'],
-                                                                            'assigned_id': batch['assigned_id']}
+                                                                            'assigned_id': batch['assigned_id'],
+                                                                            'order_id': order_id}
                                         else:
                                             pass
                             else: 
@@ -107,7 +110,6 @@ class Counter:
                         # Getting to detect in which batch changes is happend
                         updated_shipment_number_data_ = self.db.order_read(self.shipment_number)
                         updated_shipment_number_data = json.loads(updated_shipment_number_data_[2])
-                        print("DB updated_shipment_number_data", updated_shipment_number_data)
                         for item in updated_shipment_number_data:
                             for batch in item['batches']:
                                 # Check if the order finished or not
@@ -118,12 +120,13 @@ class Counter:
                                     if main_quantity != current_quantity:
                                         # Update the quantity of the scanned box 
                                         main_shipment_orders_dict[batch['batch_uuid']]['quantity'] = current_quantity
-                                        
+                                        order_id_ = main_shipment_orders_dict[batch['batch_uuid']]['order_id']
+                                        print("order_id_", order_id_)
                                         # Post requests
                                         # Sending batch to batch URL
                                         batch_report_body = {"batch_uuid":batch['batch_uuid'], "assigned_id":batch['assigned_id'],
                                                                 "type": "new", "station": int(self.stationID),
-                                                                "order_id": int(self.shipment_number),
+                                                                "order_id": int(order_id_),
                                                                 "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
                                                                 "defect_image":[], "action_type": "stop"}  
                                         send_shipment_response = requests.post(self.sendshipment_url, json=batch_report_body, headers=self.headers)
