@@ -102,12 +102,13 @@ class Counter:
                         print(f"DB function, the shipment order is {self.shipment_number} and the previus one is {previus_shipment_number}")
                         
                         # Getting to detect in which batch changes is happend
-                        updated_shipment_number_data = self.db.order_read(self.shipment_number)
-                        updated_shipment_number_data = json.loads(updated_shipment_number_data[2])
+                        updated_shipment_number_data_ = self.db.order_read(self.shipment_number)
+                        updated_shipment_number_data = json.loads(updated_shipment_number_data_[2])
+                        print("DB updated_shipment_number_data", updated_shipment_number_data)
                         for item in updated_shipment_number_data:
                             for batch in item['batches']:
                                 # Check if the order finished or not
-                                is_done_value = updated_shipment_number_data[3]
+                                is_done_value = updated_shipment_number_data_[3]
                                 if is_done_value == 0:
                                     main_quantity = main_order_dict[batch['batch_uuid']]['quantity']
                                     current_quantity = batch['quantity']
@@ -230,10 +231,8 @@ class Counter:
                     # Reading the box entrance signal
                     ts = time.time()
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
-                    print(abs(a - a_initial), )
                     # If the OK signal triggered
                     if abs(a - a_initial) >= 1:
-                        print(a ,b ,c, d ,dps)
                         print("Catched the OK signal")
                         a_initial = a
                         # Waiting to read the box barcode 
