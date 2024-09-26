@@ -68,7 +68,8 @@ class Counter:
                 #     print(f"db_order_checker > removing database {ex1}")
                 
             # Checking order db every {self.db_order_checking_interval} second
-            if time.time() - st > self.db_order_checking_interval and self.shipment_number != 0:
+            if time.time() - st > self.db_order_checking_interval and self.shipment_number != None:
+                print("self.shipment_numbe", self.shipment_number)
                 print("Going to check the watcher order DB")
                 checking_order_db = False
                 st = time.time() 
