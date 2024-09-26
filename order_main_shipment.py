@@ -110,11 +110,11 @@ class Counter:
                                 # Check if the order finished or not
                                 is_done_value = updated_shipment_number_data_[3]
                                 if is_done_value == 0:
-                                    main_quantity = main_order_dict[batch['batch_uuid']]['quantity']
+                                    main_quantity = main_shipment_orders_dict[batch['batch_uuid']]['quantity']
                                     current_quantity = batch['quantity']
                                     if main_quantity != current_quantity:
                                         # Update the quantity of the scanned box 
-                                        main_order_dict[batch['batch_uuid']]['quantity'] = current_quantity
+                                        main_shipment_orders_dict[batch['batch_uuid']]['quantity'] = current_quantity
                                         
                                         # Post requests
                                         # Sending batch to batch URL
