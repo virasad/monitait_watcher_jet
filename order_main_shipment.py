@@ -207,8 +207,7 @@ class Counter:
                             self.shipment_orders = json.loads(self.shipment_db[2])
                         else:
                             order_counting_start_flag = False
-                            print(f"The shipment order {self.shipment_number} is not in the DB, waiting to read valid data")
-                        
+                            print(f"The order of shipment order {self.shipment_number} is empty")
                     else:
                         print(f"There is no such shipment number, {shipment_scanned_barcode}, {type(shipment_scanned_barcode)}")
 
@@ -216,8 +215,12 @@ class Counter:
                 #     print(f"run > reading scanner to detect OR {ex2}")
             ##
             # Start counting process
+            test_flag = True
             while order_counting_start_flag:
                 if True:
+                    if test_flag:
+                        print("In order counting while loop, waiting to the OK signal")
+                        test_flag = False
                     # Reading the box entrance signal
                     ts = time.time()
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
