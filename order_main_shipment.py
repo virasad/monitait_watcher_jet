@@ -69,13 +69,12 @@ class Counter:
                 #     print(f"db_order_checker > removing database {ex1}")
                 
             # Checking order db every {self.db_order_checking_interval} second
-            print(time.time() - st > self.db_order_checking_interval, self.shipment_number != "")
             if time.time() - st > self.db_order_checking_interval and self.shipment_number != "":
-                print("DB order checking flag", shipment_db_checking_flag)
+                print("\n \n DB order checking flag", shipment_db_checking_flag)
                 checking_order_db = False
                 st = time.time() 
                 if True:
-                    print(self.shipment_number != previus_shipment_number, "self.shipment_number != previus_shipment_number", 2)
+                    print(self.shipment_number,  previus_shipment_number, "self.shipment_number, previus_shipment_number", 2)
                     # Checking order list on the order DB to catch the quantity value
                     if (self.shipment_number in self.shipment_numbers_list) and (self.shipment_number != previus_shipment_number):
                         while not checking_order_db:
