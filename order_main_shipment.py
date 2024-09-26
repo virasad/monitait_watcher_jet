@@ -69,9 +69,9 @@ class Counter:
                 
             # Checking order db every {self.db_order_checking_interval} second
             if time.time() - st > self.db_order_checking_interval and self.shipment_number != None:
+                checking_order_db = False
                 print("self.shipment_numbe", self.shipment_number)
                 print("Going to check the watcher order DB")
-                checking_order_db = False
                 st = time.time() 
                 if True:
                     # Checking order list on the order DB to catch the quantity value
@@ -84,6 +84,7 @@ class Counter:
                             print(main_shipment_number_data, "main_shipment_number_data")
                             if main_shipment_number_data != []:
                                 checking_order_db = True
+                                shipment_db_checking_flag = True
                                 print(f"DB, {previus_shipment_number}, main_shipment_number_data, {main_shipment_number_data}")
                                 main_shipment_orders = json.loads(main_shipment_number_data[2])
                                 for item in main_shipment_orders:
@@ -97,7 +98,9 @@ class Counter:
                                             pass
                             else: 
                                 checking_order_db = False
-                    if checking_order_db:
+                                shipment_db_checking_flag = False
+                    
+                    if shipment_db_checking_flag:
                         # Getting the scanned order list from order DB
                         print(f"DB function, the shipment order is {self.shipment_number} and the previus one is {previus_shipment_number}")
                         
