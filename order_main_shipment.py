@@ -157,6 +157,7 @@ class Counter:
                 ##
                 # The watcher updates his order DB until OR is scanned
                 if True:
+                    print("time.time() - st_1", time.time() - st_1)
                     if time.time() - st_1 > order_request_time_interval or db_checking_flag:
                         db_checking_flag = False
                         st_1 = time.time()

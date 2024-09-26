@@ -179,8 +179,8 @@ class DB:
             params = []
             # Check which column to updated
             if orders is not None:
-                query += "order_id = ?, "
-                params.append(order_id)
+                query += "orders = ?, "
+                params.append(orders)
             if is_done is not None:
                 query += "is_done = ?, "
                 params.append(is_done)
