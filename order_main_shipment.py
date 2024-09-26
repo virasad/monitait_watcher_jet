@@ -48,9 +48,9 @@ class Counter:
         b_1 = 0
         st = time.time() 
         db_st = time.time()
+        shipment_db_checking_flag = False
         while not self.stop_thread:
             # Removing the order DB every 12 hours
-            shipment_db_checking_flag = False
             if time.time() - db_st > self.order_db_remove_interval:
                 db_st = time.time()
                 if True:
@@ -70,6 +70,7 @@ class Counter:
                 
             # Checking order db every {self.db_order_checking_interval} second
             if time.time() - st > self.db_order_checking_interval and self.shipment_number != None:
+                print("DB order checking flag", shipment_db_checking_flag)
                 checking_order_db = False
                 st = time.time() 
                 if True:
@@ -91,7 +92,7 @@ class Counter:
                                         if batch['quantity'] != 0:
                                             # Put all batches of a shipment orders to dictionary
                                             main_shipment_orders_dict[batch['batch_uuid']]={
-                                                                            'quantity': batch['quantity'],
+                                                                            'quantity': int(batch['quantity']),
                                                                             'assigned_id': batch['assigned_id'],
                                                                             'order_id': order_id}
                                         else:
@@ -113,7 +114,7 @@ class Counter:
                                 is_done_value = updated_shipment_number_data_[3]
                                 if is_done_value == 0:
                                     main_quantity = main_shipment_orders_dict[batch['batch_uuid']]['quantity']
-                                    current_quantity = batch['quantity']
+                                    current_quantity = int(batch['quantity'])
                                     if main_quantity != current_quantity:
                                         # Update the quantity of the scanned box 
                                         main_shipment_orders_dict[batch['batch_uuid']]['quantity'] = current_quantity
