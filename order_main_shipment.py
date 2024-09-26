@@ -31,7 +31,7 @@ class Counter:
         self.usb_serial_flag = usb_serial_flag
         self.headers = {'Register-ID': self.register_id, 
                         'Content-Type': 'application/json'}
-        self.shipment_number = ""
+        self.shipment_number = None
         self.scanned_box_barcode = 0
         self.stationID = 0
         self.shipment_db = []
@@ -69,13 +69,15 @@ class Counter:
                 #     print(f"db_order_checker > removing database {ex1}")
                 
             # Checking order db every {self.db_order_checking_interval} second
+            print(time.time() - st > self.db_order_checking_interval, self.shipment_number != "")
             if time.time() - st > self.db_order_checking_interval and self.shipment_number != "":
                 print("DB order checking flag", shipment_db_checking_flag)
                 checking_order_db = False
                 st = time.time() 
                 if True:
+                    print(self.shipment_number != previus_shipment_number, "self.shipment_number != previus_shipment_number", 2)
                     # Checking order list on the order DB to catch the quantity value
-                    if self.shipment_number != previus_shipment_number:
+                    if (self.shipment_number in self.shipment_numbers_list) and (self.shipment_number != previus_shipment_number):
                         while not checking_order_db:
                             main_shipment_orders_dict = {}
                             # The shaipment changed, so all data 
@@ -100,7 +102,7 @@ class Counter:
                             else: 
                                 checking_order_db = False
                                 shipment_db_checking_flag = False
-                    
+                    print(shipment_db_checking_flag, "shipment_db_checking_flag")
                     if shipment_db_checking_flag:
                         # Getting the scanned order list from order DB
                         print(f"Going to check the watcher order DB, the shipment order is {self.shipment_number} and the previus one is {previus_shipment_number}")
