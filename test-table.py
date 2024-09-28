@@ -36,24 +36,31 @@ class MainWindow(QMainWindow):
         bold_font.setBold(True)
 
         # Set the vertical header labels
+        # Set the vertical header labels
         # Create and set values for columns 1 and 3
         item_row1_col1 = QTableWidgetItem("شماره محموله")  # Row 1, Column 1
-        item_row1_col1.setFont(bold_font)  # Set bold font
+        
         item_row1_col1.setBackground(QColor("green"))  # Set color for column 1
+        item_row1_col1.setFont(QFont("B Nazanin", 26))  # Set font and size
+        
         item_row1_col2 = QTableWidgetItem(f"{shipment_number}")  # Row 1, Column 2 (empty)
+        item_row1_col2.setFont(bold_font)
         item_row1_col3 = QTableWidgetItem("نوع محموله")  # Row 1, Column 3
         item_row1_col3.setBackground(QColor("green"))  # Set color for column 1
-        item_row1_col3.setFont(bold_font)  # Set bold font
+        item_row1_col3.setFont(QFont("B Nazanin", 26))  # Set font and size
         item_row1_col4 = QTableWidgetItem(f"{shipment_type}")  # Row 1, Column 4 (empty)
+        item_row1_col4.setFont(bold_font)
 
         item_row2_col1 = QTableWidgetItem("مقصد")  # Row 2, Column 1
-        item_row2_col1.setFont(bold_font)  # Set bold font
+        item_row2_col1.setFont(QFont("B Nazanin", 26))  # Set font and size
         item_row2_col1.setBackground(QColor("green"))  # Set color for column 1
         item_row2_col2 = QTableWidgetItem(f"{destination}")  # Row 2, Column 2 (empty)
+        item_row2_col2.setFont(QFont("B Nazanin", 26))  # Set font and size
         item_row2_col3 = QTableWidgetItem("مبدا")  # Row 2, Column 3
         item_row2_col3.setBackground(QColor("green"))  # Set color for column 1
-        item_row2_col3.setFont(bold_font)  # Set bold font
+        item_row2_col3.setFont(QFont("B Nazanin", 26))  # Set font and size
         item_row2_col4 = QTableWidgetItem("ساوه")  # Row 2, Column 4 (empty)
+        item_row2_col4.setFont(QFont("B Nazanin", 26))  # Set font and size
         
         
 
@@ -73,21 +80,13 @@ class MainWindow(QMainWindow):
         self.title_table.setItem(1, 3, item_row2_col4)   # 'b' row (index 1)
         
         
-        self.title_table.setColumnWidth(0, 500)  # Set width for Column 1 (index 0)
-        self.title_table.setColumnWidth(2, 500)  # Set width for Column 3 (index 2)
-        
+        self.title_table.setColumnWidth(0, 200)  # Set width for Column 1 (index 0)
+        self.title_table.setColumnWidth(2, 200)  # Set width for Column 3 (index 2)
         self.title_table.setColumnWidth(1, 500)  # Set width for Column 1 (index 0)
         self.title_table.setColumnWidth(3, 500)  # Set width for Column 3 (index 2)
         
-        # self.title_table.setColumnWidth(0, 500)  # Set height for 'a' row
-        # self.title_table.setColumnWidth(1, 500)  # Set height for 'b' row
-        # self.title_table.setColumnWidth(2, 500)  # Set height for 'b' row
-        # self.title_table.setColumnWidth(3, 500)  # Set height for 'b' row
-        # self.title_table.setRowHeight(0, 130)  # Set height for 'a' row
-        # self.title_table.setRowHeight(1, 130)  # Set height for 'b' row
-        # self.title_table.setRowHeight(2, 130)  # Set height for 'b' row
-        # self.title_table.setRowHeight(3, 130)  # Set height for 'b' row
-        # Set background color for specific columns
+        self.title_table.setRowHeight(0, 100)  # Set width for Column 1 (index 0)
+        self.title_table.setRowHeight(1, 100)  # Set width for Column 1 (index 0)
         # self.title_table.item(0, 0).setBackground(QtGui.QColor(10,50,100))
         # self.title_table.item(1, 0).setBackground(QtGui.QColor(10,50,100))
         # self.title_table.item(2, 0).setBackground(QtGui.QColor(10,50,100))
@@ -111,9 +110,10 @@ class MainWindow(QMainWindow):
         self.table_widget.setColumnCount(6)
         self.table_widget.setLayoutDirection(Qt.RightToLeft)
         self.table_widget.setHorizontalHeaderLabels([
-            "آی دی", "نام محصول", " کل", 
-            "واحد تحویل", "ماند", "شمارش شده"])
-
+            "شماره سفارش", "نام محصول", " شمارش شده", "مانده", "کل", "واحد تحویل"])
+        # self.table_widget.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
+        self.table_widget.verticalHeader().setVisible(False)  # Hide horizontal header if not needed
+        
         # Set the stylesheet for the table to increase text size
         self.table_widget.setStyleSheet("font-size: 40px;")  # Adjust size as needed
 
@@ -138,6 +138,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.image_label, alignment=Qt.AlignLeft | Qt.AlignTop)  # Position in the top right corner
 
         self.previous_quantities = {item["id"]: item["quantity"] for item in json_data}
+        self.total_quantities = {item["id"]: item["quantity"] for item in json_data}
 
         # Start the quantity decrease thread
         threading.Thread(target=self.decrease_quantity, daemon=True).start()
@@ -148,6 +149,7 @@ class MainWindow(QMainWindow):
 
     def update_table(self):
         self.table_widget.setRowCount(0)  # Clear the table
+        
         for item in json_data:
             row_position = self.table_widget.rowCount()
             self.table_widget.insertRow(row_position)
@@ -156,19 +158,22 @@ class MainWindow(QMainWindow):
 
             current_quantity = item["quantity"]
             previous_quantity = self.previous_quantities[item["id"]]
+            total_quantity = self.total_quantities[item["id"]]
+            counted_quantity = abs(total_quantity-previous_quantity)
 
             # Check if the quantity has decreased
             quantity_item = QTableWidgetItem(str(current_quantity))
             if current_quantity < previous_quantity:
                 quantity_item.setBackground(QColor("red"))  # Highlight background in red
-
+            #  "شماره سفارش", "نام محصول", " شمارش شده", "مانده", "کل", "واحد تحویل"
             # Add items to the table
             self.table_widget.setItem(row_position, 0, QTableWidgetItem(str(item["id"])))
             self.table_widget.setItem(row_position, 1, QTableWidgetItem(product_name))
-            self.table_widget.setItem(row_position, 2, quantity_item)  # Set the quantity item
-            self.table_widget.setItem(row_position, 3, QTableWidgetItem(item["delivery_unit"]))
-            self.table_widget.setItem(row_position, 4, QTableWidgetItem(item["start_date"]))
-            self.table_widget.setItem(row_position, 5, QTableWidgetItem(item["delivery_date"]))
+            self.table_widget.setItem(row_position, 2, QTableWidgetItem(str(counted_quantity)))
+            self.table_widget.setItem(row_position, 3, quantity_item)  # Set the quantity item
+            self.table_widget.setItem(row_position, 4, QTableWidgetItem(str(total_quantity)))
+            self.table_widget.setItem(row_position, 5, QTableWidgetItem(item["delivery_unit"]))
+            
 
         # Update previous quantities for the next iteration
         for item in json_data:
