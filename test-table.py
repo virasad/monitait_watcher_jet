@@ -106,8 +106,7 @@ class MainWindow(QMainWindow):
         
 
         # Initialize live stream
-        self.cap = cv2.VideoCapture(url)  # Capture from the default camera
-        self.update_frame()
+        
         # self.timer = QTimer(self)
         # self.timer.timeout.connect(self.update_frame)
         # self.timer.start(30)  # Update every 30ms (~33 FPS)
@@ -169,6 +168,9 @@ class MainWindow(QMainWindow):
 
     def update_table(self):
         self.table_widget.setRowCount(0)  # Clear the table
+        
+        self.cap = cv2.VideoCapture(url)  # Capture from the default camera
+        self.update_frame()
         
         for item in json_data:
             row_position = self.table_widget.rowCount()
