@@ -25,18 +25,32 @@ class MainWindow(QMainWindow):
         self.setGeometry(100, 100, 800, 600)
 
         # # Create a QLabel for the title
-         # Create a QTableWidget for the title
+        # Create a QTableWidget for the title
         # Create a QTableWidget for the title
         self.title_table = QTableWidget()  # No need to specify rows and columns at this point
-        self.title_table.setRowCount(3)  # Set 2 rows for 'a' and 'b'
-        self.title_table.setColumnCount(1)  # Set 1 column for values
+        self.title_table.setRowCount(2)  # Set 2 rows for 'a' and 'b'
+        self.title_table.setColumnCount(4)  # Set 1 column for values
+        
+        # Create a QFont for bold text
+        bold_font = QFont()
+        bold_font.setBold(True)
 
         # Set the vertical header labels
-        self.title_table.setVerticalHeaderLabels(["شماره محموله", "نوع محموله", "مقصد"])
-        self.title_table.setRowHeight(0, 40)  # Set height for 'a' row
-        self.title_table.setRowHeight(1, 40)  # Set height for 'b' row
-        self.title_table.setRowHeight(2, 40)  # Set height for 'b' row
-        self.title_table.setStyleSheet("font-weight: bold; color: blue;")
+        # Create and set values for columns 1 and 3
+        item_row1_col1 = QTableWidgetItem("شماره محموله")  # Row 1, Column 1
+        item_row1_col1.setFont(bold_font)  # Set bold font
+        item_row1_col2 = QTableWidgetItem(f"{shipment_number}")  # Row 1, Column 2 (empty)
+        item_row1_col3 = QTableWidgetItem("نوع محموله")  # Row 1, Column 3
+        item_row1_col3.setFont(bold_font)  # Set bold font
+        item_row1_col4 = QTableWidgetItem(f"{shipment_type}")  # Row 1, Column 4 (empty)
+
+        item_row2_col1 = QTableWidgetItem("مقصد")  # Row 2, Column 1
+        item_row2_col1.setFont(bold_font)  # Set bold font
+        item_row2_col2 = QTableWidgetItem(f"{destination}")  # Row 2, Column 2 (empty)
+        item_row2_col3 = QTableWidgetItem("مبدا")  # Row 2, Column 3
+        item_row2_col3.setFont(bold_font)  # Set bold font
+        item_row2_col4 = QTableWidgetItem("ساوه")  # Row 2, Column 4 (empty)
+        
         
 
         # Set the stylesheet for the table to increase text size
@@ -44,15 +58,24 @@ class MainWindow(QMainWindow):
     
 
         # Set values for the rows labeled 'a' and 'b'
-        self.title_table.setItem(0, 0, QTableWidgetItem(f"{shipment_number}"))  # 'a' row (index 0)
-        self.title_table.setItem(1, 0, QTableWidgetItem(f"{shipment_type}"))   # 'b' row (index 1)
-        self.title_table.setItem(2, 0, QTableWidgetItem(f"{destination}"))   # 'b' row (index 1)
-        self.title_table.setColumnWidth(0, 1000)  # Set height for 'a' row
-        self.title_table.setColumnWidth(1, 1000)  # Set height for 'b' row
-        self.title_table.setColumnWidth(2, 1000)  # Set height for 'b' row
+        self.title_table.setItem(0, 0, item_row1_col1)  # 'a' row (index 0)
+        self.title_table.setItem(0, 1, item_row1_col2)   # 'b' row (index 1)
+        self.title_table.setItem(0, 2, item_row1_col3)   # 'b' row (index 1)
+        self.title_table.setItem(0, 3, item_row1_col4)   # 'b' row (index 1)
+        
+        self.title_table.setItem(1, 0, item_row2_col1)  # 'a' row (index 0)
+        self.title_table.setItem(1, 1, item_row2_col2)   # 'b' row (index 1)
+        self.title_table.setItem(1, 2, item_row2_col3)   # 'b' row (index 1)
+        self.title_table.setItem(1, 3, item_row2_col4)   # 'b' row (index 1)
+        
+        self.title_table.setColumnWidth(0, 500)  # Set height for 'a' row
+        self.title_table.setColumnWidth(1, 500)  # Set height for 'b' row
+        self.title_table.setColumnWidth(2, 500)  # Set height for 'b' row
+        self.title_table.setColumnWidth(3, 500)  # Set height for 'b' row
         self.title_table.setRowHeight(0, 130)  # Set height for 'a' row
         self.title_table.setRowHeight(1, 130)  # Set height for 'b' row
         self.title_table.setRowHeight(2, 130)  # Set height for 'b' row
+        self.title_table.setRowHeight(3, 130)  # Set height for 'b' row
         # Set background color for specific columns
         # self.title_table.item(0, 0).setBackground(QtGui.QColor(10,50,100))
         # self.title_table.item(1, 0).setBackground(QtGui.QColor(10,50,100))
@@ -64,12 +87,13 @@ class MainWindow(QMainWindow):
 
         # Optional: Make the header visible or set other properties as needed
         self.title_table.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
+        self.title_table.verticalHeader().setVisible(False)  # Hide horizontal header if not needed
 
 
         # title_label = QLabel(f"جدول اطلاعات محصول، شماره محموله {shipment_number}، نوع محموله {shipment_type}، مقصد {destination} ")
         # title_label.setAlignment(Qt.AlignCenter)
         # title_label.setFont(QFont("Arial", 20))  # Set font and size
-        # title_label.setStyleSheet("font-weight: bold; color: blue;")  # Style the title
+        # self.title_table.setStyleSheet("font-weight: bold; color: blue;")  # Style the title
         # # Add the table
 
         self.table_widget = QTableWidget()
@@ -90,7 +114,6 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
         layout.addWidget(self.title_table)  # Add title above the table
         layout.addWidget(self.table_widget)
-
         # Create a QLabel for the image
         self.image_label = QLabel(self)
         self.image_label.setPixmap(QPixmap("logo-m-png.png").scaled(500, 500, Qt.KeepAspectRatio))  # Load your image and scale it
@@ -130,7 +153,7 @@ class MainWindow(QMainWindow):
 
             # Add items to the table
             self.table_widget.setItem(row_position, 0, QTableWidgetItem(str(item["id"])))
-            self.table_widget.setItem(row_position, 1, QTableWidgetItem(item["product_number"]))
+            self.table_widget.setItem(row_position, 1, QTableWidgetItem(product_name))
             self.table_widget.setItem(row_position, 2, quantity_item)  # Set the quantity item
             self.table_widget.setItem(row_position, 3, QTableWidgetItem(item["delivery_unit"]))
             self.table_widget.setItem(row_position, 4, QTableWidgetItem(item["start_date"]))
@@ -149,7 +172,7 @@ class MainWindow(QMainWindow):
             for item in json_data:
                 if item["quantity"] > 0:
                     item["quantity"] -= 1  # Decrease the quantity by 100
-            time.sleep(1)  # Wait for 1 second before the next decrease
+            time.sleep(2)  # Wait for 1 second before the next decrease
 
 # Main application
 if __name__ == "__main__":
