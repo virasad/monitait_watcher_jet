@@ -1,6 +1,7 @@
 import sys
 import time
-import cv2 
+import cv2, requests
+import numpy as np
 import json
 import threading
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTableWidget, QTableWidgetItem, 
@@ -99,12 +100,17 @@ class MainWindow(QMainWindow):
         # Optional: Make the header visible or set other properties as needed
         self.title_table.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
         self.title_table.verticalHeader().setVisible(False)  # Hide horizontal header if not needed
+        
+        # Create a QLabel for the image
+        self.image_label = QLabel(self)
+        
 
         # Initialize live stream
         self.cap = cv2.VideoCapture(url)  # Capture from the default camera
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_frame)
-        self.timer.start(1)  # Update every 30ms (~33 FPS)
+        self.update_frame()
+        # self.timer = QTimer(self)
+        # self.timer.timeout.connect(self.update_frame)
+        # self.timer.start(30)  # Update every 30ms (~33 FPS)
 
         self.table_widget = QTableWidget()
         self.table_widget.setColumnCount(6)
@@ -126,8 +132,6 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.title_table)  # Add title above the table
         layout.addWidget(self.table_widget)
         
-        # Create a QLabel for the image
-        self.image_label = QLabel(self)
         layout.addWidget(self.image_label, alignment=Qt.AlignLeft | Qt.AlignTop)
         
         # Create a container widget to hold the layout and image
@@ -148,12 +152,16 @@ class MainWindow(QMainWindow):
     def update_frame(self):
         ret, frame = self.cap.read()
         if ret:
+            # Convert frame to RGB
+            rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             # Get the dimensions of the frame
             h, w, ch = 250,680,3
-            # Create QImage from the RGB frame
-            qimg = QImage(frame.data, w, h, ch * w, QImage.Format_RGB888)
-            # Set the QImage on the QLabel
+            print(h, w, ch)
+            # # Create QImage from the RGB frame
+            qimg = QImage(rgb_image.data, w, h, ch * w, QImage.Format_RGB888)
+            # # Set the QImage on the QLabel
             self.image_label.setPixmap(QPixmap.fromImage(qimg))
+        
     
     def closeEvent(self, event):
         self.cap.release()  # Release the video capture on close
