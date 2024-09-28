@@ -1,19 +1,21 @@
 import sys
 import time
+import cv2 
 import json
 import threading
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTableWidget, QTableWidgetItem, 
                              QVBoxLayout, QWidget, QHeaderView, QLabel, QGroupBox, 
                              QFormLayout, QLineEdit)
-from PyQt5.QtGui import QColor, QFont, QPixmap
-from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor, QFont, QPixmap, QImage
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5 import QtGui
-
 # Your initial data
 data = (5, 'ZR2024092203', '[{"id": 163, "start_date": "2019-08-24T14:15:22Z", "delivery_date": "2019-08-24T14:15:22Z", "quantity": 3096, "delivery_unit": "CAR", "product_name": "\\u0645\\u0627\\u06cc \\u0628\\u06cc\\u0628\\u06bc", "product_number": "20240819", "default_ids": ["1234567891111"], "description": "TEST", "batches": [{"quantity": "3096", "batch_uuid": "a8715fb9-7b72-4d28-b0c3-7723f43b7f6d", "assigned_id": "1234567891111"}], "status": "not_started", "batch_status": "view"}, {"id": 164, "start_date": "2019-08-24T14:15:22Z", "delivery_date": "2019-08-24T14:15:22Z", "quantity": 3200, "delivery_unit": "CAR", "product_name": "\\u062f\\u0633\\u062a\\u0645\\u0627\\u0644 \\u0645\\u0631\\u0637\\u0648\\u0628", "product_number": "20240820", "default_ids": ["1234567892222"], "description": "TEST", "batches": [{"quantity": "3200", "batch_uuid": "bfc9d47a-ff2e-492e-9dd2-0eca1613dd68", "assigned_id": "1234567892222"}], "status": "not_started", "batch_status": "view"}, {"id": 165, "start_date": "2019-08-24T14:15:22Z", "delivery_date": "2019-08-24T14:15:22Z", "quantity": 3300, "delivery_unit": "CAR", "product_name": "\\u06a9\\u0644\\u06cc\\u0646 \\u0627\\u067e", "product_number": "20240821", "default_ids": ["1234567893333"], "description": "TEST", "batches": [{"quantity": "3300", "batch_uuid": "f0c24da2-afe9-4cfa-9a94-ab72168d025a", "assigned_id": "1234567893333"}], "status": "not_started", "batch_status": "view"}]', 0)
 shipment_number = 'ZR2024092203'
 shipment_type = "ZP50"
 destination = "عجبشیر"
+url = "http://192.168.100.72:5000/video_feed/1"  # replace with your live stream URL
+
 # Parse the JSON string into a Python list of dictionaries
 json_data = json.loads(data[2])
 
@@ -40,29 +42,28 @@ class MainWindow(QMainWindow):
         # Create and set values for columns 1 and 3
         item_row1_col1 = QTableWidgetItem("شماره محموله")  # Row 1, Column 1
         
-        item_row1_col1.setBackground(QColor("green"))  # Set color for column 1
+        item_row1_col1.setBackground(QColor("gray"))  # Set color for column 1
         item_row1_col1.setFont(QFont("B Nazanin", 26))  # Set font and size
         
         item_row1_col2 = QTableWidgetItem(f"{shipment_number}")  # Row 1, Column 2 (empty)
         item_row1_col2.setFont(bold_font)
         item_row1_col3 = QTableWidgetItem("نوع محموله")  # Row 1, Column 3
-        item_row1_col3.setBackground(QColor("green"))  # Set color for column 1
+        item_row1_col3.setBackground(QColor("gray"))  # Set color for column 1
         item_row1_col3.setFont(QFont("B Nazanin", 26))  # Set font and size
         item_row1_col4 = QTableWidgetItem(f"{shipment_type}")  # Row 1, Column 4 (empty)
         item_row1_col4.setFont(bold_font)
 
         item_row2_col1 = QTableWidgetItem("مقصد")  # Row 2, Column 1
         item_row2_col1.setFont(QFont("B Nazanin", 26))  # Set font and size
-        item_row2_col1.setBackground(QColor("green"))  # Set color for column 1
+        item_row2_col1.setBackground(QColor("gray"))  # Set color for column 1
         item_row2_col2 = QTableWidgetItem(f"{destination}")  # Row 2, Column 2 (empty)
         item_row2_col2.setFont(QFont("B Nazanin", 26))  # Set font and size
         item_row2_col3 = QTableWidgetItem("مبدا")  # Row 2, Column 3
-        item_row2_col3.setBackground(QColor("green"))  # Set color for column 1
+        item_row2_col3.setBackground(QColor("gray"))  # Set color for column 1
         item_row2_col3.setFont(QFont("B Nazanin", 26))  # Set font and size
         item_row2_col4 = QTableWidgetItem("ساوه")  # Row 2, Column 4 (empty)
         item_row2_col4.setFont(QFont("B Nazanin", 26))  # Set font and size
-        
-        
+                
 
         # Set the stylesheet for the table to increase text size
         self.title_table.setStyleSheet("font-size: 25px;")  # Adjust size as needed
@@ -99,12 +100,11 @@ class MainWindow(QMainWindow):
         self.title_table.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
         self.title_table.verticalHeader().setVisible(False)  # Hide horizontal header if not needed
 
-
-        # title_label = QLabel(f"جدول اطلاعات محصول، شماره محموله {shipment_number}، نوع محموله {shipment_type}، مقصد {destination} ")
-        # title_label.setAlignment(Qt.AlignCenter)
-        # title_label.setFont(QFont("Arial", 20))  # Set font and size
-        # self.title_table.setStyleSheet("font-weight: bold; color: blue;")  # Style the title
-        # # Add the table
+        # Initialize live stream
+        self.cap = cv2.VideoCapture(url)  # Capture from the default camera
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_frame)
+        self.timer.start(1)  # Update every 30ms (~33 FPS)
 
         self.table_widget = QTableWidget()
         self.table_widget.setColumnCount(6)
@@ -125,17 +125,15 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
         layout.addWidget(self.title_table)  # Add title above the table
         layout.addWidget(self.table_widget)
+        
         # Create a QLabel for the image
         self.image_label = QLabel(self)
-        self.image_label.setPixmap(QPixmap("logo-m-png.png").scaled(500, 500, Qt.KeepAspectRatio))  # Load your image and scale it
-
+        layout.addWidget(self.image_label, alignment=Qt.AlignLeft | Qt.AlignTop)
+        
         # Create a container widget to hold the layout and image
         container = QWidget()
         container.setLayout(layout)
         self.setCentralWidget(container)
-
-        # Add the image label to the window
-        layout.addWidget(self.image_label, alignment=Qt.AlignLeft | Qt.AlignTop)  # Position in the top right corner
 
         self.previous_quantities = {item["id"]: item["quantity"] for item in json_data}
         self.total_quantities = {item["id"]: item["quantity"] for item in json_data}
@@ -146,6 +144,22 @@ class MainWindow(QMainWindow):
         # Start the timer to refresh the table
         self.timer = threading.Timer(1.0, self.update_table)
         self.timer.start()
+    
+    def update_frame(self):
+        ret, frame = self.cap.read()
+        if ret:
+            # Convert frame to RGB
+            rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            # Get the dimensions of the frame
+            h, w, ch = rgb_image.shape
+            # Create QImage from the RGB frame
+            qimg = QImage(rgb_image.data, w, h, ch * w, QImage.Format_RGB888)
+            # Set the QImage on the QLabel
+            self.image_label.setPixmap(QPixmap.fromImage(qimg))
+    
+    def closeEvent(self, event):
+        self.cap.release()  # Release the video capture on close
+        event.accept()
 
     def update_table(self):
         self.table_widget.setRowCount(0)  # Clear the table
