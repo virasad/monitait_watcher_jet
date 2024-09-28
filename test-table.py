@@ -1,5 +1,7 @@
 import sys
 import time
+import numpy as np
+import urllib.request
 import cv2 
 import json
 import threading
@@ -100,11 +102,12 @@ class MainWindow(QMainWindow):
         self.title_table.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
         self.title_table.verticalHeader().setVisible(False)  # Hide horizontal header if not needed
 
-        # Initialize live stream
-        self.cap = cv2.VideoCapture(url)  # Capture from the default camera
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_frame)
-        self.timer.start(1)  # Update every 30ms (~33 FPS)
+        # # Initialize live stream
+        self.stream = urllib.request.urlopen('http://192.168.100.72:5000/video_feed/1')
+        # self.cap = cv2.VideoCapture(url)  # Capture from the default camera
+        # self.timer = QTimer(self)
+        # self.timer.timeout.connect(self.update_frame)
+        # self.timer.start(1)  # Update every 30ms (~33 FPS)
 
         self.table_widget = QTableWidget()
         self.table_widget.setColumnCount(6)
@@ -146,16 +149,30 @@ class MainWindow(QMainWindow):
         self.timer.start()
     
     def update_frame(self):
-        ret, frame = self.cap.read()
-        if ret:
-            # Convert frame to RGB
-            rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            # Get the dimensions of the frame
-            h, w, ch = rgb_image.shape
-            # Create QImage from the RGB frame
-            qimg = QImage(rgb_image.data, w, h, ch * w, QImage.Format_RGB888)
+        total_bytes = b''
+        total_bytes += self.stream.read(1024)
+        b = total_bytes.find(b'\xff\xd9') # JPEG end
+        if not b == -1:
+            a = total_bytes.find(b'\xff\xd8') # JPEG start
+            jpg = total_bytes[a:b+2] # actual image
+            total_bytes= total_bytes[b+2:] # other informations
+            
+            # decode to colored image ( another option is cv2.IMREAD_GRAYSCALE )
+            img = cv2.imdecode(np.fromstring(jpg, dtype=np.uint8), cv2.IMREAD_COLOR) 
+            h, w, ch = img.shape
+            qimg = QImage(img, w, h, ch * w, QImage.Format_RGB888)
             # Set the QImage on the QLabel
             self.image_label.setPixmap(QPixmap.fromImage(qimg))
+        # ret, frame = self.cap.read()
+        # if ret:
+        #     # Convert frame to RGB
+        #     rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        #     # Get the dimensions of the frame
+        #     h, w, ch = rgb_image.shape
+        #     # Create QImage from the RGB frame
+        #     qimg = QImage(rgb_image.data, w, h, ch * w, QImage.Format_RGB888)
+        #     # Set the QImage on the QLabel
+        #     self.image_label.setPixmap(QPixmap.fromImage(qimg))
     
     def closeEvent(self, event):
         self.cap.release()  # Release the video capture on close
