@@ -39,15 +39,19 @@ class MainWindow(QMainWindow):
         # Create and set values for columns 1 and 3
         item_row1_col1 = QTableWidgetItem("شماره محموله")  # Row 1, Column 1
         item_row1_col1.setFont(bold_font)  # Set bold font
+        item_row1_col1.setBackground(QColor("green"))  # Set color for column 1
         item_row1_col2 = QTableWidgetItem(f"{shipment_number}")  # Row 1, Column 2 (empty)
         item_row1_col3 = QTableWidgetItem("نوع محموله")  # Row 1, Column 3
+        item_row1_col3.setBackground(QColor("green"))  # Set color for column 1
         item_row1_col3.setFont(bold_font)  # Set bold font
         item_row1_col4 = QTableWidgetItem(f"{shipment_type}")  # Row 1, Column 4 (empty)
 
         item_row2_col1 = QTableWidgetItem("مقصد")  # Row 2, Column 1
         item_row2_col1.setFont(bold_font)  # Set bold font
+        item_row2_col1.setBackground(QColor("green"))  # Set color for column 1
         item_row2_col2 = QTableWidgetItem(f"{destination}")  # Row 2, Column 2 (empty)
         item_row2_col3 = QTableWidgetItem("مبدا")  # Row 2, Column 3
+        item_row2_col3.setBackground(QColor("green"))  # Set color for column 1
         item_row2_col3.setFont(bold_font)  # Set bold font
         item_row2_col4 = QTableWidgetItem("ساوه")  # Row 2, Column 4 (empty)
         
@@ -68,14 +72,21 @@ class MainWindow(QMainWindow):
         self.title_table.setItem(1, 2, item_row2_col3)   # 'b' row (index 1)
         self.title_table.setItem(1, 3, item_row2_col4)   # 'b' row (index 1)
         
-        self.title_table.setColumnWidth(0, 500)  # Set height for 'a' row
-        self.title_table.setColumnWidth(1, 500)  # Set height for 'b' row
-        self.title_table.setColumnWidth(2, 500)  # Set height for 'b' row
-        self.title_table.setColumnWidth(3, 500)  # Set height for 'b' row
-        self.title_table.setRowHeight(0, 130)  # Set height for 'a' row
-        self.title_table.setRowHeight(1, 130)  # Set height for 'b' row
-        self.title_table.setRowHeight(2, 130)  # Set height for 'b' row
-        self.title_table.setRowHeight(3, 130)  # Set height for 'b' row
+        
+        self.title_table.setColumnWidth(0, 500)  # Set width for Column 1 (index 0)
+        self.title_table.setColumnWidth(2, 500)  # Set width for Column 3 (index 2)
+        
+        self.title_table.setColumnWidth(1, 500)  # Set width for Column 1 (index 0)
+        self.title_table.setColumnWidth(3, 500)  # Set width for Column 3 (index 2)
+        
+        # self.title_table.setColumnWidth(0, 500)  # Set height for 'a' row
+        # self.title_table.setColumnWidth(1, 500)  # Set height for 'b' row
+        # self.title_table.setColumnWidth(2, 500)  # Set height for 'b' row
+        # self.title_table.setColumnWidth(3, 500)  # Set height for 'b' row
+        # self.title_table.setRowHeight(0, 130)  # Set height for 'a' row
+        # self.title_table.setRowHeight(1, 130)  # Set height for 'b' row
+        # self.title_table.setRowHeight(2, 130)  # Set height for 'b' row
+        # self.title_table.setRowHeight(3, 130)  # Set height for 'b' row
         # Set background color for specific columns
         # self.title_table.item(0, 0).setBackground(QtGui.QColor(10,50,100))
         # self.title_table.item(1, 0).setBackground(QtGui.QColor(10,50,100))
@@ -100,8 +111,8 @@ class MainWindow(QMainWindow):
         self.table_widget.setColumnCount(6)
         self.table_widget.setLayoutDirection(Qt.RightToLeft)
         self.table_widget.setHorizontalHeaderLabels([
-            "آی دی", "نام محصول", " تعداد کل", 
-            "واحد تحویل", "باقیمانده", "تعداد شمارش شده"])
+            "آی دی", "نام محصول", " کل", 
+            "واحد تحویل", "ماند", "شمارش شده"])
 
         # Set the stylesheet for the table to increase text size
         self.table_widget.setStyleSheet("font-size: 40px;")  # Adjust size as needed
