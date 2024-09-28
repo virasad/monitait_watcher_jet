@@ -54,9 +54,9 @@ class MainWindow(QMainWindow):
         self.title_table.setRowHeight(1, 130)  # Set height for 'b' row
         self.title_table.setRowHeight(2, 130)  # Set height for 'b' row
         # Set background color for specific columns
-        self.title_table.item(0, 0).setBackground(QtGui.QColor(10,50,100))
-        self.title_table.item(1, 0).setBackground(QtGui.QColor(10,50,100))
-        self.title_table.item(2, 0).setBackground(QtGui.QColor(10,50,100))
+        # self.title_table.item(0, 0).setBackground(QtGui.QColor(10,50,100))
+        # self.title_table.item(1, 0).setBackground(QtGui.QColor(10,50,100))
+        # self.title_table.item(2, 0).setBackground(QtGui.QColor(10,50,100))
 
         
         # Set layout direction to right-to-left
@@ -148,7 +148,7 @@ class MainWindow(QMainWindow):
         while True:
             for item in json_data:
                 if item["quantity"] > 0:
-                    item["quantity"] -= 10  # Decrease the quantity by 100
+                    item["quantity"] -= 1  # Decrease the quantity by 100
             time.sleep(1)  # Wait for 1 second before the next decrease
 
 # Main application
