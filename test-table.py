@@ -20,16 +20,15 @@ class MainWindow(QMainWindow):
         self.setGeometry(100, 100, 800, 600)
 
         # Create a QLabel for the title
-        title_label = QLabel("Product Information Table")
+        title_label = QLabel("جدول اطلاعات محصول")
         title_label.setFont(QFont("Arial", 20))  # Set font and size
         title_label.setStyleSheet("font-weight: bold; color: blue;")  # Style the title
 
         self.table_widget = QTableWidget()
-        self.table_widget.setColumnCount(8)
+        self.table_widget.setColumnCount(7)
         self.table_widget.setHorizontalHeaderLabels([
-            "ID", "Product Name", "Product Number", "Quantity", 
-            "Delivery Unit", "Start Date", "Delivery Date", "Status"
-        ])
+            "آی دی", "نام محصول", "شماره محصول", "تعداد", 
+            "واحد تحویل", "تاریخ شروع", "تاریخ تحویل"])
 
         # Set the stylesheet for the table to increase text size
         self.table_widget.setStyleSheet("font-size: 25px;")  # Adjust size as needed
@@ -88,7 +87,6 @@ class MainWindow(QMainWindow):
             self.table_widget.setItem(row_position, 4, QTableWidgetItem(item["delivery_unit"]))
             self.table_widget.setItem(row_position, 5, QTableWidgetItem(item["start_date"]))
             self.table_widget.setItem(row_position, 6, QTableWidgetItem(item["delivery_date"]))
-            self.table_widget.setItem(row_position, 7, QTableWidgetItem(item["status"]))
 
         # Update previous quantities for the next iteration
         for item in json_data:
