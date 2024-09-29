@@ -235,8 +235,6 @@ class Counter:
                         
                         # Starting to run the table
                         
-                        window = MainWindow(self.shipment_number, "ZZZ", "سیستان", self.shipment_db)
-                        window.show()
                     else:
                         print(f"There is no such shipment number, {self.shipment_number}, {type(self.shipment_number)}")
 
@@ -582,6 +580,10 @@ if __name__ == "__main__":
                     stationID_url= stationID_url, sendshipment_url=sendshipment_url, register_id=register_id,
                     usb_serial_flag=usb_serial_flag)
 
+    data = (5, 'ZR2024092203', '[{"id": 163, "start_date": "2019-08-24T14:15:22Z", "delivery_date": "2019-08-24T14:15:22Z", "quantity": 3096, "delivery_unit": "CAR", "product_name": "\\u0645\\u0627\\u06cc \\u0628\\u06cc\\u0628\\u06bc", "product_number": "20240819", "default_ids": ["1234567891111"], "description": "TEST", "batches": [{"quantity": "3096", "batch_uuid": "a8715fb9-7b72-4d28-b0c3-7723f43b7f6d", "assigned_id": "1234567891111"}], "status": "not_started", "batch_status": "view"}, {"id": 164, "start_date": "2019-08-24T14:15:22Z", "delivery_date": "2019-08-24T14:15:22Z", "quantity": 3200, "delivery_unit": "CAR", "product_name": "\\u062f\\u0633\\u062a\\u0645\\u0627\\u0644 \\u0645\\u0631\\u0637\\u0648\\u0628", "product_number": "20240820", "default_ids": ["1234567892222"], "description": "TEST", "batches": [{"quantity": "3200", "batch_uuid": "bfc9d47a-ff2e-492e-9dd2-0eca1613dd68", "assigned_id": "1234567892222"}], "status": "not_started", "batch_status": "view"}, {"id": 165, "start_date": "2019-08-24T14:15:22Z", "delivery_date": "2019-08-24T14:15:22Z", "quantity": 3300, "delivery_unit": "CAR", "product_name": "\\u06a9\\u0644\\u06cc\\u0646 \\u0627\\u067e", "product_number": "20240821", "default_ids": ["1234567893333"], "description": "TEST", "batches": [{"quantity": "3300", "batch_uuid": "f0c24da2-afe9-4cfa-9a94-ab72168d025a", "assigned_id": "1234567893333"}], "status": "not_started", "batch_status": "view"}]', 0)
+    json_data = json.loads(data[2])
+    window = MainWindow("Name", "ZZZ", "سیستان", json_data)
+    window.show()
     Thread(target=counter.run).start()
     time.sleep(0.1)
     Thread(target=counter.db_order_checker).start()
