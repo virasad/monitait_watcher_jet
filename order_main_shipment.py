@@ -409,26 +409,26 @@ class MainWindow(QMainWindow):
         
         item_row1_col1 = QTableWidgetItem("شماره محموله")  
         item_row1_col1.setBackground(QColor("gray"))  
-        item_row1_col1.setFont(bold_font)
+        item_row1_col1.setFont(self.bold_font)
         self.title_table.setItem(0, 0, item_row1_col1) 
         
         item_row1_col3 = QTableWidgetItem("نوع محموله")  
         item_row1_col3.setBackground(QColor("gray"))  
-        item_row1_col3.setFont(bold_font) 
+        item_row1_col3.setFont(self.bold_font) 
         self.title_table.setItem(0, 2, item_row1_col3) 
         
         item_row2_col1 = QTableWidgetItem("مقصد")  
-        item_row2_col1.setFont(bold_font)    
+        item_row2_col1.setFont(self.bold_font)    
         item_row2_col1.setBackground(QColor("gray"))  
         self.title_table.setItem(1, 0, item_row2_col1) 
         
         item_row2_col3 = QTableWidgetItem("مبدا")  
         item_row2_col3.setBackground(QColor("gray"))  
-        item_row2_col3.setFont(bold_font)  
+        item_row2_col3.setFont(self.bold_font)  
         self.title_table.setItem(1, 2, item_row2_col3)   
          
         item_row2_col4 = QTableWidgetItem("ساوه")  
-        item_row2_col4.setFont(bold_font) 
+        item_row2_col4.setFont(self.bold_font) 
         self.title_table.setItem(1, 3, item_row2_col4)  
         
         # Set the column and rows width and height
@@ -460,7 +460,6 @@ class MainWindow(QMainWindow):
         # Make headers stretch to fill the window
         header = self.table_widget.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.Stretch)
-        
     def db_order_checker(self):
         previus_shipment_number = ""
         b_1 = 0
@@ -560,17 +559,17 @@ class MainWindow(QMainWindow):
         # Create and set values 
         
         item_row1_col2 = QTableWidgetItem(f"{self.shipment_number}")  
-        item_row1_col2.setFont(bold_font)
+        item_row1_col2.setFont(self.bold_font)
         self.title_table.setItem(0, 1, item_row1_col2) 
         
          
         item_row1_col4 = QTableWidgetItem(f"{self.shipment_type}")  
-        item_row1_col4.setFont(bold_font)
+        item_row1_col4.setFont(self.bold_font)
         self.title_table.setItem(0, 3, item_row1_col4) 
 
       
         item_row2_col2 = QTableWidgetItem(f"{self.destination}")  
-        item_row2_col2.setFont(bold_font)  
+        item_row2_col2.setFont(self.bold_font)  
         self.title_table.setItem(1, 1, item_row2_col2) 
         
         # Set the stylesheet for the table to increase text size
@@ -679,8 +678,6 @@ class MainWindow(QMainWindow):
                             order_counting_start_flag = False
                             print(f"The order of shipment order {self.shipment_number} is empty")
                         
-                        # Starting to run the table
-                        self.windows.update_table(self.shipment_number, "55", "اراک", self.shipment_db)
                     else:
                         print(f"There is no such shipment number, {self.shipment_number}, {type(self.shipment_number)}")
 
@@ -865,12 +862,10 @@ if __name__ == "__main__":
         usb_serial_flag = False
         scanner = Scanner()
 
-    window = MainWindow()
-    window.show()
     counter = MainWindow(arduino=arduino, db=db, camera=camera, scanner=scanner, shipment_url=shipment_url,
                     stationID_url= stationID_url, sendshipment_url=sendshipment_url, register_id=register_id,
-                    usb_serial_flag=usb_serial_flag, windows=window)
-
+                    usb_serial_flag=usb_serial_flag)
+    counter.show()
     data = (5, 'ZR2024092203', '[{"id": 163, "start_date": "2019-08-24T14:15:22Z", "delivery_date": "2019-08-24T14:15:22Z", "quantity": 3096, "delivery_unit": "CAR", "product_name": "\\u0645\\u0627\\u06cc \\u0628\\u06cc\\u0628\\u06bc", "product_number": "20240819", "default_ids": ["1234567891111"], "description": "TEST", "batches": [{"quantity": "3096", "batch_uuid": "a8715fb9-7b72-4d28-b0c3-7723f43b7f6d", "assigned_id": "1234567891111"}], "status": "not_started", "batch_status": "view"}, {"id": 164, "start_date": "2019-08-24T14:15:22Z", "delivery_date": "2019-08-24T14:15:22Z", "quantity": 3200, "delivery_unit": "CAR", "product_name": "\\u062f\\u0633\\u062a\\u0645\\u0627\\u0644 \\u0645\\u0631\\u0637\\u0648\\u0628", "product_number": "20240820", "default_ids": ["1234567892222"], "description": "TEST", "batches": [{"quantity": "3200", "batch_uuid": "bfc9d47a-ff2e-492e-9dd2-0eca1613dd68", "assigned_id": "1234567892222"}], "status": "not_started", "batch_status": "view"}, {"id": 165, "start_date": "2019-08-24T14:15:22Z", "delivery_date": "2019-08-24T14:15:22Z", "quantity": 3300, "delivery_unit": "CAR", "product_name": "\\u06a9\\u0644\\u06cc\\u0646 \\u0627\\u067e", "product_number": "20240821", "default_ids": ["1234567893333"], "description": "TEST", "batches": [{"quantity": "3300", "batch_uuid": "f0c24da2-afe9-4cfa-9a94-ab72168d025a", "assigned_id": "1234567893333"}], "status": "not_started", "batch_status": "view"}]', 0)
     
     Thread(target=counter.update_table).start()
@@ -878,4 +873,3 @@ if __name__ == "__main__":
     Thread(target=counter.db_order_checker).start()
     time.sleep(0.1)
     sys.exit(app.exec_())
-8
