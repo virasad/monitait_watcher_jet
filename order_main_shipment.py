@@ -345,7 +345,7 @@ class MainWindow(QMainWindow):
                                                     self.table_widget.setItem(row_position, 1, QTableWidgetItem(product_name))
                                                     
                                                     assign_id = item['batches'][0]['assigned_id']
-                                                    if assign_id ==str(self.scanned_box_barcode)
+                                                    if assign_id ==str(self.scanned_box_barcode):
                                                         remainded_quantity = int(batch['quantity']) - 1
                                                         
                                                         total_quantity = self.total_quantities[item["id"]]
