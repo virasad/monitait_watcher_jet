@@ -337,28 +337,32 @@ class MainWindow(QMainWindow):
                                                                     orders= json.dumps(self.shipment_orders),is_done = 0)
                                                 print("Time of updating order db", time.time() - s)
                                                 
-                                                json_data2 = json.loads(self.shipment_orders[4])
                                                 self.table_widget.setRowCount(0)  # Clear the table
-                                                for item in json_data2:
+                                                for item in self.shipment_orders:
                                                     row_position = self.table_widget.rowCount()
                                                     self.table_widget.insertRow(row_position)
-
-                                                    remainded_quantity = int(batch['quantity']) - 1
+                                                    self.table_widget.setItem(row_position, 0, QTableWidgetItem(str(item["id"])))
+                                                    self.table_widget.setItem(row_position, 1, QTableWidgetItem(product_name))
                                                     
-                                                    total_quantity = self.total_quantities[item["id"]]
-                                                    counted_quantity = abs(total_quantity-remainded_quantity)
+                                                    assign_id = item['batches'][0]['assigned_id']
+                                                    if assign_id ==str(self.scanned_box_barcode)
+                                                        remainded_quantity = int(batch['quantity']) - 1
+                                                        
+                                                        total_quantity = self.total_quantities[item["id"]]
+                                                        counted_quantity = abs(total_quantity-remainded_quantity)
 
-                                                    quantity_item = QTableWidgetItem(str(counted_quantity))
-                                                    quantity_item.setBackground(QColor("red"))  # Highlight background in red
+                                                        quantity_item = QTableWidgetItem(str(counted_quantity))
+                                                        quantity_item.setBackground(QColor("red"))  # Highlight background in red
+                                                        
+                                                        # Add items to the table
+                                                    else:
+                                                        quantity_item = QTableWidgetItem(str(int(batch['quantity'])))
                                                     
-                                                    # Add items to the table
-                                                    # self.table_widget.setItem(row_position, 0, QTableWidgetItem(str(item["id"])))
-                                                    # self.table_widget.setItem(row_position, 1, QTableWidgetItem(product_name))
                                                     self.table_widget.setItem(row_position, 2, quantity_item)
                                                     self.table_widget.setItem(row_position, 3, QTableWidgetItem(str(remainded_quantity)))  # Set the quantity item
-                                                    # self.table_widget.setItem(row_position, 4, QTableWidgetItem(str(total_quantity)))
-                                                    # self.table_widget.setItem(row_position, 5, QTableWidgetItem(item["delivery_unit"]))
-                                                    
+                                                    self.table_widget.setItem(row_position, 4, QTableWidgetItem(str(total_quantity)))
+                                                    self.table_widget.setItem(row_position, 5, QTableWidgetItem(item["delivery_unit"]))
+                                                        
                                                     # self.table_widget.setRowCount(0)  # Clear the table
                                                 
                                                 print("run > The current assigned id quantity value (remainded value):", batch['quantity'])
