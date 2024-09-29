@@ -235,7 +235,7 @@ class Counter:
                             print(f"The order of shipment order {self.shipment_number} is empty")
                         
                         # Starting to run the table
-                        self.windows.update_table(self, self.shipment_number, shipment_type, "اراک", self.shipment_db)
+                        self.windows.update_table(self.shipment_number, "55", "اراک", self.shipment_db)
                     else:
                         print(f"There is no such shipment number, {self.shipment_number}, {type(self.shipment_number)}")
 
@@ -406,13 +406,14 @@ class MainWindow(QMainWindow):
         self.shipment_type = shipment_type
         self.destination = destination
         self.json_data = json.loads(orders[2])
-        self.table_widget.setRowCount(0)  # Clear the table
+        
         # if self.live_stream_flag:
         #     self.cap = cv2.VideoCapture(live_stream_url)  # Capture from the default camera
         #     self.update_frame()
         # else:
         #     pass
         # Create a QFont for bold text
+        
         bold_font = QFont()
         bold_font.setBold(True)
 
@@ -544,6 +545,8 @@ class MainWindow(QMainWindow):
             self.table_widget.setItem(row_position, 4, QTableWidgetItem(str(total_quantity)))
             self.table_widget.setItem(row_position, 5, QTableWidgetItem(item["delivery_unit"]))
             
+            # self.table_widget.setRowCount(0)  # Clear the table
+            
 
         # Update previous quantities for the next iteration
         for item in self.json_data:
@@ -579,8 +582,6 @@ if __name__ == "__main__":
 
     window = MainWindow()
     window.show()
-    sys.exit(app.exec_())
-    
     counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, shipment_url=shipment_url,
                     stationID_url= stationID_url, sendshipment_url=sendshipment_url, register_id=register_id,
                     usb_serial_flag=usb_serial_flag, windows=window)
@@ -591,4 +592,4 @@ if __name__ == "__main__":
     time.sleep(0.1)
     Thread(target=counter.db_order_checker).start()
     time.sleep(0.1)
-
+    sys.exit(app.exec_())
