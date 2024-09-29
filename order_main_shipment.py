@@ -337,7 +337,7 @@ class MainWindow(QMainWindow):
                                                                     orders= json.dumps(self.shipment_orders),is_done = 0)
                                                 print("Time of updating order db", time.time() - s)
                                                 
-                                                json_data2 = json.loads(self.shipment_orders)
+                                                json_data2 = json.loads(self.shipment_orders[2])
                                                 self.table_widget.setRowCount(0)  # Clear the table
                                                 for item in json_data2:
                                                     row_position = self.table_widget.rowCount()
