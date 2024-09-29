@@ -330,6 +330,7 @@ class MainWindow(QMainWindow):
                                     self.table_widget.setItem(row_position, 0, QTableWidgetItem(str(item["id"])))
                                     self.table_widget.setItem(row_position, 1, QTableWidgetItem(str(item["product_name"])))
                                     total_quantity = int(self.total_quantities[item["id"]])
+                                    remainded_quantity = int(item['quantity'])
                                     for batch in item['batches']:
                                         if batch['assigned_id']==str(self.scanned_box_barcode):
                                             # The box barcode is in the order
