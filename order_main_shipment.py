@@ -25,6 +25,7 @@ try:
 except Exception as ex0:
     print(f"\n There are an error in openening the CPU version of watcher script, the error is {ex0}")  
 
+app = QApplication(sys.argv)
 
 
 # class Counter:
@@ -506,9 +507,6 @@ class MainWindow(QMainWindow):
         # Start the quantity decrease thread
         threading.Thread(target=self.decrease_quantity, daemon=True).start()
 
-        # Start the timer to refresh the table
-        self.timer = threading.Timer(1.0, self.update_table)
-        self.timer.start()
     
     # def update_frame(self):
     #     ret, frame = self.cap.read()
@@ -768,6 +766,9 @@ class MainWindow(QMainWindow):
                 if True:
                     if test_flag:
                         print("In order counting while loop, waiting to the OK signal")
+                        # Start the timer to refresh the table
+                        self.timer = threading.Timer(1.0, self.update_table)
+                        self.timer.start()
                         test_flag = False
                     # Reading the box entrance signal
                     ts = time.time()
@@ -789,6 +790,7 @@ class MainWindow(QMainWindow):
                             if self.scanned_box_barcode in self.shipment_numbers_list:
                                 # The exit barcode scanned
                                 print("The exit barcode scanned")
+                                sys.exit(app.exec_())
                                 order_counting_start_flag = False
                             else:
                                 # Checking is the scanned box barcode is in the order batches or not
@@ -897,8 +899,6 @@ else:
     usb_serial_flag = False
     scanner = Scanner()
 
-app = QApplication(sys.argv)
-
 window = MainWindow(arduino=arduino, db=db, camera=camera, scanner=scanner, shipment_url=shipment_url,
                   stationID_url= stationID_url, sendshipment_url=sendshipment_url, register_id=register_id,
                   usb_serial_flag=usb_serial_flag)
@@ -908,5 +908,4 @@ time.sleep(0.1)
 Thread(target=window.db_order_checker).start()
 time.sleep(0.1)
 window.show()
-sys.exit(app.exec_())
 
