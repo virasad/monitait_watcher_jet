@@ -35,8 +35,8 @@ class MainWindow(QMainWindow):
         super().__init__()
         
         # Create a QFont for bold text
-        bold_font = QFont()
-        bold_font.setBold(True)
+        self.bold_font = QFont()
+        self.bold_font.setBold(True)
         
         self.setWindowTitle("اطلاعات محصول")
         self.setGeometry(100, 100, 800, 600)
@@ -48,24 +48,24 @@ class MainWindow(QMainWindow):
         
         self.item_row1_col1 = QTableWidgetItem("شماره محموله")  
         self.item_row1_col1.setBackground(QColor("gray"))  
-        self.item_row1_col1.setFont(bold_font)
+        self.item_row1_col1.setFont(self.bold_font)
         self.title_table.setItem(0, 0, self.item_row1_col1)
         
         self.item_row1_col3 = QTableWidgetItem("نوع محموله")  
         self.item_row1_col3.setBackground(QColor("gray"))  
-        self.item_row1_col3.setFont(bold_font)  
+        self.item_row1_col3.setFont(self.bold_font)  
         self.title_table.setItem(0, 2, self.item_row1_col3)  
         
         self.item_row2_col1 = QTableWidgetItem("مقصد")  
-        self.item_row2_col1.setFont(bold_font)    
+        self.item_row2_col1.setFont(self.bold_font)    
         self.item_row2_col1.setBackground(QColor("gray")) 
         self.title_table.setItem(1, 0, self.item_row2_col1)  
         
         self.item_row2_col3 = QTableWidgetItem("مبدا")  
         self.item_row2_col3.setBackground(QColor("gray"))  
-        self.item_row2_col3.setFont(bold_font)  
+        self.item_row2_col3.setFont(self.bold_font)  
         self.item_row2_col4 = QTableWidgetItem("ساوه")  
-        self.item_row2_col4.setFont(bold_font)  
+        self.item_row2_col4.setFont(self.bold_font)  
          
         self.title_table.setItem(1, 2, self.item_row2_col3)   
         self.title_table.setItem(1, 3, self.item_row2_col4)  
@@ -149,14 +149,14 @@ class MainWindow(QMainWindow):
         
         # Create and set values 
         self.item_row1_col2 = QTableWidgetItem("None")  
-        self.item_row1_col2.setFont(bold_font)
+        self.item_row1_col2.setFont(self.bold_font)
         
         self.item_row1_col4 = QTableWidgetItem("None")  
-        self.item_row1_col4.setFont(bold_font)
+        self.item_row1_col4.setFont(self.bold_font)
 
          
         self.item_row2_col2 = QTableWidgetItem("None")  
-        self.item_row2_col2.setFont(bold_font)  
+        self.item_row2_col2.setFont(self.bold_font)  
         
                 
         # Set the stylesheet for the table to increase text size
