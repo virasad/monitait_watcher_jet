@@ -499,9 +499,8 @@ class MainWindow(QMainWindow):
         container = QWidget()
         container.setLayout(layout)
         self.setCentralWidget(container)
-
-        self.previous_quantities = {item["id"]: item["quantity"] for item in self.json_data}
-        self.total_quantities = {item["id"]: item["quantity"] for item in self.json_data}
+        self.previous_quantities = {item["id"]: item["quantity"] for item in json.loads(self.json_data[2])}
+        self.total_quantities = {item["id"]: item["quantity"] for item in json.loads(self.json_data[2])}
 
         # Start the quantity decrease thread
         threading.Thread(target=self.decrease_quantity, daemon=True).start()
