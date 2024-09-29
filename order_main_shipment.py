@@ -234,7 +234,7 @@ class Counter:
                             print(f"The order of shipment order {self.shipment_number} is empty")
                         
                         # Starting to run the table
-                        app = QApplication(sys.argv)
+                        
                         window = MainWindow(self.shipment_number, "ZZZ", "سیستان", self.shipment_db)
                         window.show()
                     else:
@@ -373,7 +373,7 @@ class MainWindow(QMainWindow):
         self.shipment_type = shipment_type
         self.destination = destination
         self.json_data = json.loads(orders[2])
-        
+
         self.setWindowTitle("اطلاعات محصول")
         self.setGeometry(100, 100, 800, 600)
         
@@ -562,6 +562,7 @@ class MainWindow(QMainWindow):
             time.sleep(2)  # Wait for 1 second before the next decrease
 
 if __name__ == "__main__":
+    app = QApplication(sys.argv)
     arduino = Ardiuno()
     camera = Camera()
     db = DB()
