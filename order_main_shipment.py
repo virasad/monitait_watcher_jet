@@ -374,6 +374,8 @@ class MainWindow(QMainWindow):
                                                 # Update the order list
                                                 self.db.order_update(shipment_number=self.shipment_number,
                                                                     orders= json.dumps(self.shipment_orders),is_done = 1)
+                                        else:
+                                            quantity_item = QTableWidgetItem(str(int(batch['quantity'])))
                                     self.table_widget.setItem(row_position, 2, quantity_item)
                                     self.table_widget.setItem(row_position, 3, QTableWidgetItem(str(remainded_quantity)))  # Set the quantity item
                                     self.table_widget.setItem(row_position, 4, QTableWidgetItem(str(total_quantity)))
