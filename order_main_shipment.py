@@ -233,7 +233,6 @@ class MainWindow(QMainWindow):
                         self.destination = self.shipment_db[2]
                         self.shipment_type = self.shipment_db[3]
                         json_data1 = json.loads(self.shipment_db[4])
-                        print(f"Shipments results: shipment number {self.shipment_number}, orders {json_data1}")
                         # Checking is the scanned order in the order DB or not
                         if self.shipment_db != []:
                             order_counting_start_flag = True
@@ -475,7 +474,7 @@ class MainWindow(QMainWindow):
                         # Getting the scanned order list from order DB
                         # Getting to detect in which batch changes is happend
                         updated_shipment_number_data_ = self.db.order_read(self.shipment_number)
-                        updated_shipment_number_data = json.loads(updated_shipment_number_data_[2])
+                        updated_shipment_number_data = json.loads(updated_shipment_number_data_[4])
                         for item in updated_shipment_number_data:
                             for batch in item['batches']:
                                 # Check if the order finished or not
