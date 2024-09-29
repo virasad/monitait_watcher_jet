@@ -322,14 +322,15 @@ class MainWindow(QMainWindow):
                                 order_counting_start_flag = False
                             else:
                                 # Checking is the scanned box barcode is in the order batches or not
+                                self.table_widget.setRowCount(0)  # Clear the table
                                 for item in self.shipment_orders:
-                                    self.table_widget.setRowCount(0)  # Clear the table
+                                    
                                     row_position = self.table_widget.rowCount()
                                     self.table_widget.insertRow(row_position)
                                     self.table_widget.setItem(row_position, 0, QTableWidgetItem(str(item["id"])))
                                     self.table_widget.setItem(row_position, 1, QTableWidgetItem(str(item["product_name"])))
-                                    total_quantity = self.total_quantities[item["id"]]
-                                    remainded_quantity = item['quantity']
+                                    total_quantity = int(self.total_quantities[item["id"]])
+                                    remainded_quantity = int(item['quantity'])
                                     for batch in item['batches']:
                                         if batch['assigned_id']==str(self.scanned_box_barcode):
                                             # The box barcode is in the order
@@ -375,7 +376,7 @@ class MainWindow(QMainWindow):
                                                 self.db.order_update(shipment_number=self.shipment_number,
                                                                     orders= json.dumps(self.shipment_orders),is_done = 1)
                                         else:
-                                            quantity_item = QTableWidgetItem(str(int(batch['quantity'])))
+                                            quantity_item = QTableWidgetItem(str(abs((total_quantity-remainded_quantity))))
                                     self.table_widget.setItem(row_position, 2, quantity_item)
                                     self.table_widget.setItem(row_position, 3, QTableWidgetItem(str(remainded_quantity)))  # Set the quantity item
                                     self.table_widget.setItem(row_position, 4, QTableWidgetItem(str(total_quantity)))
