@@ -388,7 +388,7 @@ class MainWindow(QMainWindow):
         item_row1_col1 = QTableWidgetItem("شماره محموله")  
         item_row1_col1.setBackground(QColor("gray"))  
         item_row1_col1.setFont(bold_font)
-        item_row1_col2 = QTableWidgetItem(f"{shipment_number}")  
+        item_row1_col2 = QTableWidgetItem("None")  
         item_row1_col2.setFont(bold_font)
         
         item_row1_col3 = QTableWidgetItem("نوع محموله")  
