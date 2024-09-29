@@ -372,6 +372,114 @@ class MainWindow(QMainWindow):
                  sendshipment_url: sendshipment_url, register_id: register_id, usb_serial_flag):
         super().__init__()
         
+        self.setWindowTitle("اطلاعات محصول")
+        self.setGeometry(100, 100, 800, 600)
+        
+        # Create a QFont for bold text
+        bold_font = QFont()
+        bold_font.setBold(True)
+
+        # Create a QTableWidget for the title
+        self.title_table = QTableWidget()  # No need to specify rows and columns at this point
+        self.title_table.setRowCount(2)  # Set 2 rows for 'a' and 'b'
+        self.title_table.setColumnCount(4)  # Set 1 column for values
+        
+        # Create and set values 
+        item_row1_col1 = QTableWidgetItem("شماره محموله")  
+        item_row1_col1.setBackground(QColor("gray"))  
+        item_row1_col1.setFont(bold_font)
+        item_row1_col2 = QTableWidgetItem(f"{shipment_number}")  
+        item_row1_col2.setFont(bold_font)
+        
+        item_row1_col3 = QTableWidgetItem("نوع محموله")  
+        item_row1_col3.setBackground(QColor("gray"))  
+        item_row1_col3.setFont(bold_font)  
+        item_row1_col4 = QTableWidgetItem("None")  
+        item_row1_col4.setFont(bold_font)
+
+        item_row2_col1 = QTableWidgetItem("مقصد")  
+        item_row2_col1.setFont(bold_font)    
+        item_row2_col1.setBackground(QColor("gray"))  
+        item_row2_col2 = QTableWidgetItem("None")  
+        item_row2_col2.setFont(bold_font)  
+        
+        item_row2_col3 = QTableWidgetItem("مبدا")  
+        item_row2_col3.setBackground(QColor("gray"))  
+        item_row2_col3.setFont(bold_font)  
+        item_row2_col4 = QTableWidgetItem("ساوه")  
+        item_row2_col4.setFont(bold_font)  
+                
+        # Set the stylesheet for the table to increase text size
+        self.title_table.setStyleSheet("font-size: 25px;")  # Adjust size as needed
+    
+        # Set values for the rows and columns
+        self.title_table.setItem(0, 0, item_row1_col1)  
+        self.title_table.setItem(0, 1, item_row1_col2)   
+        self.title_table.setItem(0, 2, item_row1_col3)   
+        self.title_table.setItem(0, 3, item_row1_col4)   
+        self.title_table.setItem(1, 0, item_row2_col1)  
+        self.title_table.setItem(1, 1, item_row2_col2)   
+        self.title_table.setItem(1, 2, item_row2_col3)   
+        self.title_table.setItem(1, 3, item_row2_col4)   
+        
+        # Set the column and rows width and height
+        self.title_table.setColumnWidth(0, 200)  
+        self.title_table.setColumnWidth(2, 200)  
+        self.title_table.setColumnWidth(1, 500)  
+        self.title_table.setColumnWidth(3, 500)  
+        self.title_table.setRowHeight(0, 100)  
+        self.title_table.setRowHeight(1, 100)  
+
+        # Set layout direction to right-to-left
+        self.title_table.setLayoutDirection(Qt.RightToLeft)
+
+        # Make the header visible or set other properties as needed
+        self.title_table.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
+        self.title_table.verticalHeader().setVisible(False)  # Hide vertical header if not needed
+        
+        # # Checking whether the live stream URL is alive or not
+        # try:
+        #     response = requests.head(live_stream_url, allow_redirects=True)
+        #     if response.status_code == 200: 
+        #         self.live_stream_flag = True
+        #     else:
+        #         self.live_stream_flag = False
+        # except:
+        #     self.live_stream_flag = True
+        #     pass
+
+        self.table_widget = QTableWidget()
+        self.table_widget.setColumnCount(6)
+        self.table_widget.setLayoutDirection(Qt.RightToLeft)
+        self.table_widget.setHorizontalHeaderLabels([
+            "شماره", "نام", " شمرده", "مانده", "کل", "تحویل"])
+        # self.table_widget.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
+        self.table_widget.verticalHeader().setVisible(False)  # Hide horizontal header if not needed
+        
+        # Set the stylesheet for the table to increase text size
+        self.table_widget.setStyleSheet("font-size: 40px;")  # Adjust size as needed
+
+        # Make headers stretch to fill the window
+        header = self.table_widget.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.Stretch)
+
+        # Create a layout to arrange the title and table
+        layout = QVBoxLayout()
+        layout.addWidget(self.title_table)  # Add title above the table
+        layout.addWidget(self.table_widget)
+        
+        # if self.live_stream_flag:
+        #     # Create a QLabel for the image
+        #     self.image_label = QLabel(self)
+        #     layout.addWidget(self.image_label, alignment=Qt.AlignLeft | Qt.AlignTop)
+        # else:
+        #     pass
+        
+        # Create a container widget to hold the layout and image
+        container = QWidget()
+        container.setLayout(layout)
+        self.setCentralWidget(container)
+        
         self.arduino = arduino
         self.stop_thread = False
         self.order_list = []
@@ -399,70 +507,6 @@ class MainWindow(QMainWindow):
         self.take_picture_interval = 60 * 5
         self.order_db_remove_interval = 12 * 3600  # Convert hours to secends
 
-        self.setWindowTitle("اطلاعات محصول")
-        self.setGeometry(100, 100, 800, 600)
-        
-        self.bold_font = QFont()
-        self.bold_font.setBold(True)
-
-        # Create a QTableWidget for the title
-        self.title_table = QTableWidget()  # No need to specify rows and columns at this point
-        self.title_table.setRowCount(2)  # Set 2 rows for 'a' and 'b'
-        self.title_table.setColumnCount(4)  # Set 1 column for values
-        
-        item_row1_col1 = QTableWidgetItem("شماره محموله")  
-        item_row1_col1.setBackground(QColor("gray"))  
-        item_row1_col1.setFont(self.bold_font)
-        self.title_table.setItem(0, 0, item_row1_col1) 
-        
-        item_row1_col3 = QTableWidgetItem("نوع محموله")  
-        item_row1_col3.setBackground(QColor("gray"))  
-        item_row1_col3.setFont(self.bold_font) 
-        self.title_table.setItem(0, 2, item_row1_col3) 
-        
-        item_row2_col1 = QTableWidgetItem("مقصد")  
-        item_row2_col1.setFont(self.bold_font)    
-        item_row2_col1.setBackground(QColor("gray"))  
-        self.title_table.setItem(1, 0, item_row2_col1) 
-        
-        item_row2_col3 = QTableWidgetItem("مبدا")  
-        item_row2_col3.setBackground(QColor("gray"))  
-        item_row2_col3.setFont(self.bold_font)  
-        self.title_table.setItem(1, 2, item_row2_col3)   
-         
-        item_row2_col4 = QTableWidgetItem("ساوه")  
-        item_row2_col4.setFont(self.bold_font) 
-        self.title_table.setItem(1, 3, item_row2_col4)  
-        
-        # Set the column and rows width and height
-        self.title_table.setColumnWidth(0, 200)  
-        self.title_table.setColumnWidth(2, 200)  
-        self.title_table.setColumnWidth(1, 500)  
-        self.title_table.setColumnWidth(3, 500)  
-        self.title_table.setRowHeight(0, 100)  
-        self.title_table.setRowHeight(1, 100)  
-
-        # Set layout direction to right-to-left
-        self.title_table.setLayoutDirection(Qt.RightToLeft)
-
-        # Make the header visible or set other properties as needed
-        self.title_table.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
-        self.title_table.verticalHeader().setVisible(False)  # Hide vertical header if not needed
-    
-        self.table_widget = QTableWidget()
-        self.table_widget.setColumnCount(6)
-        self.table_widget.setLayoutDirection(Qt.RightToLeft)
-        self.table_widget.setHorizontalHeaderLabels([
-            "شماره", "نام", " شمرده", "مانده", "کل", "تحویل"])
-        # self.table_widget.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
-        self.table_widget.verticalHeader().setVisible(False)  # Hide horizontal header if not needed
-        
-        # Set the stylesheet for the table to increase text size
-        self.table_widget.setStyleSheet("font-size: 40px;")  # Adjust size as needed
-
-        # Make headers stretch to fill the window
-        header = self.table_widget.horizontalHeader()
-        header.setSectionResizeMode(QHeaderView.Stretch)
     def db_order_checker(self):
         previus_shipment_number = ""
         b_1 = 0
@@ -559,44 +603,6 @@ class MainWindow(QMainWindow):
     
     def update_table(self):
         
-        # Create and set values 
-        
-        item_row1_col2 = QTableWidgetItem(f"{self.shipment_number}")  
-        item_row1_col2.setFont(self.bold_font)
-        self.title_table.setItem(0, 1, item_row1_col2) 
-        
-         
-        item_row1_col4 = QTableWidgetItem(f"{self.shipment_type}")  
-        item_row1_col4.setFont(self.bold_font)
-        self.title_table.setItem(0, 3, item_row1_col4) 
-
-      
-        item_row2_col2 = QTableWidgetItem(f"{self.destination}")  
-        item_row2_col2.setFont(self.bold_font)  
-        self.title_table.setItem(1, 1, item_row2_col2) 
-        
-        # Set the stylesheet for the table to increase text size
-        self.title_table.setStyleSheet("font-size: 25px;")  # Adjust size as needed  
-
-        # Create a layout to arrange the title and table
-        layout = QVBoxLayout()
-        layout.addWidget(self.title_table)  # Add title above the table
-        layout.addWidget(self.table_widget)
-        
-        # if self.live_stream_flag:
-        #     # Create a QLabel for the image
-        #     self.image_label = QLabel(self)
-        #     layout.addWidget(self.image_label, alignment=Qt.AlignLeft | Qt.AlignTop)
-        # else:
-        #     pass
-        
-        # Create a container widget to hold the layout and image
-        container = QWidget()
-        container.setLayout(layout)
-        self.setCentralWidget(container)
-
-        self.previous_quantities = {item["id"]: item["quantity"] for item in json_data}
-        self.total_quantities = {item["id"]: item["quantity"] for item in json_data}
         
         self.last_server_signal = time.time()
         self.last_image = time.time()
