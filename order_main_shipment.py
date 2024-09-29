@@ -323,6 +323,13 @@ class MainWindow(QMainWindow):
                             else:
                                 # Checking is the scanned box barcode is in the order batches or not
                                 for item in self.shipment_orders:
+                                    self.table_widget.setRowCount(0)  # Clear the table
+                                    row_position = self.table_widget.rowCount()
+                                    self.table_widget.insertRow(row_position)
+                                    self.table_widget.setItem(row_position, 0, QTableWidgetItem(str(item["id"])))
+                                    self.table_widget.setItem(row_position, 1, QTableWidgetItem(str(item["product_name"])))
+                                    total_quantity = self.total_quantities[item["id"]]
+                                    remainded_quantity = item['quantity']
                                     for batch in item['batches']:
                                         if batch['assigned_id']==str(self.scanned_box_barcode):
                                             # The box barcode is in the order
@@ -337,36 +344,14 @@ class MainWindow(QMainWindow):
                                                                     orders= json.dumps(self.shipment_orders),is_done = 0)
                                                 print("Time of updating order db", time.time() - s)
                                                 
-                                                self.table_widget.setRowCount(0)  # Clear the table
-                                                for item in self.shipment_orders:
-                                                    row_position = self.table_widget.rowCount()
-                                                    self.table_widget.insertRow(row_position)
-                                                    self.table_widget.setItem(row_position, 0, QTableWidgetItem(str(item["id"])))
-                                                    self.table_widget.setItem(row_position, 1, QTableWidgetItem(product_name))
-                                                    
-                                                    assign_id = item['batches'][0]['assigned_id']
-                                                    if assign_id ==str(self.scanned_box_barcode):
-                                                        remainded_quantity = int(batch['quantity']) - 1
-                                                        
-                                                        total_quantity = self.total_quantities[item["id"]]
-                                                        counted_quantity = abs(total_quantity-remainded_quantity)
+                                                counted_quantity = abs(total_quantity-remainded_quantity)
 
-                                                        quantity_item = QTableWidgetItem(str(counted_quantity))
-                                                        quantity_item.setBackground(QColor("red"))  # Highlight background in red
-                                                        
-                                                        # Add items to the table
-                                                    else:
-                                                        quantity_item = QTableWidgetItem(str(int(batch['quantity'])))
-                                                    
-                                                    self.table_widget.setItem(row_position, 2, quantity_item)
-                                                    self.table_widget.setItem(row_position, 3, QTableWidgetItem(str(remainded_quantity)))  # Set the quantity item
-                                                    self.table_widget.setItem(row_position, 4, QTableWidgetItem(str(total_quantity)))
-                                                    self.table_widget.setItem(row_position, 5, QTableWidgetItem(item["delivery_unit"]))
-                                                        
-                                                    # self.table_widget.setRowCount(0)  # Clear the table
+                                                quantity_item = QTableWidgetItem(str(counted_quantity))
+                                                quantity_item.setBackground(QColor("red"))  # Highlight background in red
                                                 
                                                 print("run > The current assigned id quantity value (remainded value):", batch['quantity'])
                                             elif item['quantity']  == 0:
+                                                quantity_item = QTableWidgetItem(str(int(batch['quantity'])))
                                                 print("run > Counted value from this assined is has been finished")
                                                 # The detected barcode is not on the order list
                                                 self.arduino.gpio32_0.off()
@@ -374,6 +359,7 @@ class MainWindow(QMainWindow):
                                                 self.arduino.gpio32_0.on()
                                                 time.sleep(1)
                                             elif all(item['quantity'] == 0 for item in self.shipment_orders):
+                                                quantity_item = QTableWidgetItem(str(int(batch['quantity'])))
                                                 print("run > All value of the quantity is zero")
                                                 # Remove the shipment number **
                                                 if self.shipment_number in self.shipment_numbers_list:
@@ -388,6 +374,10 @@ class MainWindow(QMainWindow):
                                                 # Update the order list
                                                 self.db.order_update(shipment_number=self.shipment_number,
                                                                     orders= json.dumps(self.shipment_orders),is_done = 1)
+                                    self.table_widget.setItem(row_position, 2, quantity_item)
+                                    self.table_widget.setItem(row_position, 3, QTableWidgetItem(str(remainded_quantity)))  # Set the quantity item
+                                    self.table_widget.setItem(row_position, 4, QTableWidgetItem(str(total_quantity)))
+                                    self.table_widget.setItem(row_position, 5, QTableWidgetItem(item["delivery_unit"]))
                                 # If the scanned barcode is not in the batches, eject it 
                                 if not box_in_order_batch:
                                     print("The barcode is not on the list")
