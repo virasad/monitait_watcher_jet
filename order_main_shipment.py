@@ -375,67 +375,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("اطلاعات محصول")
         self.setGeometry(100, 100, 800, 600)
         
-        # Create a QFont for bold text
-        bold_font = QFont()
-        bold_font.setBold(True)
-
-        # Create a QTableWidget for the title
-        self.title_table = QTableWidget()  # No need to specify rows and columns at this point
-        self.title_table.setRowCount(2)  # Set 2 rows for 'a' and 'b'
-        self.title_table.setColumnCount(4)  # Set 1 column for values
         
-        # Create and set values 
-        item_row1_col1 = QTableWidgetItem("شماره محموله")  
-        item_row1_col1.setBackground(QColor("gray"))  
-        item_row1_col1.setFont(bold_font)
-        item_row1_col2 = QTableWidgetItem("None")  
-        item_row1_col2.setFont(bold_font)
-        
-        item_row1_col3 = QTableWidgetItem("نوع محموله")  
-        item_row1_col3.setBackground(QColor("gray"))  
-        item_row1_col3.setFont(bold_font)  
-        item_row1_col4 = QTableWidgetItem("None")  
-        item_row1_col4.setFont(bold_font)
-
-        item_row2_col1 = QTableWidgetItem("مقصد")  
-        item_row2_col1.setFont(bold_font)    
-        item_row2_col1.setBackground(QColor("gray"))  
-        item_row2_col2 = QTableWidgetItem("None")  
-        item_row2_col2.setFont(bold_font)  
-        
-        item_row2_col3 = QTableWidgetItem("مبدا")  
-        item_row2_col3.setBackground(QColor("gray"))  
-        item_row2_col3.setFont(bold_font)  
-        item_row2_col4 = QTableWidgetItem("ساوه")  
-        item_row2_col4.setFont(bold_font)  
-                
-        # Set the stylesheet for the table to increase text size
-        self.title_table.setStyleSheet("font-size: 25px;")  # Adjust size as needed
-    
-        # Set values for the rows and columns
-        self.title_table.setItem(0, 0, item_row1_col1)  
-        self.title_table.setItem(0, 1, item_row1_col2)   
-        self.title_table.setItem(0, 2, item_row1_col3)   
-        self.title_table.setItem(0, 3, item_row1_col4)   
-        self.title_table.setItem(1, 0, item_row2_col1)  
-        self.title_table.setItem(1, 1, item_row2_col2)   
-        self.title_table.setItem(1, 2, item_row2_col3)   
-        self.title_table.setItem(1, 3, item_row2_col4)   
-        
-        # Set the column and rows width and height
-        self.title_table.setColumnWidth(0, 200)  
-        self.title_table.setColumnWidth(2, 200)  
-        self.title_table.setColumnWidth(1, 500)  
-        self.title_table.setColumnWidth(3, 500)  
-        self.title_table.setRowHeight(0, 100)  
-        self.title_table.setRowHeight(1, 100)  
-
-        # Set layout direction to right-to-left
-        self.title_table.setLayoutDirection(Qt.RightToLeft)
-
-        # Make the header visible or set other properties as needed
-        self.title_table.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
-        self.title_table.verticalHeader().setVisible(False)  # Hide vertical header if not needed
         
         # # Checking whether the live stream URL is alive or not
         # try:
@@ -603,6 +543,69 @@ class MainWindow(QMainWindow):
     
     def update_table(self):
         
+        # Create a QFont for bold text
+        bold_font = QFont()
+        bold_font.setBold(True)
+
+        # Create a QTableWidget for the title
+        self.title_table = QTableWidget()  # No need to specify rows and columns at this point
+        self.title_table.setRowCount(2)  # Set 2 rows for 'a' and 'b'
+        self.title_table.setColumnCount(4)  # Set 1 column for values
+        
+        # Create and set values 
+        item_row1_col1 = QTableWidgetItem("شماره محموله")  
+        item_row1_col1.setBackground(QColor("gray"))  
+        item_row1_col1.setFont(bold_font)
+        item_row1_col2 = QTableWidgetItem("None")  
+        item_row1_col2.setFont(bold_font)
+        
+        item_row1_col3 = QTableWidgetItem("نوع محموله")  
+        item_row1_col3.setBackground(QColor("gray"))  
+        item_row1_col3.setFont(bold_font)  
+        item_row1_col4 = QTableWidgetItem("None")  
+        item_row1_col4.setFont(bold_font)
+
+        item_row2_col1 = QTableWidgetItem("مقصد")  
+        item_row2_col1.setFont(bold_font)    
+        item_row2_col1.setBackground(QColor("gray"))  
+        item_row2_col2 = QTableWidgetItem("None")  
+        item_row2_col2.setFont(bold_font)  
+        
+        item_row2_col3 = QTableWidgetItem("مبدا")  
+        item_row2_col3.setBackground(QColor("gray"))  
+        item_row2_col3.setFont(bold_font)  
+        item_row2_col4 = QTableWidgetItem("ساوه")  
+        item_row2_col4.setFont(bold_font)  
+                
+        # Set the stylesheet for the table to increase text size
+        self.title_table.setStyleSheet("font-size: 25px;")  # Adjust size as needed
+    
+        # Set values for the rows and columns
+        self.title_table.setItem(0, 0, item_row1_col1)  
+        self.title_table.setItem(0, 1, item_row1_col2)   
+        self.title_table.setItem(0, 2, item_row1_col3)   
+        self.title_table.setItem(0, 3, item_row1_col4)   
+        self.title_table.setItem(1, 0, item_row2_col1)  
+        self.title_table.setItem(1, 1, item_row2_col2)   
+        self.title_table.setItem(1, 2, item_row2_col3)   
+        self.title_table.setItem(1, 3, item_row2_col4)   
+        
+        # Set the column and rows width and height
+        self.title_table.setColumnWidth(0, 200)  
+        self.title_table.setColumnWidth(2, 200)  
+        self.title_table.setColumnWidth(1, 500)  
+        self.title_table.setColumnWidth(3, 500)  
+        self.title_table.setRowHeight(0, 100)  
+        self.title_table.setRowHeight(1, 100)  
+
+        # Set layout direction to right-to-left
+        self.title_table.setLayoutDirection(Qt.RightToLeft)
+
+        # Make the header visible or set other properties as needed
+        self.title_table.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
+        self.title_table.verticalHeader().setVisible(False)  # Hide vertical header if not needed
+        
+        print("-----------------------")
         
         self.last_server_signal = time.time()
         self.last_image = time.time()
