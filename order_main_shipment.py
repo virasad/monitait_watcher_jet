@@ -485,12 +485,12 @@ class MainWindow(QMainWindow):
         self.previous_quantities = {item["id"]: item["quantity"] for item in self.json_data}
         self.total_quantities = {item["id"]: item["quantity"] for item in self.json_data}
 
-        # Start the quantity decrease thread
-        threading.Thread(target=self.decrease_quantity, daemon=True).start()
+        # # Start the quantity decrease thread
+        # threading.Thread(target=self.decrease_quantity, daemon=True).start()
 
-        # Start the timer to refresh the table
-        self.timer = threading.Timer(1.0, self.update_table)
-        self.timer.start()
+        # # Start the timer to refresh the table
+        # self.timer = threading.Timer(1.0, self.update_table)
+        # self.timer.start()
     
     # def update_frame(self):
     #     ret, frame = self.cap.read()
@@ -550,9 +550,9 @@ class MainWindow(QMainWindow):
         for item in self.json_data:
             self.previous_quantities[item["id"]] = item["quantity"]
 
-        # Restart the timer
-        self.timer = threading.Timer(1.0, self.update_table)
-        self.timer.start()
+        # # Restart the timer
+        # self.timer = threading.Timer(1.0, self.update_table)
+        # self.timer.start()
 
     def decrease_quantity(self):
         while True:
