@@ -186,7 +186,6 @@ class MainWindow(QMainWindow):
                         main_dict = requests.get(self.shipment_url, headers=self.headers) 
                         # Added all batches to a list
                         main_json = main_dict.json()  
-                        print("main_json", main_json)
                         results = main_json['results']
                         
                         # Added the order batches to the order DB
@@ -227,12 +226,12 @@ class MainWindow(QMainWindow):
                         self.destination = self.shipment_db[2]
                         self.shipment_type = self.shipment_db[3]
                         json_data1 = json.loads(self.shipment_db[4])
-                        print(f"Shipments results: shipment number {self.shipment_number}, orders {json.loads(self.shipment_db[2])}")
+                        print(f"Shipments results: shipment number {self.shipment_number}, orders {json_data1}")
                         # Checking is the scanned order in the order DB or not
                         if self.shipment_db != []:
                             order_counting_start_flag = True
                             # Getting batches, product, and factory from scanned order
-                            self.shipment_orders = json.loads(self.shipment_db[2])
+                            self.shipment_orders = json.loads(self.shipment_db[4])
                         else:
                             order_counting_start_flag = False
                             print(f"The order of shipment order {self.shipment_number} is empty")
