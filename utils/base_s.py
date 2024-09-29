@@ -116,7 +116,7 @@ class DB:
         try:
             self.cursor.execute('SELECT * FROM watcher_order_table WHERE shipment_number = ?', (shipment_number,))
             if self.cursor.fetchone() is None:
-                self.cursor.execute('''insert into watcher_order_table (shipment_number, destination, shipment_type, orders, is_done) values (?,?,?)''', (shipment_number, destination, shipment_type, orders, is_done))
+                self.cursor.execute('''insert into watcher_order_table (shipment_number, destination, shipment_type, orders, is_done) values (?,?,?,?,?)''', (shipment_number, destination, shipment_type, orders, is_done))
                 self.dbconnect.commit()
                 return True
             else:

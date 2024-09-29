@@ -6,4 +6,4 @@ cursor = dbconnect.cursor()
 
 
 cursor.execute("""DELETE from watcher_order_table""")
-dbconnect.commit()
+dbconnect.commit() # mv monitait.db monitait.db.old
