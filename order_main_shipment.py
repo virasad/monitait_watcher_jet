@@ -272,7 +272,7 @@ class MainWindow(QMainWindow):
                         self.previous_quantities = {item["id"]: item["quantity"] for item in json_data1}
                         self.total_quantities = {item["id"]: item["quantity"] for item in json_data1}
                         
-                        
+                        self.table_widget.setRowCount(0)  # Clear the table
                         for item in json_data1:
                             row_position = self.table_widget.rowCount()
                             self.table_widget.insertRow(row_position)
