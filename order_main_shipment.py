@@ -289,7 +289,7 @@ class MainWindow(QMainWindow):
                             self.table_widget.setItem(row_position, 0, QTableWidgetItem(str(item["id"])))
                             self.table_widget.setItem(row_position, 1, QTableWidgetItem(product_name))
                             self.table_widget.setItem(row_position, 2, QTableWidgetItem(str(counted_quantity)))
-                            self.table_widget.setItem(row_position, 3, quantity_item)  # Set the quantity item
+                            self.table_widget.setItem(row_position, 3, QTableWidgetItem(str(0)))  # Set the quantity item
                             self.table_widget.setItem(row_position, 4, QTableWidgetItem(str(total_quantity)))
                             self.table_widget.setItem(row_position, 5, QTableWidgetItem(item["delivery_unit"]))
                             
