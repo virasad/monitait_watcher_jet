@@ -147,44 +147,6 @@ class MainWindow(QMainWindow):
     
     def update_table(self):
         
-        # Create and set values 
-        self.item_row1_col2 = QTableWidgetItem("None")  
-        self.item_row1_col2.setFont(self.bold_font)
-        
-        self.item_row1_col4 = QTableWidgetItem("None")  
-        self.item_row1_col4.setFont(self.bold_font)
-
-         
-        self.item_row2_col2 = QTableWidgetItem("None")  
-        self.item_row2_col2.setFont(self.bold_font)  
-        
-                
-        # Set the stylesheet for the table to increase text size
-        self.title_table.setStyleSheet("font-size: 25px;")  # Adjust size as needed
-    
-        # Set values for the rows and columns
-          
-        self.title_table.setItem(0, 1, self.item_row1_col2)   
-         
-        self.title_table.setItem(0, 3, self.item_row1_col4)   
-        
-        self.title_table.setItem(1, 1, self.item_row2_col2)   
-        
-        # Set the column and rows width and height
-        self.title_table.setColumnWidth(0, 200)  
-        self.title_table.setColumnWidth(2, 200)  
-        self.title_table.setColumnWidth(1, 500)  
-        self.title_table.setColumnWidth(3, 500)  
-        self.title_table.setRowHeight(0, 100)  
-        self.title_table.setRowHeight(1, 100)  
-
-        # Set layout direction to right-to-left
-        self.title_table.setLayoutDirection(Qt.RightToLeft)
-
-        # Make the header visible or set other properties as needed
-        self.title_table.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
-        self.title_table.verticalHeader().setVisible(False)  # Hide vertical header if not needed
-        
         for item in json_data:
             row_position = self.table_widget.rowCount()
             self.table_widget.insertRow(row_position)
@@ -305,6 +267,43 @@ class MainWindow(QMainWindow):
                             order_counting_start_flag = False
                             print(f"The order of shipment order {self.shipment_number} is empty")
                         # Updating the table
+                        # Create and set values 
+                        self.item_row1_col2 = QTableWidgetItem(f"{self.shipment_number}")  
+                        self.item_row1_col2.setFont(self.bold_font)
+                        
+                        self.item_row1_col4 = QTableWidgetItem("None")  
+                        self.item_row1_col4.setFont(self.bold_font)
+
+                        
+                        self.item_row2_col2 = QTableWidgetItem("Tehran")  
+                        self.item_row2_col2.setFont(self.bold_font)  
+                        
+                                
+                        # Set the stylesheet for the table to increase text size
+                        self.title_table.setStyleSheet("font-size: 25px;")  # Adjust size as needed
+                    
+                        # Set values for the rows and columns
+                        
+                        self.title_table.setItem(0, 1, self.item_row1_col2)   
+                        
+                        self.title_table.setItem(0, 3, self.item_row1_col4)   
+                        
+                        self.title_table.setItem(1, 1, self.item_row2_col2)   
+                        
+                        # Set the column and rows width and height
+                        self.title_table.setColumnWidth(0, 200)  
+                        self.title_table.setColumnWidth(2, 200)  
+                        self.title_table.setColumnWidth(1, 500)  
+                        self.title_table.setColumnWidth(3, 500)  
+                        self.title_table.setRowHeight(0, 100)  
+                        self.title_table.setRowHeight(1, 100)  
+
+                        # Set layout direction to right-to-left
+                        self.title_table.setLayoutDirection(Qt.RightToLeft)
+
+                        # Make the header visible or set other properties as needed
+                        self.title_table.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
+                        self.title_table.verticalHeader().setVisible(False)  # Hide vertical header if not needed
                     else:
                         print(f"There is no such shipment number, {self.shipment_number}, {type(self.shipment_number)}")
 
