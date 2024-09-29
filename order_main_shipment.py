@@ -140,43 +140,8 @@ class MainWindow(QMainWindow):
         self.watcher_live_signal = 60 * 5
         self.take_picture_interval = 60 * 5
         self.order_db_remove_interval = 12 * 3600  # Convert hours to secends
-        
-        self.previous_quantities = {item["id"]: item["quantity"] for item in json_data}
-        self.total_quantities = {item["id"]: item["quantity"] for item in json_data}
-
     
     def update_table(self):
-        
-        for item in json_data:
-            row_position = self.table_widget.rowCount()
-            self.table_widget.insertRow(row_position)
-
-            product_name = item["product_name"]
-
-            current_quantity = item["quantity"]
-            previous_quantity = self.previous_quantities[item["id"]]
-            total_quantity = self.total_quantities[item["id"]]
-            counted_quantity = abs(total_quantity-previous_quantity)
-
-            # Check if the quantity has decreased
-            quantity_item = QTableWidgetItem(str(current_quantity))
-            if current_quantity < previous_quantity:
-                quantity_item.setBackground(QColor("red"))  # Highlight background in red
-            #  "شماره سفارش", "نام محصول", " شمارش شده", "مانده", "کل", "واحد تحویل"
-            # Add items to the table
-            self.table_widget.setItem(row_position, 0, QTableWidgetItem(str(item["id"])))
-            self.table_widget.setItem(row_position, 1, QTableWidgetItem(product_name))
-            self.table_widget.setItem(row_position, 2, QTableWidgetItem(str(counted_quantity)))
-            self.table_widget.setItem(row_position, 3, quantity_item)  # Set the quantity item
-            self.table_widget.setItem(row_position, 4, QTableWidgetItem(str(total_quantity)))
-            self.table_widget.setItem(row_position, 5, QTableWidgetItem(item["delivery_unit"]))
-            
-            # self.table_widget.setRowCount(0)  # Clear the table
-            
-
-        # Update previous quantities for the next iteration
-        for item in json_data:
-            self.previous_quantities[item["id"]] = item["quantity"]
 
         # # Restart the timer
         # self.timer = threading.Timer(1.0, self.update_table)
@@ -257,6 +222,7 @@ class MainWindow(QMainWindow):
                         
                         # Getting the scanned order list from order DB
                         self.shipment_db = self.db.order_read(self.shipment_number)
+                        json_data1 = json.loads(self.shipment_db)
                         print(f"Shipments results: shipment number {self.shipment_number}, orders {json.loads(self.shipment_db[2])}")
                         # Checking is the scanned order in the order DB or not
                         if self.shipment_db != []:
@@ -283,11 +249,8 @@ class MainWindow(QMainWindow):
                         self.title_table.setStyleSheet("font-size: 25px;")  # Adjust size as needed
                     
                         # Set values for the rows and columns
-                        
                         self.title_table.setItem(0, 1, self.item_row1_col2)   
-                        
                         self.title_table.setItem(0, 3, self.item_row1_col4)   
-                        
                         self.title_table.setItem(1, 1, self.item_row2_col2)   
                         
                         # Set the column and rows width and height
@@ -304,6 +267,32 @@ class MainWindow(QMainWindow):
                         # Make the header visible or set other properties as needed
                         self.title_table.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
                         self.title_table.verticalHeader().setVisible(False)  # Hide vertical header if not needed
+                        
+                        self.previous_quantities = {item["id"]: item["quantity"] for item in json_data1}
+                        self.total_quantities = {item["id"]: item["quantity"] for item in json_data1}
+                        
+                        
+                        for item in json_data1:
+                            row_position = self.table_widget.rowCount()
+                            self.table_widget.insertRow(row_position)
+
+                            product_name = item["product_name"]
+
+                            current_quantity = item["quantity"]
+                            previous_quantity = self.previous_quantities[item["id"]]
+                            total_quantity = self.total_quantities[item["id"]]
+                            counted_quantity = abs(total_quantity-previous_quantity)
+
+                            #  "شماره سفارش", "نام محصول", " شمارش شده", "مانده", "کل", "واحد تحویل"
+                            # Add items to the table
+                            self.table_widget.setItem(row_position, 0, QTableWidgetItem(str(item["id"])))
+                            self.table_widget.setItem(row_position, 1, QTableWidgetItem(product_name))
+                            self.table_widget.setItem(row_position, 2, QTableWidgetItem(str(counted_quantity)))
+                            self.table_widget.setItem(row_position, 3, quantity_item)  # Set the quantity item
+                            self.table_widget.setItem(row_position, 4, QTableWidgetItem(str(total_quantity)))
+                            self.table_widget.setItem(row_position, 5, QTableWidgetItem(item["delivery_unit"]))
+                            
+                            # self.table_widget.setRowCount(0)  # Clear the table
                     else:
                         print(f"There is no such shipment number, {self.shipment_number}, {type(self.shipment_number)}")
 
@@ -464,11 +453,9 @@ class MainWindow(QMainWindow):
                 
             # Checking order db every {self.db_order_checking_interval} second
             if time.time() - st > self.db_order_checking_interval and self.shipment_number != "":
-                print("\n \n DB order checking flag", shipment_db_checking_flag)
                 checking_order_db = False
                 st = time.time() 
                 if True:
-                    print(self.shipment_number,  previus_shipment_number, "self.shipment_number, previus_shipment_number", 2)
                     # Checking order list on the order DB to catch the quantity value
                     if (self.shipment_number in self.shipment_numbers_list) and (self.shipment_number != previus_shipment_number):
                         while not checking_order_db:
@@ -495,11 +482,9 @@ class MainWindow(QMainWindow):
                             else: 
                                 checking_order_db = False
                                 shipment_db_checking_flag = False
-                    print(shipment_db_checking_flag, "shipment_db_checking_flag")
+                    
                     if shipment_db_checking_flag:
                         # Getting the scanned order list from order DB
-                        print(f"Going to check the watcher order DB, the shipment order is {self.shipment_number} and the previus one is {previus_shipment_number}")
-                        
                         # Getting to detect in which batch changes is happend
                         updated_shipment_number_data_ = self.db.order_read(self.shipment_number)
                         updated_shipment_number_data = json.loads(updated_shipment_number_data_[2])
