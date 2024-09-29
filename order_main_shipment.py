@@ -369,7 +369,7 @@ class Counter:
 class MainWindow(QMainWindow):
     def __init__(self, shipment_number, shipment_type, destination, orders):
         super().__init__()
-        slef.shipment_number = shipment_number
+        self.shipment_number = shipment_number
         self.shipment_type = shipment_type
         self.destination = destination
         self.json_data = json.loads(orders[2])
@@ -390,19 +390,19 @@ class MainWindow(QMainWindow):
         item_row1_col1 = QTableWidgetItem("شماره محموله")  
         item_row1_col1.setBackground(QColor("gray"))  
         item_row1_col1.setFont(bold_font)
-        item_row1_col2 = QTableWidgetItem(f"{slef.shipment_number}")  
+        item_row1_col2 = QTableWidgetItem(f"{self.shipment_number}")  
         item_row1_col2.setFont(bold_font)
         
         item_row1_col3 = QTableWidgetItem("نوع محموله")  
         item_row1_col3.setBackground(QColor("gray"))  
         item_row1_col3.setFont(bold_font)  
-        item_row1_col4 = QTableWidgetItem(f"{slef.shipment_type}")  
+        item_row1_col4 = QTableWidgetItem(f"{self.shipment_type}")  
         item_row1_col4.setFont(bold_font)
 
         item_row2_col1 = QTableWidgetItem("مقصد")  
         item_row2_col1.setFont(bold_font)    
         item_row2_col1.setBackground(QColor("gray"))  
-        item_row2_col2 = QTableWidgetItem(f"{slef.destination}")  
+        item_row2_col2 = QTableWidgetItem(f"{self.destination}")  
         item_row2_col2.setFont(bold_font)  
         
         item_row2_col3 = QTableWidgetItem("مبدا")  
@@ -561,28 +561,28 @@ class MainWindow(QMainWindow):
                     item["quantity"] -= 1  # Decrease the quantity by 100
             time.sleep(2)  # Wait for 1 second before the next decrease
 
+if __name__ == "__main__":
+    arduino = Ardiuno()
+    camera = Camera()
+    db = DB()
 
-arduino = Ardiuno()
-camera = Camera()
-db = DB()
+    # Connected to the found scanner 
+    # List all ttyUSB devices
+    ttyUSB_devices = glob.glob('/dev/ttyUSB*')
+    if ttyUSB_devices!= []:
+        usb_serial_flag = True 
+        print(f"The found UART ttyyUSB: {ttyUSB_devices}")
+        scanner = UARTscanner(port=ttyUSB_devices[0], baudrate = 9600, timeout = 1)
+    else:
+        usb_serial_flag = False
+        scanner = Scanner()
 
-# Connected to the found scanner 
-# List all ttyUSB devices
-ttyUSB_devices = glob.glob('/dev/ttyUSB*')
-if ttyUSB_devices!= []:
-    usb_serial_flag = True 
-    print(f"The found UART ttyyUSB: {ttyUSB_devices}")
-    scanner = UARTscanner(port=ttyUSB_devices[0], baudrate = 9600, timeout = 1)
-else:
-    usb_serial_flag = False
-    scanner = Scanner()
+    counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, shipment_url=shipment_url,
+                    stationID_url= stationID_url, sendshipment_url=sendshipment_url, register_id=register_id,
+                    usb_serial_flag=usb_serial_flag)
 
-counter = Counter(arduino=arduino, db=db, camera=camera, scanner=scanner, shipment_url=shipment_url,
-                  stationID_url= stationID_url, sendshipment_url=sendshipment_url, register_id=register_id,
-                  usb_serial_flag=usb_serial_flag)
-
-Thread(target=counter.run).start()
-time.sleep(0.1)
-Thread(target=counter.db_order_checker).start()
-time.sleep(0.1)
+    Thread(target=counter.run).start()
+    time.sleep(0.1)
+    Thread(target=counter.db_order_checker).start()
+    time.sleep(0.1)
 
