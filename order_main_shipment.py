@@ -345,7 +345,7 @@ class MainWindow(QMainWindow):
                                                                     orders= json.dumps(self.shipment_orders),is_done = 0)
                                                 print("Time of updating order db", time.time() - s)
                                                 
-                                                counted_quantity = abs(total_quantity-remainded_quantity)
+                                                counted_quantity = abs(total_quantity-item['quantity'])
 
                                                 quantity_item = QTableWidgetItem(str(counted_quantity))
                                                 quantity_item.setBackground(QColor("red"))  # Highlight background in red
