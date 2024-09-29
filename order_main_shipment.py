@@ -1,5 +1,17 @@
 from utils.base_s import *
 import glob
+import sys
+import time
+import cv2, requests
+import numpy as np
+import json
+import threading
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QTableWidget, QTableWidgetItem, 
+                             QVBoxLayout, QWidget, QHeaderView, QLabel, QGroupBox, 
+                             QFormLayout, QLineEdit)
+from PyQt5.QtGui import QColor, QFont, QPixmap, QImage
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5 import QtGui
 
 register_id = str(socket.gethostname())
 
