@@ -370,7 +370,7 @@ class MainWindow(QMainWindow):
         self.shipment_number = shipment_number
         self.shipment_type = shipment_type
         self.destination = destination
-        self.json_data = orders[2]
+        self.json_data = json.loads(orders[2])
 
         self.setWindowTitle("اطلاعات محصول")
         self.setGeometry(100, 100, 800, 600)
