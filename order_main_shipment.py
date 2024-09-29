@@ -455,7 +455,7 @@ class MainWindow(QMainWindow):
                                 checking_order_db = True
                                 shipment_db_checking_flag = True
                                 print(f"DB, {previus_shipment_number}")
-                                main_shipment_orders = json.loads(main_shipment_number_data[2])
+                                main_shipment_orders = json.loads(main_shipment_number_data[4])
                                 for item in main_shipment_orders:
                                     order_id = item['id']
                                     for batch in item['batches']:
