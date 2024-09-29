@@ -375,7 +375,10 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("اطلاعات محصول")
         self.setGeometry(100, 100, 800, 600)
         
-        
+        # Create a QTableWidget for the title
+        self.title_table = QTableWidget()  # No need to specify rows and columns at this point
+        self.title_table.setRowCount(2)  # Set 2 rows for 'a' and 'b'
+        self.title_table.setColumnCount(4)  # Set 1 column for values
         
         # # Checking whether the live stream URL is alive or not
         # try:
@@ -547,10 +550,6 @@ class MainWindow(QMainWindow):
         bold_font = QFont()
         bold_font.setBold(True)
 
-        # Create a QTableWidget for the title
-        self.title_table = QTableWidget()  # No need to specify rows and columns at this point
-        self.title_table.setRowCount(2)  # Set 2 rows for 'a' and 'b'
-        self.title_table.setColumnCount(4)  # Set 1 column for values
         
         # Create and set values 
         item_row1_col1 = QTableWidgetItem("شماره محموله")  
