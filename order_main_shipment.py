@@ -93,7 +93,7 @@ class MainWindow(QMainWindow):
         self.table_widget.setColumnCount(6)
         self.table_widget.setLayoutDirection(Qt.RightToLeft)
         self.table_widget.setHorizontalHeaderLabels([
-            "شماره", "نام", " شمرده", "مانده", "کل", "تحویل"])
+            "شماره", "نام", " شمرده", "مانده", "کل", "واحد"])
         # self.table_widget.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
         self.table_widget.verticalHeader().setVisible(False)  # Hide horizontal header if not needed
         
@@ -233,6 +233,7 @@ class MainWindow(QMainWindow):
                         self.destination = self.shipment_db[2]
                         self.shipment_type = self.shipment_db[3]
                         json_data1 = json.loads(self.shipment_db[4])
+                        print("\n The orders", json_data1)
                         # Checking is the scanned order in the order DB or not
                         if self.shipment_db != []:
                             order_counting_start_flag = True
@@ -246,14 +247,12 @@ class MainWindow(QMainWindow):
                         self.item_row1_col2 = QTableWidgetItem(f"{self.shipment_number}")  
                         self.item_row1_col2.setFont(self.bold_font)
                         
-                        self.item_row1_col4 = QTableWidgetItem("None")  
+                        self.item_row1_col4 = QTableWidgetItem(f"{self.shipment_type}")  
                         self.item_row1_col4.setFont(self.bold_font)
 
-                        
-                        self.item_row2_col2 = QTableWidgetItem("Tehran")  
+                        self.item_row2_col2 = QTableWidgetItem(f"{self.destination}")  
                         self.item_row2_col2.setFont(self.bold_font)  
                         
-                                
                         # Set the stylesheet for the table to increase text size
                         self.title_table.setStyleSheet("font-size: 25px;")  # Adjust size as needed
                     
@@ -337,6 +336,31 @@ class MainWindow(QMainWindow):
                                                 self.db.order_update(shipment_number=self.shipment_number,
                                                                     orders= json.dumps(self.shipment_orders),is_done = 0)
                                                 print("Time of updating order db", time.time() - s)
+                                                
+                                                json_data2 = json.loads(self.shipment_orders)
+                                                self.table_widget.setRowCount(0)  # Clear the table
+                                                for item in json_data2:
+                                                    row_position = self.table_widget.rowCount()
+                                                    self.table_widget.insertRow(row_position)
+
+                                                    remainded_quantity = int(batch['quantity']) - 1
+                                                    
+                                                    total_quantity = self.total_quantities[item["id"]]
+                                                    counted_quantity = abs(total_quantity-remainded_quantity)
+
+                                                    quantity_item = QTableWidgetItem(str(counted_quantity))
+                                                    quantity_item.setBackground(QColor("red"))  # Highlight background in red
+                                                    
+                                                    # Add items to the table
+                                                    # self.table_widget.setItem(row_position, 0, QTableWidgetItem(str(item["id"])))
+                                                    # self.table_widget.setItem(row_position, 1, QTableWidgetItem(product_name))
+                                                    self.table_widget.setItem(row_position, 2, quantity_item)
+                                                    self.table_widget.setItem(row_position, 3, QTableWidgetItem(str(remainded_quantity)))  # Set the quantity item
+                                                    # self.table_widget.setItem(row_position, 4, QTableWidgetItem(str(total_quantity)))
+                                                    # self.table_widget.setItem(row_position, 5, QTableWidgetItem(item["delivery_unit"]))
+                                                    
+                                                    # self.table_widget.setRowCount(0)  # Clear the table
+                                                
                                                 print("run > The current assigned id quantity value (remainded value):", batch['quantity'])
                                             elif item['quantity']  == 0:
                                                 print("run > Counted value from this assined is has been finished")
