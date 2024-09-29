@@ -537,7 +537,7 @@ class MainWindow(QMainWindow):
         # else:
         #     pass
         
-        for item in self.json_data:
+        for item in json.loads(self.json_data[2]):
             row_position = self.table_widget.rowCount()
             self.table_widget.insertRow(row_position)
 
@@ -563,7 +563,7 @@ class MainWindow(QMainWindow):
             
 
         # Update previous quantities for the next iteration
-        for item in self.json_data:
+        for item in json.loads(self.json_data[2]):
             self.previous_quantities[item["id"]] = item["quantity"]
 
         # Restart the timer
@@ -572,7 +572,7 @@ class MainWindow(QMainWindow):
 
     def decrease_quantity(self):
         while True:
-            for item in self.json_data:
+            for item in json.loads(self.json_data[2]):
                 if item["quantity"] > 0:
                     item["quantity"] -= 1  # Decrease the quantity by 100
             time.sleep(2)  # Wait for 1 second before the next decrease
