@@ -193,7 +193,9 @@ class MainWindow(QMainWindow):
                         s3 = time.time()
                         for entry in results:
                             is_exist = self.db.order_write(shipment_number=entry["shipment_number"], 
-                                                orders=json.dumps(entry['orders']), is_done=0)
+                                                           destination=entry["destination"], 
+                                                           shipment_type=entry["type"],
+                                                           orders=json.dumps(entry['orders']), is_done=0)
                             if is_exist:
                                 print(f"{entry['shipment_number']} is not exists")
                             else:
@@ -220,10 +222,11 @@ class MainWindow(QMainWindow):
                     else:
                         self.shipment_number = shipment_scanned_barcode_byte_string
                     if self.shipment_number in self.shipment_numbers_list :
-                        
                         # Getting the scanned order list from order DB
                         self.shipment_db = self.db.order_read(self.shipment_number)
-                        json_data1 = json.loads(self.shipment_db[2])
+                        self.destination = self.shipment_db[2]
+                        self.shipment_type = self.shipment_db[3]
+                        json_data1 = json.loads(self.shipment_db[4])
                         print(f"Shipments results: shipment number {self.shipment_number}, orders {json.loads(self.shipment_db[2])}")
                         # Checking is the scanned order in the order DB or not
                         if self.shipment_db != []:

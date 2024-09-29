@@ -112,11 +112,11 @@ class DB:
             print(f"DB > write {e}")
             return False
     
-    def order_write(self, shipment_number, orders={}, is_done=0):
+    def order_write(self, shipment_number, destination, shipment_type, orders={}, is_done=0):
         try:
             self.cursor.execute('SELECT * FROM watcher_order_table WHERE shipment_number = ?', (shipment_number,))
             if self.cursor.fetchone() is None:
-                self.cursor.execute('''insert into watcher_order_table (shipment_number, orders, is_done) values (?,?,?)''', (shipment_number, orders, is_done))
+                self.cursor.execute('''insert into watcher_order_table (shipment_number, destination, shipment_type, orders, is_done) values (?,?,?)''', (shipment_number, destination, shipment_type, orders, is_done))
                 self.dbconnect.commit()
                 return True
             else:
@@ -173,7 +173,7 @@ class DB:
             print(f"DB > delete order {e_od}")
             return False
         
-    def order_update(self, shipment_number, orders=None, is_done=None):
+    def order_update(self, shipment_number, destination=None, shipment_type=None, orders=None, is_done=None):
         try:
             query = "UPDATE watcher_order_table SET "
             params = []
@@ -181,6 +181,12 @@ class DB:
             if orders is not None:
                 query += "orders = ?, "
                 params.append(orders)
+            if destination is not None:
+                query += "destination = ?, "
+                params.append(destination)
+            if shipment_type is not None:
+                query += "shipment_type = ?, "
+                params.append(shipment_type)
             if is_done is not None:
                 query += "is_done = ?, "
                 params.append(is_done)
