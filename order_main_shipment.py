@@ -70,6 +70,21 @@ class MainWindow(QMainWindow):
         self.title_table.setItem(1, 2, self.item_row2_col3)   
         self.title_table.setItem(1, 3, self.item_row2_col4)  
         
+        # Set the column and rows width and height
+        self.title_table.setColumnWidth(0, 200)  
+        self.title_table.setColumnWidth(2, 200)  
+        self.title_table.setColumnWidth(1, 500)  
+        self.title_table.setColumnWidth(3, 500)  
+        self.title_table.setRowHeight(0, 100)  
+        self.title_table.setRowHeight(1, 100)  
+
+        # Set layout direction to right-to-left
+        self.title_table.setLayoutDirection(Qt.RightToLeft)
+
+        # Make the header visible or set other properties as needed
+        self.title_table.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
+        self.title_table.verticalHeader().setVisible(False)  # Hide vertical header if not needed
+        
         
         # # Checking whether the live stream URL is alive or not
         # try:
@@ -205,7 +220,7 @@ class MainWindow(QMainWindow):
                                 pass
                             else:
                                 self.shipment_numbers_list.append(entry['shipment_number'])
-                        print("\n Time of adding shipment to DB", time.time() - s3)
+                        print("\n Time of adding shipment to DB", time.time() - s3, "self.shipment_numbers_list", self.shipment_numbers_listf)
                     else:
                         pass
                 # except Exception as ex1:
@@ -255,21 +270,6 @@ class MainWindow(QMainWindow):
                         self.title_table.setItem(0, 1, self.item_row1_col2)   
                         self.title_table.setItem(0, 3, self.item_row1_col4)   
                         self.title_table.setItem(1, 1, self.item_row2_col2)   
-                        
-                        # Set the column and rows width and height
-                        self.title_table.setColumnWidth(0, 200)  
-                        self.title_table.setColumnWidth(2, 200)  
-                        self.title_table.setColumnWidth(1, 500)  
-                        self.title_table.setColumnWidth(3, 500)  
-                        self.title_table.setRowHeight(0, 100)  
-                        self.title_table.setRowHeight(1, 100)  
-
-                        # Set layout direction to right-to-left
-                        self.title_table.setLayoutDirection(Qt.RightToLeft)
-
-                        # Make the header visible or set other properties as needed
-                        self.title_table.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
-                        self.title_table.verticalHeader().setVisible(False)  # Hide vertical header if not needed
                         
                         self.previous_quantities = {item["id"]: item["quantity"] for item in json_data1}
                         self.total_quantities = {item["id"]: item["quantity"] for item in json_data1}
