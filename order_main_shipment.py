@@ -111,6 +111,9 @@ class MainWindow(QMainWindow):
         self.watcher_live_signal = 60 * 5
         self.take_picture_interval = 60 * 5
         self.order_db_remove_interval = 12 * 3600  # Convert hours to secends
+        
+        self.previous_quantities = {item["id"]: item["quantity"] for item in json_data}
+        self.total_quantities = {item["id"]: item["quantity"] for item in json_data}
 
     
     def update_table(self):
