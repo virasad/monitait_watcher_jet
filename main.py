@@ -240,7 +240,7 @@ while flag:
           if (b'\r\n' in buffer): # find line in serial data
             last_received, buffer = buffer.split(b'\r\n')[-2:]
             serial_list = str(last_received).split("'")[1].split(',')
-            
+            print("serial_list", serial_list)
             for z in range(len(serial_list)):
               extra_info.update({"d{}".format(z) : int(serial_list[z])})
             k = 0
@@ -301,7 +301,7 @@ while flag:
     
     # Counting camera index
     j = j + 1
-    if j == 100: 
+    if j %3 ==0: 
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
       try:
@@ -358,7 +358,7 @@ while flag:
               (x_m,y_m,w_m,h_m) = cv2.boundingRect(cnt)
                   
           # Applynig the hough circles transform 
-          param2=80
+          param2=30
           rows = gray.shape[0]
           circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 2, 15,
                                   param1=50, param2=param2, minRadius=10, maxRadius=250)
@@ -380,7 +380,7 @@ while flag:
               radius = i_index[2]
             else:
               # Applynig the hough circles transform 
-              param2=40
+              param2=30
               rows = gray.shape[0]
               
               circles_2 = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 2, 2 * rows,
