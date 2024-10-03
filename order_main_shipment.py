@@ -19,6 +19,7 @@ register_id = str(socket.gethostname())
 shipment_url = 'https://develop-app.monitait.com/api/factory/shipment-orders/'
 stationID_url = f'https://develop-app.monitait.com/api/factory/watcher/{register_id}/'
 sendshipment_url = 'https://develop-app.monitait.com/api/elastic-search/send-batch-report/'
+live_stream_url = 'http://192.168.125.103:5000/video_feed/1'
 
 
 class MainWindow(QMainWindow):
@@ -77,18 +78,7 @@ class MainWindow(QMainWindow):
         self.title_table.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
         self.title_table.verticalHeader().setVisible(False)  # Hide vertical header if not needed
         
-        
-        # # Checking whether the live stream URL is alive or not
-        # try:
-        #     response = requests.head(live_stream_url, allow_redirects=True)
-        #     if response.status_code == 200: 
-        #         self.live_stream_flag = True
-        #     else:
-        #         self.live_stream_flag = False
-        # except:
-        #     self.live_stream_flag = True
-        #     pass
-
+    
         self.table_widget = QTableWidget()
         self.table_widget.setColumnCount(6)
         self.table_widget.setLayoutDirection(Qt.RightToLeft)
@@ -109,12 +99,24 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.title_table)  # Add title above the table
         layout.addWidget(self.table_widget)
         
-        # if self.live_stream_flag:
-        #     # Create a QLabel for the image
-        #     self.image_label = QLabel(self)
-        #     layout.addWidget(self.image_label, alignment=Qt.AlignLeft | Qt.AlignTop)
-        # else:
-        #     pass
+        # Checking whether the live stream URL is alive or not
+        try:
+            response = requests.head(live_stream_url, allow_redirects=True)
+            if response.status_code == 200: 
+                self.live_stream_flag = True
+            else:
+                self.live_stream_flag = False
+        except:
+            self.live_stream_flag = True
+            pass
+
+        
+        if self.live_stream_flag:
+            # Create a QLabel for the image
+            self.image_label = QLabel(self)
+            layout.addWidget(self.image_label, alignment=Qt.AlignLeft | Qt.AlignTop)
+        else:
+            pass
         
         # Create a container widget to hold the layout and image
         container = QWidget()
@@ -148,11 +150,32 @@ class MainWindow(QMainWindow):
         self.take_picture_interval = 60 * 5
         self.order_db_remove_interval = 12 * 3600  # Convert hours to secends
     
+    def update_frame(self):
+        ret, frame = self.cap.read()
+        if ret:
+            # Convert frame to RGB
+            rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            # Get the dimensions of the frame
+            h, w, ch = rgb_image.shape
+            # # Create QImage from the RGB frame
+            qimg = QImage(rgb_image.data, w, h, ch * w, QImage.Format_RGB888)
+            # # Set the QImage on the QLabel
+            self.image_label.setPixmap(QPixmap.fromImage(qimg))
+        
+    def closeEvent(self, event):
+        print(1)
+        if self.live_stream_flag:
+            self.cap.release()  # Release the video capture on close
+            event.accept()
+        else:
+            pass
+    
     def update_table(self):
 
         # # Restart the timer
         # self.timer = threading.Timer(1.0, self.update_table)
         # self.timer.start()
+        
         
         print("-----------------------")
         
@@ -286,6 +309,11 @@ class MainWindow(QMainWindow):
                             self.table_widget.setItem(row_position, 5, QTableWidgetItem(item["delivery_unit"]))
                             
                             # self.table_widget.setRowCount(0)  # Clear the table
+                        if self.live_stream_flag:
+                            self.cap = cv2.VideoCapture(live_stream_url)  # Capture from the default camera
+                            self.update_frame()
+                        else:
+                            pass
                     else:
                         print(f"There is no such shipment number, {self.shipment_number}, {type(self.shipment_number)}")
 
@@ -300,6 +328,13 @@ class MainWindow(QMainWindow):
                         print("In order counting while loop, waiting to the OK signal")
                         test_flag = False
                     # Reading the box entrance signal
+                    
+                    if self.live_stream_flag:
+                        self.cap = cv2.VideoCapture(live_stream_url)  # Capture from the default camera
+                        self.update_frame()
+                    else:
+                        pass
+                    
                     ts = time.time()
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
                     # If the OK signal triggered
@@ -376,7 +411,7 @@ class MainWindow(QMainWindow):
                                                 self.db.order_update(shipment_number=self.shipment_number,
                                                                     orders= json.dumps(self.shipment_orders),is_done = 1)
                                         else:
-                                            quantity_item = QTableWidgetItem(str(abs((total_quantity-remainded_quantity))))
+                                            quantity_item = QTableWidgetItem(str(abs((remainded_quantity))))
                                     remainded_quantity = int(item['quantity'])
                                     self.table_widget.setItem(row_position, 2, quantity_item)
                                     self.table_widget.setItem(row_position, 3, QTableWidgetItem(str(remainded_quantity)))  # Set the quantity item
