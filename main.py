@@ -408,7 +408,7 @@ while flag:
             radius = 1
           
           # Writing the output image
-          extra_info_volume.update({"tank_volume" : estimated_tank_volume})  
+          extra_info_volume.update({"tank_volume" : radius})  
           cv2.imwrite(f"{image_path}.jpg", src)
           initial_tank_volume = estimated_tank_volume
           
