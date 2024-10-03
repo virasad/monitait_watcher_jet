@@ -1,6 +1,6 @@
 from periphery import GPIO
 import sqlite3
-import time, datetime
+import time
 import datetime
 import signal
 import requests
@@ -311,8 +311,7 @@ while flag:
           ret, src = video_cap.read()
           video_cap.release()
           
-          date = datetime.datetime.now()
-          image_number = f"{date.year}{date.month}{date.day}_t"
+          image_number = f"{int(time.time())}_t"
           image_path = "/home/pi/monitait_watcher_jet/" + str(image_number)
           
           # Get the original image dimensions to crop the captured image 
@@ -450,8 +449,7 @@ while flag:
           ret, src = video_cap.read()
           video_cap.release()
           
-          date = datetime.datetime.now()
-          image_number = f"{date.year}{date.month}{date.day}_g"
+          image_number = f"{int(time.time())}_g"
           image_path_2 = "/home/pi/monitait_watcher_jet/" + str(image_number)
           # Get the original image dimensions to crop the captured image 
           height, width, channels = src.shape
