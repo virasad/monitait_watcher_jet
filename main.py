@@ -301,7 +301,8 @@ while flag:
     
     # Counting camera index
     j = j + 1
-    if j == 100: 
+    print(j)
+    if j % 3 == 0: 
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
       try:
@@ -374,7 +375,7 @@ while flag:
                 k_index = k_index + 1
                 radius = i_index[2]
                 center = center
-            
+            print("k_index", k_index, "vradius", radius)
             if k_index == 1:
               estimated_tank_volume = abs(-8223.1 + (695.1*radius) - 2.318 * (radius**2))
               radius = i_index[2]
@@ -428,6 +429,7 @@ while flag:
             product_id=0,
             lot_info=0,
             extra_info= extra_info_volume)
+          print("r_c_1", r_c_1)
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
