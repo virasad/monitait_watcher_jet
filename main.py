@@ -301,7 +301,7 @@ while flag:
     
     # Counting camera index
     j = j + 1
-    if j == 30: 
+    if j % 3 == 0: 
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
       try:
@@ -312,8 +312,7 @@ while flag:
           video_cap.release()
           
           date = datetime.datetime.now()
-          date_hour, date_minute, date_second = time.strftime("%H"), time.strftime("%M"), time.strftime("%S")
-          image_number = f"{date.year}_{date.month}_{date.day}_{date_hour}_{date_minute}_{date_second}_t"
+          image_number = f"{date.year}{date.month}{date.day}_t"
           image_path = "/home/pi/monitait_watcher_jet/" + str(image_number)
           
           # Get the original image dimensions to crop the captured image 
@@ -423,6 +422,7 @@ while flag:
             product_id=0,
             lot_info=0,
             extra_info= extra_info_volume)
+          print("r_c_1", r_c_1)
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
@@ -451,8 +451,7 @@ while flag:
           video_cap.release()
           
           date = datetime.datetime.now()
-          date_hour, date_minute, date_second = time.strftime("%H"), time.strftime("%M"), time.strftime("%S")
-          image_number = f"{date.year}_{date.month}_{date.day}_{date_hour}_{date_minute}_{date_second}_g"
+          image_number = f"{date.year}{date.month}{date.day}_g"
           image_path_2 = "/home/pi/monitait_watcher_jet/" + str(image_number)
           # Get the original image dimensions to crop the captured image 
           height, width, channels = src.shape
@@ -491,6 +490,7 @@ while flag:
             product_id=0,
             lot_info=0,
             extra_info= extra_info_gauge)
+          print
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
