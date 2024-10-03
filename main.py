@@ -381,11 +381,12 @@ while flag:
               radius = i_index[2]
             else:
               # Applynig the hough circles transform 
-              param2=80
+              param2=40
               rows = gray.shape[0]
               
               circles_2 = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 2, 2 * rows,
                                       param1=50, param2=param2, minRadius=10, maxRadius=250)
+              print("circles_2", circles_2)
               # Drawing the detected circles 
               if circles_2 is not None:
                 circles_2 = np.uint16(np.around(circles_2))
