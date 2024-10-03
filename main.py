@@ -1,6 +1,6 @@
 from periphery import GPIO
 import sqlite3
-import time
+import time, datetime
 import datetime
 import signal
 import requests
@@ -33,8 +33,8 @@ snapshot_url = f"rtsp://{ip_camera_username}:{ip_camera_pass}@{ip_camera}:554/ca
 gauge_ip_camera = "192.168.101.117"
 gauge_snapshot_url = f"rtsp://{ip_camera_username}:{ip_camera_pass}@{gauge_ip_camera}:554/cam/realmonitor?channel=1&subtype=0" 
 
-initial_tank_volume = 0
-estimated_tank_volume = -1
+# initial_tank_volume = 0
+# estimated_tank_volume = -1
 radius = -1
 tank_volume_thresholds = 20
 
@@ -302,7 +302,7 @@ while flag:
     # Counting camera index
     j = j + 1
     print(j)
-    if j % 3 == 0: 
+    if j %3 == 0: 
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
       try:
@@ -312,7 +312,9 @@ while flag:
           ret, src = video_cap.read()
           video_cap.release()
           
-          image_number = f"{int(time.time())}_t"
+          date = datetime.datetime.now()
+          date_hour, date_minute, date_second = time.strftime("%H"), time.strftime("%M"), time.strftime("%S")
+          image_number = f"{date.year}_{date.month}_{date.day}_{date_hour}_{date_minute}_{date_second}_t"
           image_path = "/home/pi/monitait_watcher_jet/" + str(image_number)
           
           # Get the original image dimensions to crop the captured image 
@@ -375,7 +377,7 @@ while flag:
                 center = center
             
             if k_index == 1:
-              estimated_tank_volume = -19.95 + (1.062*radius) - 0.0034 * (radius**2)
+              # estimated_tank_volume = -19.95 + (1.062*radius) - 0.0034 * (radius**2)
               radius = i_index[2]
             else:
               # Applynig the hough circles transform 
@@ -394,23 +396,29 @@ while flag:
                     radius = i_index[2]
                             
                     # Estimation the tank height
-                    estimated_tank_volume = abs(-19.95 + (1.062*radius) - 0.0034 * (radius**2))
+                    # estimated_tank_volume = abs(-19.95 + (1.062*radius) - 0.0034 * (radius**2))
+                    estimated_tank_volume = radius
                     
-                    if estimated_tank_volume > 50:
-                      estimated_tank_volume = 0
-                      radius = 0
-                    else:
-                      pass 
+                    # if estimated_tank_volume > 50:
+                    #   estimated_tank_volume = 0
+                    #   radius = 0
+                    # else:
+                    #   pass 
                   else:
                     pass
           else:
-            estimated_tank_volume = 1
+            # estimated_tank_volume = 1
             radius = 1
           
           # Writing the output image
+          # Single uint16 number
+          uint16_number = np.uint16(radius)
+
+          # Convert to float64
+          radius = uint16_number.astype(np.float64)
           extra_info_volume.update({"tank_volume" : radius})  
           cv2.imwrite(f"{image_path}.jpg", src)
-          initial_tank_volume = estimated_tank_volume
+          # initial_tank_volume = estimated_tank_volume
           
           r_c_1 = watcher_update(
             register_id=hostname,
@@ -421,7 +429,7 @@ while flag:
             product_id=0,
             lot_info=0,
             extra_info= extra_info_volume)
-          print("r_c_1", r_c_1)
+          print(r_c_1, "r_c_1")
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
@@ -449,7 +457,9 @@ while flag:
           ret, src = video_cap.read()
           video_cap.release()
           
-          image_number = f"{int(time.time())}_g"
+          date = datetime.datetime.now()
+          date_hour, date_minute, date_second = time.strftime("%H"), time.strftime("%M"), time.strftime("%S")
+          image_number = f"{date.year}_{date.month}_{date.day}_{date_hour}_{date_minute}_{date_second}_g"
           image_path_2 = "/home/pi/monitait_watcher_jet/" + str(image_number)
           # Get the original image dimensions to crop the captured image 
           height, width, channels = src.shape
@@ -488,7 +498,6 @@ while flag:
             product_id=0,
             lot_info=0,
             extra_info= extra_info_gauge)
-        
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
