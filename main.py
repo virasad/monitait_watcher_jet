@@ -300,8 +300,7 @@ while flag:
     
     # Counting camera index
     j = j + 1
-    print(j)
-    if j %3 ==0: 
+    if j == 100: 
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
       try:
@@ -374,7 +373,6 @@ while flag:
                 k_index = k_index + 1
                 radius = i_index[2]
                 center = center
-            print(k_index, "k_index")
             if k_index == 1:
               estimated_tank_volume = abs(-8223.1 + (695.1*radius) - 2.318 * (radius**2))
               radius = i_index[2]
@@ -418,7 +416,7 @@ while flag:
           extra_info_volume.update({"tank_volume" : estimated_tank_volume, "radius":radius})  
           cv2.imwrite(f"{image_path}.jpg", src)
           # initial_tank_volume = estimated_tank_volume
-          print(extra_info_volume)
+          
           r_c_1 = watcher_update(
             register_id=hostname,
             quantity=0,
