@@ -313,7 +313,7 @@ while flag:
           
           image_number = f"{int(time.time())}_t"
           image_path = "/home/pi/monitait_watcher_jet/" + str(image_number)
-          
+          print("image_path", image_path)
           # Get the original image dimensions to crop the captured image 
           height, width = 1080, 1920
           # When image size is 1920 * 880
@@ -406,10 +406,17 @@ while flag:
           else:
             # estimated_tank_volume = 1
             radius = 1
-          
+          print("radius", radius)
           # Writing the output image
           extra_info_volume.update({"tank_volume" : radius})  
           cv2.imwrite(f"{image_path}.jpg", src)
+          
+          file_path = f"{image_path}.jpg"
+
+          if os.path.isfile(file_path):
+            print("File exists.")
+          else:
+            print("File does not exist.")
           # initial_tank_volume = estimated_tank_volume
           
           r_c_1 = watcher_update(
