@@ -301,8 +301,7 @@ while flag:
     
     # Counting camera index
     j = j + 1
-    print(j)
-    if j %3 == 0: 
+    if j == 100: 
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
       try:
@@ -429,7 +428,6 @@ while flag:
             product_id=0,
             lot_info=0,
             extra_info= extra_info_volume)
-          print(r_c_1, "r_c_1")
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
