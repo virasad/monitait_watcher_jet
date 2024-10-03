@@ -34,7 +34,7 @@ gauge_ip_camera = "192.168.101.117"
 gauge_snapshot_url = f"rtsp://{ip_camera_username}:{ip_camera_pass}@{gauge_ip_camera}:554/cam/realmonitor?channel=1&subtype=0" 
 
 # initial_tank_volume = 0
-# estimated_tank_volume = -1
+estimated_tank_volume = -1
 radius = -1
 tank_volume_thresholds = 20
 
@@ -376,7 +376,7 @@ while flag:
                 center = center
             
             if k_index == 1:
-              # estimated_tank_volume = -19.95 + (1.062*radius) - 0.0034 * (radius**2)
+              estimated_tank_volume = abs(-8223.1 + (695.1*radius) - 2.318 * (radius**2))
               radius = i_index[2]
             else:
               # Applynig the hough circles transform 
@@ -395,8 +395,8 @@ while flag:
                     radius = i_index[2]
                             
                     # Estimation the tank height
-                    # estimated_tank_volume = abs(-19.95 + (1.062*radius) - 0.0034 * (radius**2))
-                    estimated_tank_volume = radius
+                    estimated_tank_volume = abs(-8223.1 + (695.1*radius) - 2.318 * (radius**2))
+                    # estimated_tank_volume = radius
                     
                     # if estimated_tank_volume > 50:
                     #   estimated_tank_volume = 0
@@ -406,7 +406,7 @@ while flag:
                   else:
                     pass
           else:
-            # estimated_tank_volume = 1
+            estimated_tank_volume = 1
             radius = 1
           
           # Writing the output image
@@ -415,7 +415,7 @@ while flag:
 
           # Convert to float64
           radius = uint16_number.astype(np.float64)
-          extra_info_volume.update({"tank_volume" : radius})  
+          extra_info_volume.update({"tank_volume" : estimated_tank_volume, "radius":radius})  
           cv2.imwrite(f"{image_path}.jpg", src)
           # initial_tank_volume = estimated_tank_volume
           
