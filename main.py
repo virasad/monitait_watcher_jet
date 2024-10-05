@@ -372,6 +372,7 @@ while flag:
               if x_m <= center[0] <= x_m+w_m and y_m <= center[1] <= y_m+h_m:
                 k_index = k_index + 1
                 radius = i_index[2]
+                cv2.circle(src1, center, radius, (0, 255, 0), 3)
                 center = center
             if k_index == 1:
               estimated_tank_volume = abs(-8223.1 + (695.1*radius) - 2.318 * (radius**2))
@@ -391,7 +392,7 @@ while flag:
                   if x_m <= center[0] <= x_m+w_m and y_m <= center[1] <= y_m+h_m:
                     # circle outline
                     radius = i_index[2]
-                            
+                    cv2.circle(src1, center, radius, (0, 255, 0), 3)
                     # Estimation the tank height
                     estimated_tank_volume = abs(-8223.1 + (695.1*radius) - 2.318 * (radius**2))
                     # estimated_tank_volume = radius
@@ -414,7 +415,7 @@ while flag:
           # Convert to float64
           radius = uint16_number.astype(np.float64)
           extra_info_volume.update({"tank_volume" : estimated_tank_volume, "radius":radius})  
-          cv2.imwrite(f"{image_path}.jpg", src)
+          cv2.imwrite(f"{image_path}.jpg", src1)
           # initial_tank_volume = estimated_tank_volume
           
           r_c_1 = watcher_update(
