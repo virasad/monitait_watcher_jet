@@ -325,10 +325,10 @@ while flag:
 
           # When image size is 1920 * 1080
           left = 608
-          top = 478
+          top = 420
           right = 838
-          bottom = 182
-          
+          bottom = 152
+                             
           # Crop 200 pixels from top and bottom the image
           # src1 = src[286:880, 498:1188]
           src1 = src[top:height-bottom, left:width-right]
@@ -363,20 +363,26 @@ while flag:
                                   param1=50, param2=param2, minRadius=10, maxRadius=250)
           
           k_index = 0
+          di_max = height * width
           # Finding possible circle 
           if circles is not None:
             circles = np.uint16(np.around(circles))
             for i_index in circles[0, :]:
-              center = (i_index[0], i_index[1])
               #Checking if the found circles on the proper area
-              if x_m <= center[0] <= x_m+w_m and y_m <= center[1] <= y_m+h_m:
-                k_index = k_index + 1
-                radius = i_index[2]
-                cv2.circle(src1, center, radius, (0, 255, 0), 3)
-                center = center
+              if x_m <= i_index[0] <= x_m+w_m and y_m <= i_index[1] <= y_m+h_m:
+                d = (i_index[0] - x_m)**2 + (i_index[1] - y_m)**2
+                if d < di_max:
+                  di_max = d
+                  src1 = src[top:height-bottom, left:width-right]
+                  k_index = k_index + 1
+                  radius = i_index[2]
+                  cv2.circle(src1, center, radius, (0, 255, 0), 3)
+                  center = (i_index[0], i_index[1])
             if k_index == 1:
-              estimated_tank_volume = abs(-8223.1 + (695.1*radius) - 2.318 * (radius**2))
+              src1 = src[top:height-bottom, left:width-right]
+              estimated_tank_volume = abs(-4759.1 + (571.7*radius) - 1.525 * (radius**2))
               radius = i_index[2]
+              cv2.circle(src1, center, radius, (0, 255, 0), 2)
             else:
               # Applynig the hough circles transform 
               param2=30
@@ -390,11 +396,12 @@ while flag:
                 for i_index in circles_2[0, :]:
                   center = (i_index[0], i_index[1])
                   if x_m <= center[0] <= x_m+w_m and y_m <= center[1] <= y_m+h_m:
+                    src1 = src[top:height-bottom, left:width-right]
                     # circle outline
                     radius = i_index[2]
                     cv2.circle(src1, center, radius, (0, 255, 0), 3)
                     # Estimation the tank height
-                    estimated_tank_volume = abs(-8223.1 + (695.1*radius) - 2.318 * (radius**2))
+                    estimated_tank_volume = abs(-4759.1 + (571.7*radius) - 1.525 * (radius**2))
                     # estimated_tank_volume = radius
                     
                     # if estimated_tank_volume > 50:
