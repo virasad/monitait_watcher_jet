@@ -529,64 +529,65 @@ while flag:
           print("filter counter")
           ## Filter Contours
           for idx, contour in enumerate(contours):
-              print(idx, "idx")
-              bbox = cv2.boundingRect(contour)
-              area = bbox[-1]*bbox[-2]
-              if area < 1000:
-                continue
-              rot_rect = cv2.minAreaRect(contour)
-              bbox = cv2.boundingRect(contour)
-              (cx,cy), (w,h), rot_angle = rot_rect
-              
-              # Extract the region of interest (ROI)
-              roi = res[int(cy):int(cy+h), int(cx):int(cx+w)]
-              
-              # Convert the ROI to grayscale
-              gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-              
-              mean_brightness = np.mean(gray_roi)
-              
-              rbox = np.int9(cv2.boxPoints(rot_rect))
-              
-              if int(h) >= counter_max_width:
-                print("int(h)", int(h))
-                counter_max_width = int(h)
-                overlap = gauge_functions.is_rectangle_in_white_area(mask, rbox)
-                if overlap:
-                  res = res_1
-                  
-                  # Draw a line 
-                  pt1 = np.array((679, 2), dtype=np.int64)
-                  pt2 = np.array((2, 442), dtype=np.int64)
-                  cv2.line(res, pt1, pt2,(0, 0, 255))
-                  
-                  pt3 = (rbox[1][0], rbox[1][1])
-                  pt4 = (rbox[0][0], rbox[0][1])
-                  # Vector between pt1 and pt2
-                  vector1 = np.array(pt2) - np.array(pt1)
-                  # Vector between pt3 and pt4
-                  vector2 = np.array(pt4) - np.array(pt3)
-                  
-                  # Dot product
-                  dot_product = np.dot(vector1, vector2)
-                  
-                  # Magnitudes
-                  magnitude1 = np.linalg.norm(vector1)
-                  magnitude2 = np.linalg.norm(vector2)
-                  
-                  # Calculate the angle in radians
-                  cos_theta = dot_product / (magnitude1 * magnitude2)
-                  angle_radians = np.arccos(np.clip(cos_theta, -1.0, 1.0))  # Clip to avoid numerical issues
-                  
-                  # Convert to degrees
-                  angle_degrees = np.degrees(angle_radians)
-                  
-                  cv2.drawContours(res, [rbox], 0, (0,255,0), 1)
-                  # cv2.drawContours(res, [rbox], -1, (255, 255, 255), thickness=cv2.FILLED)
-                  text="#{}: {:2.3f}".format(idx, rot_angle)
-                  org=(int(cx)-10,int(cy)-10)
-                  #cv2.putText(res, text=text, org = org, fontFace = cv2.FONT_HERSHEY_PLAIN, fontScale=0.7, color=(0,0,255), thickness = 1, lineType=cv2.LINE_AA)
-                  cv2.putText(res, text=text, org = org, fontFace = 1, fontScale=0.8, color=(0,0,255), thickness = 1, lineType=16)
+            print(idx, "idx")
+            bbox = cv2.boundingRect(contour)
+            area = bbox[-1]*bbox[-2]
+            if area < 1000:
+              continue
+            print("area", area)
+            rot_rect = cv2.minAreaRect(contour)
+            bbox = cv2.boundingRect(contour)
+            (cx,cy), (w,h), rot_angle = rot_rect
+            # Extract the region of interest (ROI)
+            roi = res[int(cy):int(cy+h), int(cx):int(cx+w)]
+            print("conver roi")
+            # Convert the ROI to grayscale
+            gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+            
+            mean_brightness = np.mean(gray_roi)
+            
+            rbox = np.int9(cv2.boxPoints(rot_rect))
+            print("int h")
+            if int(h) >= counter_max_width:
+              print("int(h)", int(h))
+              counter_max_width = int(h)
+              overlap = gauge_functions.is_rectangle_in_white_area(mask, rbox)
+              print("overlap", overlap)
+              if overlap:
+                res = res_1
+                
+                # Draw a line 
+                pt1 = np.array((679, 2), dtype=np.int64)
+                pt2 = np.array((2, 442), dtype=np.int64)
+                cv2.line(res, pt1, pt2,(0, 0, 255))
+                
+                pt3 = (rbox[1][0], rbox[1][1])
+                pt4 = (rbox[0][0], rbox[0][1])
+                # Vector between pt1 and pt2
+                vector1 = np.array(pt2) - np.array(pt1)
+                # Vector between pt3 and pt4
+                vector2 = np.array(pt4) - np.array(pt3)
+                
+                # Dot product
+                dot_product = np.dot(vector1, vector2)
+                
+                # Magnitudes
+                magnitude1 = np.linalg.norm(vector1)
+                magnitude2 = np.linalg.norm(vector2)
+                
+                # Calculate the angle in radians
+                cos_theta = dot_product / (magnitude1 * magnitude2)
+                angle_radians = np.arccos(np.clip(cos_theta, -1.0, 1.0))  # Clip to avoid numerical issues
+                
+                # Convert to degrees
+                angle_degrees = np.degrees(angle_radians)
+                
+                cv2.drawContours(res, [rbox], 0, (0,255,0), 1)
+                # cv2.drawContours(res, [rbox], -1, (255, 255, 255), thickness=cv2.FILLED)
+                text="#{}: {:2.3f}".format(idx, rot_angle)
+                org=(int(cx)-10,int(cy)-10)
+                #cv2.putText(res, text=text, org = org, fontFace = cv2.FONT_HERSHEY_PLAIN, fontScale=0.7, color=(0,0,255), thickness = 1, lineType=cv2.LINE_AA)
+                cv2.putText(res, text=text, org = org, fontFace = 1, fontScale=0.8, color=(0,0,255), thickness = 1, lineType=16)
 
           cv2.imwrite(f"{image_path_2}.jpg", res)
           extra_info_gauge.update({"estimated_psi" : abs(angle_degrees)}) 
