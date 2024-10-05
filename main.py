@@ -442,8 +442,8 @@ while flag:
     #   print(f"File {image_path} has been removed.")
     # else:
     #   print(f"File {image_path} does not exist, so no action was taken.")
-    print(j)
-    if j % 3 == 0:
+
+    if j >= 190:
       j=0   # reset counting index
       # Start to capture image from the Gauge
       try:
@@ -504,8 +504,6 @@ while flag:
           # Step 5: Apply the mask to extract the circular area
           na = cv2.bitwise_and(na, na, mask=binary_mask2)
 
-          print("threshold")
-
           ## Threshold to binary
           retval, threshed = cv2.threshold(na, thresh = 80,  maxval=250, type=cv2.THRESH_BINARY)
           
@@ -523,11 +521,9 @@ while flag:
           cv2.drawContours(res, contours, -1, (255,0,0), 1)
 
           counter_max_width = 0
-          print("filter counter")
           angle_degrees = 0
           ## Filter Contours
           for idx, contour in enumerate(contours):
-            print(idx, "idx")
             bbox = cv2.boundingRect(contour)
             # area = bbox[-1]*bbox[-2]
             # if area < 1000:
@@ -538,15 +534,11 @@ while flag:
             (cx,cy), (w,h), rot_angle = rot_rect
             # Extract the region of interest (ROI)
             roi = res[int(cy):int(cy+h), int(cx):int(cx+w)]
-            print("conver roi")
             
             rbox = np.intp(cv2.boxPoints(rot_rect))
-            print("int h")
             if int(h) >= counter_max_width:
-              print("int(h)", int(h))
               counter_max_width = int(h)
               overlap = gauge_functions.is_rectangle_in_white_area(mask, rbox)
-              print("overlap", overlap)
               if overlap:
                 res = region.copy()
                 
@@ -585,7 +577,6 @@ while flag:
 
           cv2.imwrite(f"{image_path_2}.jpg", res)
           extra_info_gauge.update({"estimated_psi" : abs(angle_degrees)}) 
-          print('angle_degrees', angle_degrees)
           
           r_c_1 = watcher_update(
             register_id=hostname+"-1",
@@ -597,7 +588,6 @@ while flag:
             lot_info=0,
             extra_info= extra_info_gauge)
           
-          print(r_c_1, "r_c_1")
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
@@ -608,7 +598,7 @@ while flag:
         pass
     
     # Reset image capturing index 
-    if j > 210:
+    if j > 200:
       j = 0
     else:
       pass
