@@ -471,7 +471,19 @@ while flag:
           cv2.imwrite(f"{image_path_2}.jpg", src1)
           gauge_number = 5
           file_type='jpg'
+          
+          r_c_1 = watcher_update(
+            register_id=hostname+"-1",
+            quantity=0,
+            defect_quantity=0,
+            send_img=True ,
+            image_path=f"{image_path_2}.jpg",
+            product_id=0,
+            lot_info=0,
+            extra_info= {})
+          print("r_c_1 response", r_c_1)
           print("start try")
+          print(d)
           try:
             # name the calibration image of your gauge 'gauge-#.jpg', for example 'gauge-5.jpg'.  It's written this way so you can easily try multiple images
             min_angle, max_angle, min_value, max_value, units, x, y, r = gauge_functions.calibrate_gauge(src, gauge_number, file_type)
@@ -486,16 +498,7 @@ while flag:
             initial_psi = abs(estimated_psi)
           extra_info_gauge.update({"estimated_psi" : abs(estimated_psi)}) 
           
-          r_c_1 = watcher_update(
-            register_id=hostname+"-1",
-            quantity=0,
-            defect_quantity=0,
-            send_img=True ,
-            image_path=f"{image_path_2}.jpg",
-            product_id=0,
-            lot_info=0,
-            extra_info= extra_info_gauge)
-          print("r_c_1 response", r_c_1)
+          
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
