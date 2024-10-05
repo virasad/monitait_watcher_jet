@@ -457,18 +457,17 @@ while flag:
           date_hour, date_minute, date_second = time.strftime("%H"), time.strftime("%M"), time.strftime("%S")
           image_number = f"{date.year}_{date.month}_{date.day}_{date_hour}_{date_minute}_{date_second}_g"
           image_path_2 = "/home/pi/monitait_watcher_jet/" + str(image_number)
-          # Get the original image dimensions to crop the captured image 
-          height, width, channels = src.shape
           
           # Specify the number of pixels to crop from the left and right sides
-          left = 1
+          left = 0
           top = 112
           right = 336
-          bottom = 804
-          
+          bottom = 704
+          # Get the original image dimensions to crop the captured image 
+          height, width, channels = src.shape
           # Crop 200 pixels from top and bottom the image
           img = src[top:height-bottom, left:width-right]
-          
+          height, width, channels = img.shape
           binary_mask2 =None
 
           # rotate the image
@@ -517,16 +516,15 @@ while flag:
           ## Find contours
           contours = cv2.findContours(opened, mode=cv2.RETR_LIST, method=cv2.CHAIN_APPROX_SIMPLE)[-2]
 
-
           ## Draw Contours
           res = region.copy()
-          res_1 = region.copy()
 
           mask = cv2.imread('mask.jpg', cv2.IMREAD_GRAYSCALE)
           cv2.drawContours(res, contours, -1, (255,0,0), 1)
 
           counter_max_width = 0
           print("filter counter")
+          angle_degrees = 0
           ## Filter Contours
           for idx, contour in enumerate(contours):
             print(idx, "idx")
@@ -550,7 +548,7 @@ while flag:
               overlap = gauge_functions.is_rectangle_in_white_area(mask, rbox)
               print("overlap", overlap)
               if overlap:
-                res = res_1
+                res = region.copy()
                 
                 # Draw a line 
                 pt1 = np.array((679, 2), dtype=np.int64)
