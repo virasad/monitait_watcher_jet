@@ -505,7 +505,7 @@ while flag:
           # Step 5: Apply the mask to extract the circular area
           na = cv2.bitwise_and(na, na, mask=binary_mask2)
 
-          print(1)
+          print("threshold")
 
           ## Threshold to binary
           retval, threshed = cv2.threshold(na, thresh = 80,  maxval=250, type=cv2.THRESH_BINARY)
@@ -526,9 +526,10 @@ while flag:
           cv2.drawContours(res, contours, -1, (255,0,0), 1)
 
           counter_max_width = 0
-          print(2)
+          print("filter counter")
           ## Filter Contours
           for idx, contour in enumerate(contours):
+              print(idx, "idx")
               bbox = cv2.boundingRect(contour)
               area = bbox[-1]*bbox[-2]
               if area < 1000:
@@ -545,7 +546,7 @@ while flag:
               
               mean_brightness = np.mean(gray_roi)
               
-              rbox = np.int0(cv2.boxPoints(rot_rect))
+              rbox = np.int9(cv2.boxPoints(rot_rect))
               
               if int(h) >= counter_max_width:
                 counter_max_width = int(h)
@@ -588,7 +589,7 @@ while flag:
 
           cv2.imwrite(f"{image_path_2}.jpg", res)
           extra_info_gauge.update({"estimated_psi" : abs(angle_degrees)}) 
-          print(3)
+          print('angle_degrees', angle_degrees)
           
           r_c_1 = watcher_update(
             register_id=hostname+"-1",
