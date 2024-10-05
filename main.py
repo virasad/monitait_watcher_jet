@@ -442,16 +442,15 @@ while flag:
     #   print(f"File {image_path} has been removed.")
     # else:
     #   print(f"File {image_path} does not exist, so no action was taken.")
-    print(j)
-    if j % 2 == 0:
+    
+    if j > 200:
       j=0   # reset counting index
       # Start to capture image from the Gauge
       try:
         video_cap = cv2.VideoCapture(gauge_snapshot_url)
         
         if video_cap.isOpened():
-          print("start capturing")
-          ret, src1 = video_cap.read()
+          ret, src = video_cap.read()
           video_cap.release()
           
           date = datetime.datetime.now()
@@ -459,31 +458,19 @@ while flag:
           image_number = f"{date.year}_{date.month}_{date.day}_{date_hour}_{date_minute}_{date_second}_g"
           image_path_2 = "/home/pi/monitait_watcher_jet/" + str(image_number)
           # Get the original image dimensions to crop the captured image 
-          height, width, channels = src1.shape
-          print("image captured shape is", src1.shape)
+          height, width, channels = src.shape
+          
           # Specify the number of pixels to crop from the left and right sides
           left_crop = 100
           right_crop = 2
           bottom_crop = 700
           
           # Crop 200 pixels from top and bottom the image
-          src = src1[:height-bottom_crop, left_crop:width-right_crop]
-          cv2.imwrite(f"{image_path_2}.jpg", src1)
+          src = src[:height-bottom_crop, left_crop:width-right_crop]
+          cv2.imwrite(f"{image_path_2}.jpg", src)
           gauge_number = 5
           file_type='jpg'
           
-          r_c_1 = watcher_update(
-            register_id=hostname+"-1",
-            quantity=0,
-            defect_quantity=0,
-            send_img=True ,
-            image_path=f"{image_path_2}.jpg",
-            product_id=0,
-            lot_info=0,
-            extra_info= {})
-          print("r_c_1 response", r_c_1)
-          print("start try")
-          print(d)
           try:
             # name the calibration image of your gauge 'gauge-#.jpg', for example 'gauge-5.jpg'.  It's written this way so you can easily try multiple images
             min_angle, max_angle, min_value, max_value, units, x, y, r = gauge_functions.calibrate_gauge(src, gauge_number, file_type)
@@ -498,7 +485,15 @@ while flag:
             initial_psi = abs(estimated_psi)
           extra_info_gauge.update({"estimated_psi" : abs(estimated_psi)}) 
           
-          
+          r_c_1 = watcher_update(
+            register_id=hostname+"-1",
+            quantity=0,
+            defect_quantity=0,
+            send_img=True ,
+            image_path=f"{image_path_2}.jpg",
+            product_id=0,
+            lot_info=0,
+            extra_info= extra_info_gauge)
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
