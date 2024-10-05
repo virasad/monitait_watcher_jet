@@ -9,6 +9,30 @@ import numpy as np
 #import paho.mqtt.client as mqtt
 import time
 
+def is_rectangle_in_white_area(mask, rect_points):
+    """
+    Check if any part of a rectangle defined by its 4 corner points lies in the white area of a mask.
+
+    :param mask: Binary mask (0 for black, 255 for white).
+    :param rect_points: Array of 4 points (x, y) representing the corners of the rectangle.
+    :return: True if any part of the rectangle is in the white area, otherwise False.
+    """
+    # Convert the corner points to a numpy array
+    rect_points = np.array(rect_points, dtype=np.int32)
+    
+    # Create a mask to represent the rectangle
+    rect_mask = np.zeros_like(mask)  # same size as the mask
+    cv2.fillPoly(rect_mask, [rect_points], 255)  # fill the polygon defined by the points
+    
+    # Perform a bitwise AND to get the overlapping region between the rectangle and the white area of the mask
+    overlap = cv2.bitwise_and(mask, rect_mask)
+    
+    # Check if there are any white pixels in the overlap region
+    white_pixels_in_rect = cv2.countNonZero(overlap)  # number of white pixels in the overlap region
+    
+    # If any white pixels are found in the overlap, return True (partial intersection)
+    return white_pixels_in_rect > 0
+
 def avg_circles(circles, b):
     avg_x=0
     avg_y=0

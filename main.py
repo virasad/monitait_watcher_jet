@@ -442,8 +442,8 @@ while flag:
     #   print(f"File {image_path} has been removed.")
     # else:
     #   print(f"File {image_path} does not exist, so no action was taken.")
-    
-    if j > 200:
+    print(j)
+    if j % 3 == 0:
       j=0   # reset counting index
       # Start to capture image from the Gauge
       try:
@@ -461,29 +461,134 @@ while flag:
           height, width, channels = src.shape
           
           # Specify the number of pixels to crop from the left and right sides
-          left_crop = 100
-          right_crop = 2
-          bottom_crop = 700
+          left = 1
+          top = 112
+          right = 336
+          bottom = 804
           
           # Crop 200 pixels from top and bottom the image
-          src = src[:height-bottom_crop, left_crop:width-right_crop]
-          cv2.imwrite(f"{image_path_2}.jpg", src)
-          gauge_number = 5
-          file_type='jpg'
+          img = src[top:height-bottom, left:width-right]
           
-          try:
-            # name the calibration image of your gauge 'gauge-#.jpg', for example 'gauge-5.jpg'.  It's written this way so you can easily try multiple images
-            min_angle, max_angle, min_value, max_value, units, x, y, r = gauge_functions.calibrate_gauge(src, gauge_number, file_type)
-                  
+          binary_mask2 =None
 
-            #feed an image (or frame) to get the current value, based on the calibration, by default uses same image as calibration
-            # img = cv2.imread('gauge-%s.%s' % (gauge_number, file_type))
-            estimated_psi = gauge_functions.get_current_value(src, min_angle, max_angle, min_value, max_value, x, y, r, gauge_number, file_type) 
-            initial_psi = abs(estimated_psi)
-          except:
-            estimated_psi = 0
-            initial_psi = abs(estimated_psi)
-          extra_info_gauge.update({"estimated_psi" : abs(estimated_psi)}) 
+          # rotate the image
+          center = (width/2, height/2)
+
+          # Define rotation angle in degrees
+          angle = -64
+          scale = 1
+          
+          # Calculate rotation matrix
+          rotation_matrix = cv2.getRotationMatrix2D(center, angle, scale)
+
+          # Apply the computed rotation matrix to the image
+          rotated_image = cv2.warpAffine(img, rotation_matrix, (width, height))
+
+          ## Threshold in grayscale
+          gray = cv2.cvtColor(rotated_image, cv2.COLOR_BGR2GRAY)
+          retval, threshed = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY )
+
+          ## Find wathc region by counting the projector
+          h,w = rotated_image.shape[:2]
+          x = np.sum(threshed, axis=0)
+          y = np.sum(threshed, axis=1)
+          yy = np.nonzero(y>(w/3*255))[0]
+          xx = np.nonzero(x > (h/3*255))[0]
+          region = rotated_image[yy[0]:yy[-1], xx[0]:xx[-1]]
+
+          ## Change to LAB space
+          lab = cv2.cvtColor(region, cv2.COLOR_BGR2LAB)
+          l,a,b = cv2.split(lab)
+
+          ## normalized the a channel to all dynamic range
+          na = cv2.normalize(a, None, alpha=0, beta=125, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+          # Step 5: Apply the mask to extract the circular area
+          na = cv2.bitwise_and(na, na, mask=binary_mask2)
+
+          print(1)
+
+          ## Threshold to binary
+          retval, threshed = cv2.threshold(na, thresh = 80,  maxval=250, type=cv2.THRESH_BINARY)
+          
+          ## Do morphology
+          kernel = cv2.getStructuringElement( cv2.MORPH_ELLIPSE , (3,3))
+          opened = cv2.morphologyEx(threshed, cv2.MORPH_OPEN,kernel)
+          res = np.hstack((threshed, opened))
+          ## Find contours
+          contours = cv2.findContours(opened, mode=cv2.RETR_LIST, method=cv2.CHAIN_APPROX_SIMPLE)[-2]
+
+
+          ## Draw Contours
+          res = region.copy()
+          res_1 = region.copy()
+
+          mask = cv2.imread('mask.jpg', cv2.IMREAD_GRAYSCALE)
+          cv2.drawContours(res, contours, -1, (255,0,0), 1)
+
+          counter_max_width = 0
+          print(2)
+          ## Filter Contours
+          for idx, contour in enumerate(contours):
+              bbox = cv2.boundingRect(contour)
+              area = bbox[-1]*bbox[-2]
+              if area < 1000:
+                continue
+              rot_rect = cv2.minAreaRect(contour)
+              bbox = cv2.boundingRect(contour)
+              (cx,cy), (w,h), rot_angle = rot_rect
+              
+              # Extract the region of interest (ROI)
+              roi = res[int(cy):int(cy+h), int(cx):int(cx+w)]
+              
+              # Convert the ROI to grayscale
+              gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+              
+              mean_brightness = np.mean(gray_roi)
+              
+              rbox = np.int0(cv2.boxPoints(rot_rect))
+              
+              if int(h) >= counter_max_width:
+                counter_max_width = int(h)
+                overlap = is_rectangle_in_white_area(mask, rbox)
+                if overlap:
+                    res = res_1
+                    
+                    # Draw a line 
+                    pt1 = np.array((679, 2), dtype=np.int64)
+                    pt2 = np.array((2, 442), dtype=np.int64)
+                    cv2.line(res, pt1, pt2,(0, 0, 255))
+                    
+                    pt3 = (rbox[1][0], rbox[1][1])
+                    pt4 = (rbox[0][0], rbox[0][1])
+                    # Vector between pt1 and pt2
+                    vector1 = np.array(pt2) - np.array(pt1)
+                    # Vector between pt3 and pt4
+                    vector2 = np.array(pt4) - np.array(pt3)
+                    
+                    # Dot product
+                    dot_product = np.dot(vector1, vector2)
+                    
+                    # Magnitudes
+                    magnitude1 = np.linalg.norm(vector1)
+                    magnitude2 = np.linalg.norm(vector2)
+                    
+                    # Calculate the angle in radians
+                    cos_theta = dot_product / (magnitude1 * magnitude2)
+                    angle_radians = np.arccos(np.clip(cos_theta, -1.0, 1.0))  # Clip to avoid numerical issues
+                    
+                    # Convert to degrees
+                    angle_degrees = np.degrees(angle_radians)
+                    
+                    cv2.drawContours(res, [rbox], 0, (0,255,0), 1)
+                    # cv2.drawContours(res, [rbox], -1, (255, 255, 255), thickness=cv2.FILLED)
+                    text="#{}: {:2.3f}".format(idx, rot_angle)
+                    org=(int(cx)-10,int(cy)-10)
+                    #cv2.putText(res, text=text, org = org, fontFace = cv2.FONT_HERSHEY_PLAIN, fontScale=0.7, color=(0,0,255), thickness = 1, lineType=cv2.LINE_AA)
+                    cv2.putText(res, text=text, org = org, fontFace = 1, fontScale=0.8, color=(0,0,255), thickness = 1, lineType=16)
+
+          cv2.imwrite(f"{image_path_2}.jpg", res)
+          extra_info_gauge.update({"estimated_psi" : abs(angle_degrees)}) 
+          print(3)
           
           r_c_1 = watcher_update(
             register_id=hostname+"-1",
@@ -494,6 +599,8 @@ while flag:
             product_id=0,
             lot_info=0,
             extra_info= extra_info_gauge)
+          
+          print(r_c_1, "r_c_1")
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
