@@ -531,22 +531,18 @@ while flag:
           for idx, contour in enumerate(contours):
             print(idx, "idx")
             bbox = cv2.boundingRect(contour)
-            area = bbox[-1]*bbox[-2]
-            if area < 1000:
-              continue
-            print("area", area)
+            # area = bbox[-1]*bbox[-2]
+            # if area < 1000:
+            #   continue
+            # print("area", area)
             rot_rect = cv2.minAreaRect(contour)
             bbox = cv2.boundingRect(contour)
             (cx,cy), (w,h), rot_angle = rot_rect
             # Extract the region of interest (ROI)
             roi = res[int(cy):int(cy+h), int(cx):int(cx+w)]
             print("conver roi")
-            # Convert the ROI to grayscale
-            gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
             
-            mean_brightness = np.mean(gray_roi)
-            
-            rbox = np.int9(cv2.boxPoints(rot_rect))
+            rbox = np.intp(cv2.boxPoints(rot_rect))
             print("int h")
             if int(h) >= counter_max_width:
               print("int(h)", int(h))
