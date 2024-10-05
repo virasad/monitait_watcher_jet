@@ -467,7 +467,7 @@ while flag:
           bottom_crop = 700
           
           # Crop 200 pixels from top and bottom the image
-          src = src[:height-bottom_crop, left_crop:width-right_crop]
+          src = src1[:height-bottom_crop, left_crop:width-right_crop]
           cv2.imwrite(f"{image_path_2}.jpg", src1)
           gauge_number = 5
           file_type='jpg'
