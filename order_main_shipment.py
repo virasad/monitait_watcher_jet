@@ -535,7 +535,6 @@ class MainWindow(QMainWindow):
                                     pass
                     
                     if shipment_db_checking_flag:
-                        print("\n local db cheking process to sending request")
                         # Getting the scanned order list from order DB
                         # Getting to detect in which batch changes is happend
                         updated_shipment_number_data_ = self.db.order_read(self.shipment_number)
@@ -544,11 +543,9 @@ class MainWindow(QMainWindow):
                             for batch in item['batches']:
                                 # Check if the order finished or not
                                 is_done_value = updated_shipment_number_data_[5]
-                                print(is_done_value, "is_done_valuea.")
                                 if is_done_value == 0:
                                     main_quantity = main_shipment_orders_dict[batch['batch_uuid']]['quantity']
                                     current_quantity = int(batch['quantity'])
-                                    print(main_quantity, current_quantity, batch['assigned_id'])
                                     if main_quantity != current_quantity:
                                         # Update the quantity of the scanned box 
                                         main_shipment_orders_dict[batch['batch_uuid']]['quantity'] = current_quantity

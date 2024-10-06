@@ -556,10 +556,10 @@ class Scanner:
         self.VALUE_UP = 0
         self.VALUE_DOWN = 1
         self.barcode_string_output = ''
-        for path in evdev.list_devices():
-            print('path:', path)
+        # for path in evdev.list_devices():
+        #     print('path:', path)
         self.dev = self.get_device()
-        print('selected device:', self.dev)
+        # print('selected device:', self.dev)
         try:
             self.dev.grab()
         except:
