@@ -497,9 +497,9 @@ class MainWindow(QMainWindow):
                 db_st = time.time()
                 if True:
                     
-                    is_done_one = self.db.order_read(is_done=1, status="onetable")
+                    is_done_one = self.db.order_read(is_done=1)
                     print("\n Removing part, is done 1", is_done_one)
-                    is_done_zero = self.db.order_read(is_done=0, status="onetable")
+                    is_done_zero = self.db.order_read(is_done=0)
                     print("\n Removing part, is done 0", is_done_zero)
                     # # Removed all datafrom table
                     # table_delete = self.db.order_delete(status="total")
