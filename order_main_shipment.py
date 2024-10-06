@@ -542,6 +542,7 @@ class MainWindow(QMainWindow):
                         updated_shipment_number_data = json.loads(updated_shipment_number_data_[4])
                         for item in updated_shipment_number_data:
                             for batch in item['batches']:
+                                print(batch['batch_uuid'], "batch['batch_uuid']")
                                 # Check if the order finished or not
                                 is_done_value = updated_shipment_number_data_[3]
                                 if is_done_value == 0:
