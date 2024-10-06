@@ -177,12 +177,9 @@ class MainWindow(QMainWindow):
         # self.timer.start()
         
         
-        print("-----------------------")
-        
         self.last_server_signal = time.time()
         self.last_image = time.time()
         db_checking_flag = True
-        order_request_time_interval = 15 # Every "order_request_time_interval" secends, the order is requested from Monitait
         self.old_barcode = ''
         a_initial = 0
         b_initial = 0
@@ -203,45 +200,8 @@ class MainWindow(QMainWindow):
             order_counting_start_flag = False # To start counting process, this flag set as True when OR detected
             image_name = ""
             extra_info = {}
-            st_1 = time.time()
             # Getting order from batch API
             while not order_counting_start_flag:
-                ##
-                # The watcher updates his order DB until OR is scanned
-                if True:
-                    if time.time() - st_1 > order_request_time_interval or db_checking_flag:
-                        db_checking_flag = False
-                        st_1 = time.time()
-                        print("\n start to adding the data")
-                        main_dict = requests.get(self.shipment_url, headers=self.headers) 
-                        # Added all batches to a list
-                        main_json = main_dict.json()  
-                        print('\n main_json', main_json)
-                        results = main_json['results']
-                        
-                        # Added the order batches to the order DB
-                        s3 = time.time()
-                        for entry in results:
-                            print(entry["shipment_number"], "shipment number")
-                            is_exist = self.db.order_write(shipment_number=entry["shipment_number"], 
-                                                           destination=entry["destination"], 
-                                                           shipment_type=entry["type"],
-                                                           orders=json.dumps(entry['orders']), is_done=0)
-                            if is_exist:
-                                print(f"{entry['shipment_number']} is not exists")
-                            else:
-                                print(f"{entry['shipment_number']} is exists")
-                            
-                            # Added shipment number to the shipment list
-                            if entry['shipment_number'] in self.shipment_numbers_list:
-                                pass
-                            else:
-                                self.shipment_numbers_list.append(entry['shipment_number'])
-                        print("\n Time of adding shipment to DB", time.time() - s3, "self.shipment_numbers_list", self.shipment_numbers_list)
-                    else:
-                        pass
-                # except Exception as ex1:
-                #     print(f"run > waiting to the OR barcode {ex1}")
                 ##
                 # Reading the scanner to detect OR and start the counting process
                 if True:
@@ -252,9 +212,11 @@ class MainWindow(QMainWindow):
                         self.shipment_number = str(shipment_scanned_barcode)
                     else:
                         self.shipment_number = shipment_scanned_barcode_byte_string
-                    if self.shipment_number in self.shipment_numbers_list :
-                        # Getting the scanned order list from order DB
-                        self.shipment_db = self.db.order_read(self.shipment_number)
+                    
+                    # Getting the scanned order list from order DB
+                    self.shipment_db = self.db.order_read(self.shipment_number)
+                    
+                    if self.shipment_db != []:
                         self.destination = self.shipment_db[2]
                         self.shipment_type = self.shipment_db[3]
                         json_data1 = json.loads(self.shipment_db[4])
@@ -318,7 +280,6 @@ class MainWindow(QMainWindow):
                         #     pass
                     else:
                         print(f"There is no such shipment number, {self.shipment_number}, {type(self.shipment_number)}")
-
                 # except Exception as ex2:
                 #     print(f"run > reading scanner to detect OR {ex2}")
             ##
@@ -330,7 +291,6 @@ class MainWindow(QMainWindow):
                         print("In order counting while loop, waiting to the OK signal")
                         test_flag = False
                     # Reading the box entrance signal
-                    print("showing live stream if live stream be alive")
                     # if self.live_stream_flag:
                     #     self.cap = cv2.VideoCapture(live_stream_url)  # Capture from the default camera
                     #     self.update_frame()
@@ -477,8 +437,46 @@ class MainWindow(QMainWindow):
         b_1 = 0
         st = time.time() 
         db_st = time.time()
+        db_checking_flag = True
         shipment_db_checking_flag = False
+        order_request_time_interval = 15 # Every "order_request_time_interval" secends, the order is requested from Monitait
+        st_1 = time.time()
         while not self.stop_thread:
+            
+            # The watcher updates his order DB until OR is scanned
+            if True:
+                if time.time() - st_1 > order_request_time_interval or db_checking_flag:
+                    db_checking_flag = False
+                    st_1 = time.time()
+                    print("\n start to adding the data to the local database")
+                    main_dict = requests.get(self.shipment_url, headers=self.headers) 
+                    # Added all batches to a list
+                    main_json = main_dict.json()  
+                    results = main_json['results']
+                    
+                    # Added the order batches to the order DB
+                    s3 = time.time()
+                    for entry in results:
+                        is_exist = self.db.order_write(shipment_number=entry["shipment_number"], 
+                                                        destination=entry["destination"], 
+                                                        shipment_type=entry["type"],
+                                                        orders=json.dumps(entry['orders']), is_done=0)
+                        if is_exist:
+                            print(f"{entry['shipment_number']} is not exists")
+                        else:
+                            print(f"{entry['shipment_number']} is exists")
+                        
+                        # Added shipment number to the shipment list
+                        if entry['shipment_number'] in self.shipment_numbers_list:
+                            pass
+                        else:
+                            self.shipment_numbers_list.append(entry['shipment_number'])
+                    print("\n Time of adding shipment to DB", time.time() - s3, "self.shipment_numbers_list", self.shipment_numbers_list)
+                else:
+                    pass
+            # except Exception as ex1:
+            #     print(f"run > waiting to the OR barcode {ex1}")
+            
             # Removing the order DB every 12 hours
             if time.time() - db_st > self.order_db_remove_interval:
                 db_st = time.time()
@@ -499,35 +497,30 @@ class MainWindow(QMainWindow):
                 
             # Checking order db every {self.db_order_checking_interval} second
             if time.time() - st > self.db_order_checking_interval and self.shipment_number != "":
-                checking_order_db = False
                 st = time.time() 
                 if True:
                     # Checking order list on the order DB to catch the quantity value
-                    if (self.shipment_number in self.shipment_numbers_list) and (self.shipment_number != previus_shipment_number):
-                        while not checking_order_db:
-                            main_shipment_orders_dict = {}
-                            # The shaipment changed, so all data 
-                            previus_shipment_number = self.shipment_number
-                            main_shipment_number_data = self.db.order_read(self.shipment_number)
-                            if main_shipment_number_data != []:
-                                checking_order_db = True
-                                shipment_db_checking_flag = True
-                                print(f"DB, {previus_shipment_number}")
-                                main_shipment_orders = json.loads(main_shipment_number_data[4])
-                                for item in main_shipment_orders:
-                                    order_id = item['id']
-                                    for batch in item['batches']:
-                                        if batch['quantity'] != 0:
-                                            # Put all batches of a shipment orders to dictionary
-                                            main_shipment_orders_dict[batch['batch_uuid']]={
-                                                                            'quantity': int(batch['quantity']),
-                                                                            'assigned_id': batch['assigned_id'],
-                                                                            'order_id': order_id}
-                                        else:
-                                            pass
-                            else: 
-                                checking_order_db = False
-                                shipment_db_checking_flag = False
+                    main_shipment_number_data = self.db.order_read(self.shipment_number)
+                    if (main_shipment_number_data != []) and (self.shipment_number != previus_shipment_number):
+                        print(f"Shipment values: shipment number {self.shipment_number}, previus shipment number {previus_shipment_number}")
+                        main_shipment_orders_dict = {}
+                        # The shaipment changed, so all data 
+                        previus_shipment_number = self.shipment_number
+                        shipment_db_checking_flag = True
+                        main_shipment_orders = json.loads(main_shipment_number_data[4])
+                        for item in main_shipment_orders:
+                            order_id = item['id']
+                            for batch in item['batches']:
+                                if batch['quantity'] != 0:
+                                    # Put all batches of a shipment orders to dictionary
+                                    main_shipment_orders_dict[batch['batch_uuid']]={
+                                                                    'quantity': int(batch['quantity']),
+                                                                    'assigned_id': batch['assigned_id'],
+                                                                    'order_id': order_id}
+                                else:
+                                    pass
+                    else: 
+                        shipment_db_checking_flag = False
                     
                     if shipment_db_checking_flag:
                         # Getting the scanned order list from order DB
@@ -583,9 +576,9 @@ if __name__ == "__main__":
                     usb_serial_flag=usb_serial_flag)
     
     print("update table")
-    Thread(target=counter.update_table).start()
-    time.sleep(0.1)
     Thread(target=counter.db_order_checker).start()
+    time.sleep(0.1)
+    Thread(target=counter.update_table).start()
     time.sleep(0.1)
     counter.show()
     sys.exit(app.exec_())
