@@ -99,24 +99,24 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.title_table)  # Add title above the table
         layout.addWidget(self.table_widget)
         print("Checking the live stream url")
-        # Checking whether the live stream URL is alive or not
-        try:
-            response = requests.head(live_stream_url, allow_redirects=True)
-            if response.status_code == 200: 
-                self.live_stream_flag = True
-            else:
-                self.live_stream_flag = False
-        except:
-            self.live_stream_flag = True
-            pass
+        # # Checking whether the live stream URL is alive or not
+        # try:
+        #     response = requests.head(live_stream_url, allow_redirects=True)
+        #     if response.status_code == 200: 
+        #         self.live_stream_flag = True
+        #     else:
+        #         self.live_stream_flag = False
+        # except:
+        #     self.live_stream_flag = True
+        #     pass
 
         print("Adding widget if live stream is True")
-        if self.live_stream_flag:
-            # Create a QLabel for the image
-            self.image_label = QLabel(self)
-            layout.addWidget(self.image_label, alignment=Qt.AlignLeft | Qt.AlignTop)
-        else:
-            pass
+        # if self.live_stream_flag:
+        #     # Create a QLabel for the image
+        #     self.image_label = QLabel(self)
+        #     layout.addWidget(self.image_label, alignment=Qt.AlignLeft | Qt.AlignTop)
+        # else:
+        #     pass
         
         # Create a container widget to hold the layout and image
         container = QWidget()
@@ -162,13 +162,13 @@ class MainWindow(QMainWindow):
             # # Set the QImage on the QLabel
             self.image_label.setPixmap(QPixmap.fromImage(qimg))
         
-    def closeEvent(self, event):
-        print(1)
-        if self.live_stream_flag:
-            self.cap.release()  # Release the video capture on close
-            event.accept()
-        else:
-            pass
+    # def closeEvent(self, event):
+    #     print(1)
+    #     if self.live_stream_flag:
+    #         self.cap.release()  # Release the video capture on close
+    #         event.accept()
+    #     else:
+    #         pass
     
     def update_table(self):
 
@@ -310,12 +310,12 @@ class MainWindow(QMainWindow):
                             self.table_widget.setItem(row_position, 4, QTableWidgetItem(str(total_quantity)))
                             self.table_widget.setItem(row_position, 5, QTableWidgetItem(item["delivery_unit"]))
                             
-                            # self.table_widget.setRowCount(0)  # Clear the table
-                        if self.live_stream_flag:
-                            self.cap = cv2.VideoCapture(live_stream_url)  # Capture from the default camera
-                            self.update_frame()
-                        else:
-                            pass
+                        #     # self.table_widget.setRowCount(0)  # Clear the table
+                        # if self.live_stream_flag:
+                        #     self.cap = cv2.VideoCapture(live_stream_url)  # Capture from the default camera
+                        #     self.update_frame()
+                        # else:
+                        #     pass
                     else:
                         print(f"There is no such shipment number, {self.shipment_number}, {type(self.shipment_number)}")
 
@@ -330,12 +330,12 @@ class MainWindow(QMainWindow):
                         print("In order counting while loop, waiting to the OK signal")
                         test_flag = False
                     # Reading the box entrance signal
-                    print("showing flag if live stream be alive")
-                    if self.live_stream_flag:
-                        self.cap = cv2.VideoCapture(live_stream_url)  # Capture from the default camera
-                        self.update_frame()
-                    else:
-                        pass
+                    print("showing live stream if live stream be alive")
+                    # if self.live_stream_flag:
+                    #     self.cap = cv2.VideoCapture(live_stream_url)  # Capture from the default camera
+                    #     self.update_frame()
+                    # else:
+                    #     pass
                     
                     ts = time.time()
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
