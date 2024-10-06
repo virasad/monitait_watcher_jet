@@ -461,9 +461,10 @@ class MainWindow(QMainWindow):
                     
                     for index in range(pagination_number):
                         page = index + 1
-                        shipment_url = f'https://app.monitait.com/api/factory/shipment-orders/?status=not_started&page={page}'
+                        print(page)
+                        page_shipment_url = f'https://app.monitait.com/api/factory/shipment-orders/?status=not_started&page={page}'
                         
-                        main_dict = requests.get(self.shipment_url, headers=self.headers) 
+                        main_dict = requests.get(page_shipment_url, headers=self.headers) 
                         # Added all batches to a list
                         main_json = main_dict.json()  
                         
