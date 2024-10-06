@@ -76,7 +76,6 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
         else:
             try:
                 response = requests.post(URL, data=json.dumps(DATA), headers={"content-type": "application/json"})
-                print(response.text)
                 return True
             except Exception as e:
                 print(f"watcher update no image {e}")
@@ -137,12 +136,15 @@ class DB:
             print(f"DB > read {e}")
             return []
     
-    def order_read(self, shipment_number=None, status="onetable"):
+    def order_read(self, shipment_number=None, is_done=None, status="onetable"):
         try:
             if status == "total": 
                 self.cursor.execute('SELECT * FROM watcher_order_table')
             elif status == "onetable":
-                self.cursor.execute('SELECT * FROM watcher_order_table WHERE shipment_number = ?', (shipment_number,))
+                if shipment_number is not None:
+                    self.cursor.execute('SELECT * FROM watcher_order_table WHERE shipment_number = ?', (shipment_number,))
+                if is_done is not None:
+                    self.cursor.execute('SELECT * FROM watcher_order_table WHERE is_done = ?', (is_done,))
             rows = self.cursor.fetchall()
             if len(rows) == 0:
                 return []

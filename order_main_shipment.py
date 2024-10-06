@@ -492,20 +492,26 @@ class MainWindow(QMainWindow):
                 print(f"run > waiting to the OR barcode {ex1}")
             
             # Removing the order DB every 12 hours
-            if time.time() - db_st > self.order_db_remove_interval:
+            # if time.time() - db_st > self.order_db_remove_interval:
+            if True:
                 db_st = time.time()
                 if True:
-                    # Removed all datafrom table
-                    table_delete = self.db.order_delete(status="total")
-                    # Getting update the watcher db
-                    shipment_resp = requests.get(self.shipment_url, headers=self.headers) 
-                    # Added all batches to a list
-                    main_json = main_dict.json()  
-                    results = main_json['results']
-                    # Added the order batches to the order DB
-                    for entry in results:
-                        # Save the orders to database
-                        is_exist = self.db.order_write(shipment_number=entry["shipment_number"], orders=json.dumps(entry['orders']), is_done=0)
+                    
+                    is_done_one = self.db.order_read(shipment_number=None, is_done=1, status="onetable")
+                    print("\n Removing part, is done 1", is_done_one)
+                    is_done_zero = self.db.order_read(shipment_number=None, is_done=0, status="onetable")
+                    print("\n Removing part, is done 1", is_done_zero)
+                    # # Removed all datafrom table
+                    # table_delete = self.db.order_delete(status="total")
+                    # # Getting update the watcher db
+                    # shipment_resp = requests.get(self.shipment_url, headers=self.headers) 
+                    # # Added all batches to a list
+                    # main_json = main_dict.json()  
+                    # results = main_json['results']
+                    # # Added the order batches to the order DB
+                    # for entry in results:
+                    #     # Save the orders to database
+                    #     is_exist = self.db.order_write(shipment_number=entry["shipment_number"], orders=json.dumps(entry['orders']), is_done=0)
                 # except Exception as ex1:
                 #     print(f"db_order_checker > removing database {ex1}")
                 
