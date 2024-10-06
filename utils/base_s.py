@@ -143,13 +143,19 @@ class DB:
             elif status == "onetable":
                 if shipment_number is not None:
                     self.cursor.execute('SELECT * FROM watcher_order_table WHERE shipment_number = ?', (shipment_number,))
+                    rows = self.cursor.fetchall()
+                    if len(rows) == 0:
+                        return []
+                    else:
+                        return rows[0]
+                    
                 if is_done is not None:
                     self.cursor.execute('SELECT * FROM watcher_order_table WHERE is_done = ?', (is_done,))
-            rows = self.cursor.fetchall()
-            if len(rows) == 0:
-                return []
-            else:
-                return rows
+                    rows = self.cursor.fetchall()
+                    if len(rows) == 0:
+                        return []
+                    else:
+                        return rows
         except Exception as e_or:
             print(f"DB > read order {e_or}")
             return []

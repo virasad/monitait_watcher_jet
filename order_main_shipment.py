@@ -497,10 +497,34 @@ class MainWindow(QMainWindow):
                 db_st = time.time()
                 if True:
                     
-                    is_done_one = self.db.order_read(is_done=1)
-                    print("\n Removing part, is done 1", is_done_one)
-                    is_done_zero = self.db.order_read(is_done=0)
-                    print("\n Removing part, is done 0", is_done_zero)
+                    completed_orders_list = self.db.order_read(is_done=1)
+                    if completed_orders_list == []:
+                        print("There are no completed order")
+                    else:
+                        for item in completed_orders_list:
+                            orders = json.loads(item[4])
+                            orders_num = len(orders)
+                            status_code_number = 0
+                            for ord in orders:
+                                ord_id = ord["id"]
+                                current_quantity = int(ord['quantity'])
+                                batch_uuid = ord['batches'][0]['batch_uuid']
+                                assigned_id = ord['batches'][0]['assigned_id']
+                                
+                                batch_report_body = {"batch_uuid":batch_uuid, "assigned_id":assigned_id,
+                                                                "type": "new", "station": int(self.stationID),
+                                                                "order_id": int(ord_id),
+                                                                "defected_qty": 0, "added_quantity": current_quantity, 
+                                                                "defect_image":[], "action_type": "stop"}  
+
+                                send_shipment_response = requests.post(self.sendshipment_url, json=batch_report_body, headers=self.headers)
+                                if send_shipment_response.status_code == 200:
+                                    status_code_number += 1
+                                else:
+                                    pass
+                                print("\n Send batch status code", send_shipment_response.status_code, "Post time", time.time()-s2)
+                            
+            
                     # # Removed all datafrom table
                     # table_delete = self.db.order_delete(status="total")
                     # # Getting update the watcher db
