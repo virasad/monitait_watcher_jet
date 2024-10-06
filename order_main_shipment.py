@@ -444,7 +444,7 @@ class MainWindow(QMainWindow):
         while not self.stop_thread:
             
             # The watcher updates his order DB until OR is scanned
-            if True:
+            try:
                 if time.time() - st_1 > order_request_time_interval or db_checking_flag:
                     db_checking_flag = False
                     st_1 = time.time()
@@ -488,8 +488,8 @@ class MainWindow(QMainWindow):
                         # print("\n Time of adding shipment to DB", time.time() - s3, "self.shipment_numbers_list", self.shipment_numbers_list)
                 else:
                     pass
-            # except Exception as ex1:
-            #     print(f"run > waiting to the OR barcode {ex1}")
+            except Exception as ex1:
+                print(f"run > waiting to the OR barcode {ex1}")
             
             # Removing the order DB every 12 hours
             if time.time() - db_st > self.order_db_remove_interval:
@@ -510,7 +510,7 @@ class MainWindow(QMainWindow):
                 #     print(f"db_order_checker > removing database {ex1}")
                 
             # Checking order db every {self.db_order_checking_interval} second
-            if time.time() - st > self.db_order_checking_interval and self.shipment_number != "":
+            if (time.time() - st > self.db_order_checking_interval) and (self.shipment_number != "") and (not db_checking_flag):
                 st = time.time() 
                 if True:
                     # Checking order list on the order DB to catch the quantity value
@@ -542,12 +542,13 @@ class MainWindow(QMainWindow):
                         updated_shipment_number_data = json.loads(updated_shipment_number_data_[4])
                         for item in updated_shipment_number_data:
                             for batch in item['batches']:
-                                print(batch['batch_uuid'], "batch['batch_uuid']")
                                 # Check if the order finished or not
                                 is_done_value = updated_shipment_number_data_[3]
+                                print(is_done_value, "is_done_value")
                                 if is_done_value == 0:
                                     main_quantity = main_shipment_orders_dict[batch['batch_uuid']]['quantity']
                                     current_quantity = int(batch['quantity'])
+                                    print(main_quantity, current_quantity, batch['assigned_id'])
                                     if main_quantity != current_quantity:
                                         # Update the quantity of the scanned box 
                                         main_shipment_orders_dict[batch['batch_uuid']]['quantity'] = current_quantity
