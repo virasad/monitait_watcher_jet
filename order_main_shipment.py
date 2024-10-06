@@ -98,7 +98,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
         layout.addWidget(self.title_table)  # Add title above the table
         layout.addWidget(self.table_widget)
-        
+        print("Checking the live stream url")
         # Checking whether the live stream URL is alive or not
         try:
             response = requests.head(live_stream_url, allow_redirects=True)
@@ -110,7 +110,7 @@ class MainWindow(QMainWindow):
             self.live_stream_flag = True
             pass
 
-        
+        print("Adding widget if live stream is True")
         if self.live_stream_flag:
             # Create a QLabel for the image
             self.image_label = QLabel(self)
@@ -216,6 +216,7 @@ class MainWindow(QMainWindow):
                         main_dict = requests.get(self.shipment_url, headers=self.headers) 
                         # Added all batches to a list
                         main_json = main_dict.json()  
+                        print('\n main_json', main_json)
                         results = main_json['results']
                         
                         # Added the order batches to the order DB
@@ -328,7 +329,7 @@ class MainWindow(QMainWindow):
                         print("In order counting while loop, waiting to the OK signal")
                         test_flag = False
                     # Reading the box entrance signal
-                    
+                    print("showing flag if live stream be alive")
                     if self.live_stream_flag:
                         self.cap = cv2.VideoCapture(live_stream_url)  # Capture from the default camera
                         self.update_frame()
@@ -575,12 +576,12 @@ if __name__ == "__main__":
     else:
         usb_serial_flag = False
         scanner = Scanner()
-
+    print("start counter")
     counter = MainWindow(arduino=arduino, db=db, camera=camera, scanner=scanner, shipment_url=shipment_url,
                     stationID_url= stationID_url, sendshipment_url=sendshipment_url, register_id=register_id,
                     usb_serial_flag=usb_serial_flag)
     
-
+    print("update table")
     Thread(target=counter.update_table).start()
     time.sleep(0.1)
     Thread(target=counter.db_order_checker).start()
