@@ -543,8 +543,8 @@ class MainWindow(QMainWindow):
                         for item in updated_shipment_number_data:
                             for batch in item['batches']:
                                 # Check if the order finished or not
-                                is_done_value = updated_shipment_number_data_[3]
-                                print(is_done_value, "is_done_value")
+                                is_done_value = updated_shipment_number_data_[5]
+                                print(is_done_value, "is_done_valuea.")
                                 if is_done_value == 0:
                                     main_quantity = main_shipment_orders_dict[batch['batch_uuid']]['quantity']
                                     current_quantity = int(batch['quantity'])
