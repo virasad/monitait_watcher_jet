@@ -413,7 +413,7 @@ class MainWindow(QMainWindow):
                                                 self.db.order_update(shipment_number=self.shipment_number,
                                                                     orders= json.dumps(self.shipment_orders),is_done = 1)
                                         else:
-                                            quantity_item = QTableWidgetItem(str(abs((remainded_quantity))))
+                                            quantity_item = QTableWidgetItem(str(abs(total_quantity-item['quantity'])))
                                     remainded_quantity = int(item['quantity'])
                                     self.table_widget.setItem(row_position, 2, quantity_item)
                                     self.table_widget.setItem(row_position, 3, QTableWidgetItem(str(remainded_quantity)))  # Set the quantity item
