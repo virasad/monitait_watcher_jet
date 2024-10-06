@@ -16,7 +16,7 @@ from PyQt5 import QtGui
 register_id = str(socket.gethostname())
 
 ## URLs slack
-shipment_url = 'https://develop-app.monitait.com/api/factory/shipment-orders/?status=not_started&page=1'
+shipment_url = 'https://app.monitait.com/api/factory/shipment-orders/?status=not_started&page=1'
 stationID_url = f'https://app.monitait.com/api/factory/watcher/{register_id}/'
 sendshipment_url = 'https://app.monitait.com/api/elastic-search/send-batch-report/'
 live_stream_url = 'http://192.168.125.103:5000/video_feed/1'
