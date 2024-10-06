@@ -513,7 +513,6 @@ class MainWindow(QMainWindow):
             if time.time() - st > self.db_order_checking_interval and self.shipment_number != "":
                 st = time.time() 
                 if True:
-                    print("\n local db cheking process")
                     # Checking order list on the order DB to catch the quantity value
                     main_shipment_number_data = self.db.order_read(self.shipment_number)
                     if (main_shipment_number_data != []) and (self.shipment_number != previus_shipment_number):
@@ -534,10 +533,9 @@ class MainWindow(QMainWindow):
                                                                     'order_id': order_id}
                                 else:
                                     pass
-                    else: 
-                        shipment_db_checking_flag = False
                     
                     if shipment_db_checking_flag:
+                        print("\n local db cheking process to sending request")
                         # Getting the scanned order list from order DB
                         # Getting to detect in which batch changes is happend
                         updated_shipment_number_data_ = self.db.order_read(self.shipment_number)
