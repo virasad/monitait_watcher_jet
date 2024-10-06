@@ -452,26 +452,41 @@ class MainWindow(QMainWindow):
                     main_dict = requests.get(self.shipment_url, headers=self.headers) 
                     # Added all batches to a list
                     main_json = main_dict.json()  
-                    results = main_json['results']
+                    # Checking how much page should be checks?
+                    count = main_json['count']
+                    if count % 10 == 0 :
+                        pagination_number = count // 10
+                    else:
+                        pagination_number = count // 10
                     
-                    # Added the order batches to the order DB
-                    s3 = time.time()
-                    for entry in results:
-                        is_exist = self.db.order_write(shipment_number=entry["shipment_number"], 
-                                                        destination=entry["destination"], 
-                                                        shipment_type=entry["type"],
-                                                        orders=json.dumps(entry['orders']), is_done=0)
-                        if is_exist:
-                            print(f"{entry['shipment_number']} is not exists")
-                        else:
-                            print(f"{entry['shipment_number']} is exists")
+                    for index in range(pagination_number):
+                        page = index + 1
+                        shipment_url = f'https://app.monitait.com/api/factory/shipment-orders/?status=not_started&page={page}'
                         
-                        # Added shipment number to the shipment list
-                        if entry['shipment_number'] in self.shipment_numbers_list:
-                            pass
-                        else:
-                            self.shipment_numbers_list.append(entry['shipment_number'])
-                    print("\n Time of adding shipment to DB", time.time() - s3, "self.shipment_numbers_list", self.shipment_numbers_list)
+                        main_dict = requests.get(self.shipment_url, headers=self.headers) 
+                        # Added all batches to a list
+                        main_json = main_dict.json()  
+                        
+                        results = main_json['results']
+                        
+                        # Added the order batches to the order DB
+                        s3 = time.time()
+                        for entry in results:
+                            is_exist = self.db.order_write(shipment_number=entry["shipment_number"], 
+                                                            destination=entry["destination"], 
+                                                            shipment_type=entry["type"],
+                                                            orders=json.dumps(entry['orders']), is_done=0)
+                            if is_exist:
+                                print(f"{entry['shipment_number']} is not exists")
+                            else:
+                                print(f"{entry['shipment_number']} is exists")
+                            
+                            # Added shipment number to the shipment list
+                            if entry['shipment_number'] in self.shipment_numbers_list:
+                                pass
+                            else:
+                                self.shipment_numbers_list.append(entry['shipment_number'])
+                        print("\n Time of adding shipment to DB", time.time() - s3, "self.shipment_numbers_list", self.shipment_numbers_list)
                 else:
                     pass
             # except Exception as ex1:
