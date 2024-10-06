@@ -439,7 +439,7 @@ class MainWindow(QMainWindow):
         db_st = time.time()
         db_checking_flag = True
         shipment_db_checking_flag = False
-        order_request_time_interval = 15 # Every "order_request_time_interval" secends, the order is requested from Monitait
+        order_request_time_interval = 100 # Every "order_request_time_interval" secends, the order is requested from Monitait
         st_1 = time.time()
         while not self.stop_thread:
             
@@ -461,13 +461,11 @@ class MainWindow(QMainWindow):
                     
                     for index in range(pagination_number):
                         page = index + 1
-                        print(page)
                         page_shipment_url = f'https://app.monitait.com/api/factory/shipment-orders/?status=not_started&page={page}'
                         
                         main_dict = requests.get(page_shipment_url, headers=self.headers) 
                         # Added all batches to a list
                         main_json = main_dict.json()  
-                        
                         results = main_json['results']
                         
                         # Added the order batches to the order DB
@@ -477,17 +475,17 @@ class MainWindow(QMainWindow):
                                                             destination=entry["destination"], 
                                                             shipment_type=entry["type"],
                                                             orders=json.dumps(entry['orders']), is_done=0)
-                            if is_exist:
-                                print(f"{entry['shipment_number']} is not exists")
-                            else:
-                                print(f"{entry['shipment_number']} is exists")
+                            # if is_exist:
+                            #     print(f"{entry['shipment_number']} is not exists")
+                            # else:
+                            #     print(f"{entry['shipment_number']} is exists")
                             
                             # Added shipment number to the shipment list
                             if entry['shipment_number'] in self.shipment_numbers_list:
                                 pass
                             else:
                                 self.shipment_numbers_list.append(entry['shipment_number'])
-                        print("\n Time of adding shipment to DB", time.time() - s3, "self.shipment_numbers_list", self.shipment_numbers_list)
+                        # print("\n Time of adding shipment to DB", time.time() - s3, "self.shipment_numbers_list", self.shipment_numbers_list)
                 else:
                     pass
             # except Exception as ex1:
@@ -515,6 +513,7 @@ class MainWindow(QMainWindow):
             if time.time() - st > self.db_order_checking_interval and self.shipment_number != "":
                 st = time.time() 
                 if True:
+                    print("\n local db cheking process")
                     # Checking order list on the order DB to catch the quantity value
                     main_shipment_number_data = self.db.order_read(self.shipment_number)
                     if (main_shipment_number_data != []) and (self.shipment_number != previus_shipment_number):
