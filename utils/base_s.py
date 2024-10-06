@@ -149,7 +149,7 @@ class DB:
             if len(rows) == 0:
                 return []
             else:
-                return rows[0]
+                return rows
         except Exception as e_or:
             print(f"DB > read order {e_or}")
             return []
