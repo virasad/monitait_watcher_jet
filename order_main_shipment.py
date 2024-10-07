@@ -82,6 +82,7 @@ class MainWindow(QMainWindow):
         self.title_table.setColumnWidth(3, 500)  
         self.title_table.setRowHeight(0, 100)  
         self.title_table.setRowHeight(1, 100)  
+        self.title_table.setRowHeight(2, 100)  
 
         # Set layout direction to right-to-left
         self.title_table.setLayoutDirection(Qt.RightToLeft)
