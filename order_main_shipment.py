@@ -233,14 +233,15 @@ class MainWindow(QMainWindow):
                         self.destination = self.shipment_db[2]
                         self.shipment_type = self.shipment_db[3]
                         json_data1 = json.loads(self.shipment_db[4])
-                        
+                        print("\n The orders before update", json_data1)
                         # Update the quantity by another calculation URL
                         for ord in json_data1:
                             order_id = ord['id'] 
                             calculation_url = f"https://app.monitait.com/api/elastic-search/batch-report-calculations/?station_id={self.stationID}&order_id={order_id}"
                             order_remaind_value = requests.get(calculation_url, headers=self.headers)
-                            print("order_remaind_value.status_code", order_remaind_value.status_code, "order_id", order_id, "json data")
                             if order_remaind_value.status_code == 200:
+                                print("order_remaind_value.status_code", order_remaind_value.status_code, "order_id", order_id, "json data")
+                                order_remaind_value = order_remaind_value.json() 
                                 station_reports = order_remaind_value[0]['station_reports'][0]
                                 batch_quantity = int(station_reports['batch_quantity'])
                                 station_results = station_reports['result'][0] 
@@ -251,10 +252,8 @@ class MainWindow(QMainWindow):
                                 ord['quantity'] = batch_quantity - total_completed_quantity
                             else:
                                 pass
-                            
-                        
-                        
-                        print("\n The orders", json_data1)
+                           
+                        print("\n The orders after update", json_data1)
                         # Checking is the scanned order in the order DB or not
                         if self.shipment_db != []:
                             order_counting_start_flag = True
@@ -568,22 +567,22 @@ class MainWindow(QMainWindow):
                                 order_id = ord['id'] 
                                 calculation_url = f"https://app.monitait.com/api/elastic-search/batch-report-calculations/?station_id={self.stationID}&order_id={order_id}"
                                 order_remaind_value = requests.get(calculation_url, headers=self.headers)
-                                print("order_remaind_value.status_code", order_remaind_value.status_code, "order_id", order_id)
                                 if order_remaind_value.status_code == 200:
-                                    print(order_remaind_value, 1)
+                                    print(" entry['orders'] before update", entry['orders'])
+                                    print("\n order_remaind_value.status_code", order_remaind_value.status_code, "order_id", order_id)
                                     order_remaind_value = order_remaind_value.json() 
-                                    print(order_remaind_value, 2)
                                     station_reports = order_remaind_value[0]['station_reports'][0]
                                     batch_quantity = int(station_reports['batch_quantity'])
                                     station_results = station_reports['result'][0] 
                                     total_completed_quantity = station_results['total_completed_quantity']
                                     total_remained_quantity = station_results['total_remained_quantity']
+                                    print("batch_quantity", batch_quantity,"completed", total_completed_quantity,"remainded", total_remained_quantity)
                                     # Update the order
                                     ord['batches'][0]['quantity'] = batch_quantity - total_completed_quantity
                                     ord['quantity'] = batch_quantity - total_completed_quantity
                                 else:
                                     pass
-                                
+                            print("\n entry['orders'] after update", entry['orders'])
                             is_exist = self.db.order_write(shipment_number=entry["shipment_number"], 
                                                             destination=entry["destination"], 
                                                             shipment_type=entry["type"],
