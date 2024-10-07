@@ -203,6 +203,8 @@ class MainWindow(QMainWindow):
             self.stationID = stationID_json['station']['id']
         except Exception as ex:
             print(f"headers except {ex}")
+            
+        print("stationID_url", self.stationID)
         ##
         ## Main WHILE loop
         while not self.stop_thread:
