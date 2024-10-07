@@ -557,7 +557,8 @@ class MainWindow(QMainWindow):
                 if True:
                     # Checking order list on the order DB to catch the quantity value
                     main_shipment_number_data = self.db.order_read(self.shipment_number)
-                    if (main_shipment_number_data != []) and (self.shipment_number != previus_shipment_number):
+                    print(main_shipment_number_data, "main_shipment_number_data", self.shipment_number, "self.shipment_number")
+                    if (main_shipment_number_data != None) and (self.shipment_number != previus_shipment_number):
                         print(f"Shipment values: shipment number {self.shipment_number}, previus shipment number {previus_shipment_number}")
                         main_shipment_orders_dict = {}
                         # The shaipment changed, so all data 
