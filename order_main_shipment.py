@@ -148,7 +148,7 @@ class MainWindow(QMainWindow):
         self.db_order_checking_interval = 10 # Secends
         self.watcher_live_signal = 60 * 5
         self.take_picture_interval = 60 * 5
-        self.order_db_remove_interval = 12 * 3600  # Convert hours to secends
+        self.order_db_remove_interval = 30  # Convert hours to secends
     
     def update_frame(self):
         ret, frame = self.cap.read()
@@ -457,7 +457,7 @@ class MainWindow(QMainWindow):
                     if count % 10 == 0 :
                         pagination_number = count // 10
                     else:
-                        pagination_number = count // 10
+                        pagination_number = count // 10 + 1
                     
                     for index in range(pagination_number):
                         page = index + 1
@@ -492,18 +492,18 @@ class MainWindow(QMainWindow):
                 print(f"run > waiting to the OR barcode {ex1}")
             
             # Removing the order DB every 12 hours
-            # if time.time() - db_st > self.order_db_remove_interval:
-            if True:
+            if time.time() - db_st > self.order_db_remove_interval:
                 db_st = time.time()
                 if True:
-                    
+                    # Find the completed orders from watcher local db
                     completed_orders_list = self.db.order_read(is_done=1)
                     if completed_orders_list == []:
-                        print("There are no completed order")
+                        print("\nThere are no completed orders")
                     else:
+                        print("\n Found completed orders", completed_orders_list)
                         for item in completed_orders_list:
                             orders = json.loads(item[4])
-                            orders_num = len(orders)
+                            orders_number = len(orders)
                             status_code_number = 0
                             for ord in orders:
                                 ord_id = ord["id"]
@@ -522,7 +522,7 @@ class MainWindow(QMainWindow):
                                     status_code_number += 1
                                 else:
                                     pass
-                                print("\n Send batch status code", send_shipment_response.status_code, "Post time", time.time()-s2)
+                            print(f"\n status code number {status_code_number}, order numbers {orders_number}")
                             
             
                     # # Removed all datafrom table
