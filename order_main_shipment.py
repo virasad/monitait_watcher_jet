@@ -438,7 +438,7 @@ class MainWindow(QMainWindow):
                                     print("The barcode is not on the list")
                                     self.wrong_barcode += 1
                                     self.item_row2_col3 = QTableWidgetItem(f"{self.wrong_barcode}")  
-                                    self.item_row2_col3.setBackground(QColor("darkRed"))  
+                                    self.item_row2_col3.setBackground(QColor("red"))  
                                     time.sleep(0.1)
                                     self.item_row2_col3.setBackground(QColor("white")) 
                                     self.title_table.setItem(2, 3, self.item_row2_col3) 
@@ -614,7 +614,6 @@ class MainWindow(QMainWindow):
                 if True:
                     # Checking order list on the order DB to catch the quantity value
                     main_shipment_number_data = self.db.order_read(self.shipment_number)
-                    print(main_shipment_number_data, "main_shipment_number_data", self.shipment_number, "self.shipment_number")
                     if (main_shipment_number_data != None) and (self.shipment_number != previus_shipment_number):
                         print(f"Shipment values: shipment number {self.shipment_number}, previus shipment number {previus_shipment_number}")
                         main_shipment_orders_dict = {}
