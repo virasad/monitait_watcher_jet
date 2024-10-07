@@ -243,19 +243,12 @@ class MainWindow(QMainWindow):
                         # Updating the table
                         # Create and set values 
                         self.item_row0_col1 = QTableWidgetItem(f"{self.shipment_number}")  
-                        # self.item_row1_col2.setFont(self.bold_font)
                         
                         self.item_row0_col3 = QTableWidgetItem(f"{self.shipment_type}")  
-                        # self.item_row1_col4.setFont(self.bold_font)
-
                         self.item_row1_col1 = QTableWidgetItem(f"{self.destination}")  
-                        # self.item_row2_col2.setFont(self.bold_font)  
                         
                         self.item_row2_col1 = QTableWidgetItem(f"{0}")  
-                        # self.item_row3_col2.setFont(self.bold_font)  
-                        
                         self.item_row2_col3 = QTableWidgetItem(f"{0}")  
-                        # self.item_row3_col4.setFont(self.bold_font)  
                         
                         # Set the stylesheet for the table to increase text size
                         self.title_table.setStyleSheet("font-size: 25px;")  # Adjust size as needed
@@ -379,8 +372,16 @@ class MainWindow(QMainWindow):
                                                 
                                                 print("run > The current assigned id quantity value (remainded value):", batch['quantity'])
                                             elif item['quantity']  == 0:
-                                                quantity_item = QTableWidgetItem(str(int(batch['quantity'])))
-                                                remainded_item  = QTableWidgetItem(str(int(item['quantity'])))
+                                                
+                                                counted_quantity = abs(total_quantity-item['quantity'])
+
+                                                quantity_item = QTableWidgetItem(str(counted_quantity))
+                                                quantity_item.setBackground(QColor("green"))  # Highlight background in red
+                                                
+                                                remainded_quantity = int(item['quantity'])
+                                                remainded_item = QTableWidgetItem(str(remainded_quantity))
+                                                remainded_item.setBackground(QColor("yellow"))
+                                                
                                                 
                                                 self.eject[item["id"]] += 1
                                                 eject_quantity = int(self.eject[item["id"]])
@@ -394,8 +395,14 @@ class MainWindow(QMainWindow):
                                                 self.arduino.gpio32_0.on()
                                                 time.sleep(1)
                                             elif all(item['quantity'] == 0 for item in self.shipment_orders):
-                                                quantity_item = QTableWidgetItem(str(int(batch['quantity'])))
-                                                remainded_item  = QTableWidgetItem(str(int(item['quantity'])))
+                                                counted_quantity = abs(total_quantity-item['quantity'])
+
+                                                quantity_item = QTableWidgetItem(str(counted_quantity))
+                                                quantity_item.setBackground(QColor("green"))  # Highlight background in red
+                                                
+                                                remainded_quantity = int(item['quantity'])
+                                                remainded_item = QTableWidgetItem(str(remainded_quantity))
+                                                remainded_item.setBackground(QColor("yellow"))
                                                 
                                                 self.eject[item["id"]] += 1
                                                 eject_quantity = int(self.eject[item["id"]])
