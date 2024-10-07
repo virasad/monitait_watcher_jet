@@ -570,6 +570,9 @@ class MainWindow(QMainWindow):
                                 order_remaind_value = requests.get(calculation_url, headers=self.headers)
                                 print("order_remaind_value.status_code", order_remaind_value.status_code, "order_id", order_id)
                                 if order_remaind_value.status_code == 200:
+                                    print(order_remaind_value, 1)
+                                    order_remaind_value = order_remaind_value.json() 
+                                    print(order_remaind_value, 2)
                                     station_reports = order_remaind_value[0]['station_reports'][0]
                                     batch_quantity = int(station_reports['batch_quantity'])
                                     station_results = station_reports['result'][0] 
