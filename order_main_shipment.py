@@ -250,6 +250,7 @@ class MainWindow(QMainWindow):
                                 # Update the order
                                 ord['batches'][0]['quantity'] = batch_quantity - total_completed_quantity
                                 ord['quantity'] = batch_quantity - total_completed_quantity
+                                print("order_remaind_value after update", ord, "order_id", order_id, "json data")
                             else:
                                 pass
                            
@@ -580,9 +581,9 @@ class MainWindow(QMainWindow):
                                     # Update the order
                                     ord['batches'][0]['quantity'] = batch_quantity - total_completed_quantity
                                     ord['quantity'] = batch_quantity - total_completed_quantity
+                                    print("\n entry['orders'] after update", entry['orders'])
                                 else:
                                     pass
-                            print("\n entry['orders'] after update", entry['orders'])
                             is_exist = self.db.order_write(shipment_number=entry["shipment_number"], 
                                                             destination=entry["destination"], 
                                                             shipment_type=entry["type"],
