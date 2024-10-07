@@ -39,39 +39,39 @@ class MainWindow(QMainWindow):
         self.title_table.setRowCount(3)  # Set 2 rows for 'a' and 'b'
         self.title_table.setColumnCount(4)  # Set 1 column for values
         
-        self.item_row1_col1 = QTableWidgetItem("شماره محموله")  
-        self.item_row1_col1.setBackground(QColor("gray"))  
-        self.item_row1_col1.setFont(self.bold_font)
-        self.title_table.setItem(0, 0, self.item_row1_col1)
+        self.item_row0_col0 = QTableWidgetItem("شماره محموله")  
+        self.item_row0_col0.setBackground(QColor("gray"))  
+        self.item_row0_col0.setFont(self.bold_font)
+        self.title_table.setItem(0, 0, self.item_row0_col0)
         
-        self.item_row1_col3 = QTableWidgetItem("نوع محموله")  
-        self.item_row1_col3.setBackground(QColor("gray"))  
+        self.item_row0_col2 = QTableWidgetItem("نوع محموله")  
+        self.item_row0_col2.setBackground(QColor("gray"))  
+        self.item_row0_col2.setFont(self.bold_font)  
+        self.title_table.setItem(0, 2, self.item_row0_col2)  
+        
+        self.item_row1_col0 = QTableWidgetItem("مقصد")  
+        self.item_row1_col0.setFont(self.bold_font)    
+        self.item_row1_col0.setBackground(QColor("gray")) 
+        self.title_table.setItem(1, 0, self.item_row1_col0)  
+        
+        self.item_row1_col2 = QTableWidgetItem("مبدا")  
+        self.item_row1_col2.setBackground(QColor("gray"))  
+        self.item_row1_col2.setFont(self.bold_font)  
+        self.title_table.setItem(1, 2, self.item_row1_col2)  
+        
+        self.item_row1_col3 = QTableWidgetItem("ساوه")  
         self.item_row1_col3.setFont(self.bold_font)  
-        self.title_table.setItem(0, 2, self.item_row1_col3)  
+        self.title_table.setItem(1, 3, self.item_row1_col3) 
         
-        self.item_row2_col1 = QTableWidgetItem("مقصد")  
-        self.item_row2_col1.setFont(self.bold_font)    
-        self.item_row2_col1.setBackground(QColor("gray")) 
-        self.title_table.setItem(1, 0, self.item_row2_col1)  
+        self.item_row2_col0 = QTableWidgetItem("شناسایی نشده")  
+        self.item_row2_col0.setBackground(QColor("gray"))  
+        self.item_row2_col0.setFont(self.bold_font)  
+        self.title_table.setItem(2, 0, self.item_row2_col0)
         
-        self.item_row2_col3 = QTableWidgetItem("مبدا")  
-        self.item_row2_col3.setBackground(QColor("gray"))  
-        self.item_row2_col3.setFont(self.bold_font)  
-        self.title_table.setItem(1, 2, self.item_row2_col3)  
-        
-        self.item_row2_col4 = QTableWidgetItem("ساوه")  
-        self.item_row2_col4.setFont(self.bold_font)  
-        self.title_table.setItem(1, 3, self.item_row2_col4) 
-        
-        self.item_row3_col1 = QTableWidgetItem("شناسایی نشده")  
-        self.item_row3_col1.setBackground(QColor("gray"))  
-        self.item_row3_col1.setFont(self.bold_font)  
-        self.title_table.setItem(2, 0, self.item_row3_col1)
-        
-        self.item_row3_col3 = QTableWidgetItem("اشتباه")  
-        self.item_row3_col3.setBackground(QColor("gray"))  
-        self.item_row3_col3.setFont(self.bold_font)  
-        self.title_table.setItem(2, 2, self.item_row3_col3) 
+        self.item_row2_col2 = QTableWidgetItem("اشتباه")  
+        self.item_row2_col2.setBackground(QColor("gray"))  
+        self.item_row2_col2.setFont(self.bold_font)  
+        self.title_table.setItem(2, 2, self.item_row2_col2) 
          
         # Set the column and rows width and height
         self.title_table.setColumnWidth(0, 200)  
@@ -243,22 +243,30 @@ class MainWindow(QMainWindow):
                             print(f"The order of shipment order {self.shipment_number} is empty")
                         # Updating the table
                         # Create and set values 
-                        self.item_row1_col2 = QTableWidgetItem(f"{self.shipment_number}")  
-                        self.item_row1_col2.setFont(self.bold_font)
+                        self.item_row0_col1 = QTableWidgetItem(f"{self.shipment_number}")  
+                        # self.item_row1_col2.setFont(self.bold_font)
                         
-                        self.item_row1_col4 = QTableWidgetItem(f"{self.shipment_type}")  
-                        self.item_row1_col4.setFont(self.bold_font)
+                        self.item_row0_col3 = QTableWidgetItem(f"{self.shipment_type}")  
+                        # self.item_row1_col4.setFont(self.bold_font)
 
-                        self.item_row2_col2 = QTableWidgetItem(f"{self.destination}")  
-                        self.item_row2_col2.setFont(self.bold_font)  
+                        self.item_row1_col1 = QTableWidgetItem(f"{self.destination}")  
+                        # self.item_row2_col2.setFont(self.bold_font)  
+                        
+                        self.item_row2_col1 = QTableWidgetItem(f"{0}")  
+                        # self.item_row3_col2.setFont(self.bold_font)  
+                        
+                        self.item_row2_col3 = QTableWidgetItem(f"{0}")  
+                        # self.item_row3_col4.setFont(self.bold_font)  
                         
                         # Set the stylesheet for the table to increase text size
                         self.title_table.setStyleSheet("font-size: 25px;")  # Adjust size as needed
                     
                         # Set values for the rows and columns
-                        self.title_table.setItem(0, 1, self.item_row1_col2)   
-                        self.title_table.setItem(0, 3, self.item_row1_col4)   
-                        self.title_table.setItem(1, 1, self.item_row2_col2)   
+                        self.title_table.setItem(0, 1, self.item_row0_col1)   
+                        self.title_table.setItem(0, 3, self.item_row0_col3)   
+                        self.title_table.setItem(1, 1, self.item_row1_col1)   
+                        self.title_table.setItem(2, 1, self.item_row2_col1)   
+                        self.title_table.setItem(2, 3, self.item_row2_col3) 
                         
                         self.previous_quantities = {item["id"]: item["quantity"] for item in json_data1}
                         self.total_quantities = {item["id"]: item["quantity"] for item in json_data1}
@@ -423,8 +431,8 @@ class MainWindow(QMainWindow):
                                 if not box_in_order_batch:
                                     print("The barcode is not on the list")
                                     self.wrong_barcode += 1
-                                    self.item_row3_col3 = QTableWidgetItem(f"{self.wrong_barcode}")  
-                                    self.item_row3_col3.setFont(self.bold_font)  
+                                    self.item_row2_col3 = QTableWidgetItem(f"{self.wrong_barcode}")  
+                                    self.title_table.setItem(2, 3, self.item_row2_col3) 
                                     
                                     # The detected barcode is not on the order list
                                     self.arduino.gpio32_0.off()
@@ -435,6 +443,11 @@ class MainWindow(QMainWindow):
                     elif abs(b - b_initial) >= 1:
                         print("Recived NG signal")
                         b_initial = b
+                        
+                        self.not_detected_barcode += 1
+                        self.not_detected_barcode = QTableWidgetItem(f"{self.not_detected_barcode}")  
+                        self.title_table.setItem(2, 3, self.item_row2_col3) 
+                        
                         # Duo to reciving NG signal, the box should be ejected
                         self.arduino.gpio32_0.off()
                         time.sleep(1)
