@@ -229,7 +229,7 @@ class MainWindow(QMainWindow):
                             self.shipment_number = shipment_scanned_barcode_byte_string
                     else:
                         exit_flag = False
-                        print("Exit barcode scanned", self.scanned_box_barcode)
+                        print("****Exit barcode scanned", self.scanned_box_barcode)
                         self.shipment_number = self.scanned_box_barcode
                     
                     # Getting the scanned order list from order DB
@@ -577,19 +577,15 @@ class MainWindow(QMainWindow):
                                 calculation_url = f"https://app.monitait.com/api/elastic-search/batch-report-calculations/?station_id={self.stationID}&order_id={order_id}"
                                 order_remaind_value = requests.get(calculation_url, headers=self.headers)
                                 if order_remaind_value.status_code == 200:
-                                    print("\n \n entry['orders'] before update", ord, "order_id", order_id)
-                                    print(" order_remaind_value.status_code", order_remaind_value.status_code, "order_id", order_id)
                                     order_remaind_value = order_remaind_value.json() 
                                     station_reports = order_remaind_value[0]['station_reports'][0]
                                     batch_quantity = int(station_reports['batch_quantity'])
                                     station_results = station_reports['result'][0] 
                                     total_completed_quantity = station_results['total_completed_quantity']
                                     total_remained_quantity = station_results['total_remained_quantity']
-                                    print("batch_quantity", batch_quantity,"completed", total_completed_quantity,"remainded", total_remained_quantity)
                                     # Update the order
                                     ord['batches'][0]['quantity'] = batch_quantity - total_completed_quantity
                                     ord['quantity'] = batch_quantity - total_completed_quantity
-                                    print("entry['orders'] after update", ord)
                                 else:
                                     pass
                             is_exist = self.db.order_write(shipment_number=entry["shipment_number"], 
