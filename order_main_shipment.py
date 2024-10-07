@@ -95,7 +95,7 @@ class MainWindow(QMainWindow):
         self.table_widget.setColumnCount(7)
         self.table_widget.setLayoutDirection(Qt.RightToLeft)
         self.table_widget.setHorizontalHeaderLabels([
-            "اجکت","شماره", "نام", " شمرده", "مانده", "کل", "واحد"])
+            "شماره", "نام", " شمرده", "مانده", "کل", "واحد", "اجکت"])
         # self.table_widget.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
         self.table_widget.verticalHeader().setVisible(False)  # Hide horizontal header if not needed
         
