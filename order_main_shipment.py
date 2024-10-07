@@ -542,6 +542,7 @@ class MainWindow(QMainWindow):
                         # Added the order batches to the order DB
                         s3 = time.time()
                         for entry in results:
+                            print(entry['orders'], "entry['orders']")
                             is_exist = self.db.order_write(shipment_number=entry["shipment_number"], 
                                                             destination=entry["destination"], 
                                                             shipment_type=entry["type"],
