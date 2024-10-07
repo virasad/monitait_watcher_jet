@@ -308,7 +308,6 @@ class MainWindow(QMainWindow):
                             counted_quantity = abs(total_quantity-previous_quantity)
                             eject_value = self.eject[item["id"]]
 
-                            #  "شماره سفارش", "نام محصول", " شمارش شده", "مانده", "کل", "واحد تحویل"
                             # Add items to the table
                             self.table_widget.setItem(row_position, 0, QTableWidgetItem(str(item["id"])))
                             self.table_widget.setItem(row_position, 1, QTableWidgetItem(product_name))
@@ -486,7 +485,7 @@ class MainWindow(QMainWindow):
                         b_initial = b
                         
                         self.not_detected_barcode += 1
-                        self.not_detected_barcode = QTableWidgetItem(f"{self.not_detected_barcode}")  
+                        self.item_row2_col1 = QTableWidgetItem(f"{self.not_detected_barcode}")  
                         self.item_row2_col1.setBackground(QColor("darkRed"))  
                         time.sleep(0.1)
                         self.item_row2_col1.setBackground(QColor("white")) 
