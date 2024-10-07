@@ -211,6 +211,7 @@ class MainWindow(QMainWindow):
             data_saved = False
             send_image = False
             order_counting_start_flag = False # To start counting process, this flag set as True when OR detected
+            exit_flag = False
             image_name = ""
             extra_info = {}
             # Getting order from batch API
@@ -218,13 +219,18 @@ class MainWindow(QMainWindow):
                 ##
                 # Reading the scanner to detect OR and start the counting process
                 if True:
-                    shipment_scanned_barcode_byte_string  = self.scanner.read_barcode()
-                    # If the scanner output is serial, convert its output to str
-                    if self.usb_serial_flag:    
-                        shipment_scanned_barcode = shipment_scanned_barcode_byte_string.decode().strip()
-                        self.shipment_number = str(shipment_scanned_barcode)
+                    if not exit_flag:
+                        shipment_scanned_barcode_byte_string  = self.scanner.read_barcode()
+                        # If the scanner output is serial, convert its output to str
+                        if self.usb_serial_flag:    
+                            shipment_scanned_barcode = shipment_scanned_barcode_byte_string.decode().strip()
+                            self.shipment_number = str(shipment_scanned_barcode)
+                        else:
+                            self.shipment_number = shipment_scanned_barcode_byte_string
                     else:
-                        self.shipment_number = shipment_scanned_barcode_byte_string
+                        exit_flag = False
+                        print("Exit barcode scanned", self.scanned_box_barcode)
+                        self.shipment_number = self.scanned_box_barcode
                     
                     # Getting the scanned order list from order DB
                     self.shipment_db = self.db.order_read(self.shipment_number)
@@ -357,6 +363,7 @@ class MainWindow(QMainWindow):
                                 # The exit barcode scanned
                                 print("The exit barcode scanned")
                                 order_counting_start_flag = False
+                                exit_flag = True
                             else:
                                 # Checking is the scanned box barcode is in the order batches or not
                                 self.table_widget.setRowCount(0)  # Clear the table
@@ -446,6 +453,8 @@ class MainWindow(QMainWindow):
                                                 # Update the order list
                                                 self.db.order_update(shipment_number=self.shipment_number,
                                                                     orders= json.dumps(self.shipment_orders),is_done = 1)
+                                                
+                                                order_counting_start_flag = False
                                         else:
                                             quantity_item = QTableWidgetItem(str(abs(total_quantity-item['quantity'])))
                                             remainded_item  = QTableWidgetItem(str(int(item['quantity'])))
