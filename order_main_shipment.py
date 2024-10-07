@@ -60,7 +60,6 @@ class MainWindow(QMainWindow):
         self.title_table.setItem(1, 2, self.item_row1_col2)  
         
         self.item_row1_col3 = QTableWidgetItem("ساوه")  
-        self.item_row1_col3.setFont(self.bold_font)  
         self.title_table.setItem(1, 3, self.item_row1_col3) 
         
         self.item_row2_col0 = QTableWidgetItem("شناسایی نشده")  
