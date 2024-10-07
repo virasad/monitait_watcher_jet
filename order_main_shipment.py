@@ -233,6 +233,27 @@ class MainWindow(QMainWindow):
                         self.destination = self.shipment_db[2]
                         self.shipment_type = self.shipment_db[3]
                         json_data1 = json.loads(self.shipment_db[4])
+                        
+                        # Update the quantity by another calculation URL
+                        for ord in json_data1:
+                            order_id = ord['id'] 
+                            calculation_url = f"https://app.monitait.com/api/elastic-search/batch-report-calculations/?station_id={self.stationID}&order_id={order_id}"
+                            order_remaind_value = requests.get(calculation_url, headers=self.headers)
+                            print("order_remaind_value.status_code", order_remaind_value.status_code, "order_id", order_id, "json data")
+                            if order_remaind_value.status_code == 200:
+                                station_reports = order_remaind_value[0]['station_reports'][0]
+                                batch_quantity = int(station_reports['batch_quantity'])
+                                station_results = station_reports['result'][0] 
+                                total_completed_quantity = station_results['total_completed_quantity']
+                                total_remained_quantity = station_results['total_remained_quantity']
+                                # Update the order
+                                ord['batches'][0]['quantity'] = batch_quantity - total_completed_quantity
+                                ord['quantity'] = batch_quantity - total_completed_quantity
+                            else:
+                                pass
+                            
+                        
+                        
                         print("\n The orders", json_data1)
                         # Checking is the scanned order in the order DB or not
                         if self.shipment_db != []:
@@ -542,7 +563,24 @@ class MainWindow(QMainWindow):
                         # Added the order batches to the order DB
                         s3 = time.time()
                         for entry in results:
-                            print(entry['orders'], "entry['orders']")
+                            # Update the quantity by another calculation URL
+                            for ord in entry['orders']:
+                                order_id = ord['id'] 
+                                calculation_url = f"https://app.monitait.com/api/elastic-search/batch-report-calculations/?station_id={self.stationID}&order_id={order_id}"
+                                order_remaind_value = requests.get(calculation_url, headers=self.headers)
+                                print("order_remaind_value.status_code", order_remaind_value.status_code, "order_id", order_id)
+                                if order_remaind_value.status_code == 200:
+                                    station_reports = order_remaind_value[0]['station_reports'][0]
+                                    batch_quantity = int(station_reports['batch_quantity'])
+                                    station_results = station_reports['result'][0] 
+                                    total_completed_quantity = station_results['total_completed_quantity']
+                                    total_remained_quantity = station_results['total_remained_quantity']
+                                    # Update the order
+                                    ord['batches'][0]['quantity'] = batch_quantity - total_completed_quantity
+                                    ord['quantity'] = batch_quantity - total_completed_quantity
+                                else:
+                                    pass
+                                
                             is_exist = self.db.order_write(shipment_number=entry["shipment_number"], 
                                                             destination=entry["destination"], 
                                                             shipment_type=entry["type"],
@@ -662,7 +700,7 @@ class MainWindow(QMainWindow):
                                                                 "defect_image":[], "action_type": "stop"}  
                                         s2 = time.time()
                                         send_shipment_response = requests.post(self.sendshipment_url, json=batch_report_body, headers=self.headers)
-                                        print("\n Send batch status code", send_shipment_response.status_code, "Post time", time.time()-s2)
+                                        print("\n ****Send batch status code", send_shipment_response.status_code, "Post time", time.time()-s2)
                                 else:
                                     pass
                 # except Exception as ex2:
