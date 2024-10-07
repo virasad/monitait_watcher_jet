@@ -411,7 +411,7 @@ class MainWindow(QMainWindow):
                                                                     orders= json.dumps(self.shipment_orders),is_done = 1)
                                         else:
                                             quantity_item = QTableWidgetItem(str(abs(total_quantity-item['quantity'])))
-                                            remainded_quantity = int(item['quantity'])
+                                            remainded_item  = QTableWidgetItem(str(int(item['quantity'])))
                                             eject_item  = QTableWidgetItem(str(int(self.eject[item['id']])))
                                     
                                     self.table_widget.setItem(row_position, 2, quantity_item)
