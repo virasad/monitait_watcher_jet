@@ -37,7 +37,7 @@ class MainWindow(QMainWindow):
         # Create a QTableWidget for the title
         self.title_table = QTableWidget()  # No need to specify rows and columns at this point
         self.title_table.setRowCount(3)  # Set 2 rows for 'a' and 'b'
-        self.title_table.setColumnCount(6)  # Set 1 column for values
+        self.title_table.setColumnCount(4)  # Set 1 column for values
         
         self.item_row1_col1 = QTableWidgetItem("شماره محموله")  
         self.item_row1_col1.setBackground(QColor("gray"))  
@@ -73,13 +73,12 @@ class MainWindow(QMainWindow):
         self.item_row3_col3.setFont(self.bold_font)  
         self.title_table.setItem(2, 2, self.item_row3_col3) 
          
-         
-        
         # Set the column and rows width and height
         self.title_table.setColumnWidth(0, 200)  
         self.title_table.setColumnWidth(2, 200)  
         self.title_table.setColumnWidth(1, 500)  
         self.title_table.setColumnWidth(3, 500)  
+        self.title_table.setColumnWidth(4, 500) 
         self.title_table.setRowHeight(0, 100)  
         self.title_table.setRowHeight(1, 100)  
         self.title_table.setRowHeight(2, 100)  
@@ -93,10 +92,10 @@ class MainWindow(QMainWindow):
         
     
         self.table_widget = QTableWidget()
-        self.table_widget.setColumnCount(6)
+        self.table_widget.setColumnCount(7)
         self.table_widget.setLayoutDirection(Qt.RightToLeft)
         self.table_widget.setHorizontalHeaderLabels([
-            "شماره", "نام", " شمرده", "مانده", "کل", "واحد"])
+            "اجکت","شماره", "نام", " شمرده", "مانده", "کل", "واحد"])
         # self.table_widget.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
         self.table_widget.verticalHeader().setVisible(False)  # Hide horizontal header if not needed
         
