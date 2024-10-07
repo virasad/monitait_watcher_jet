@@ -240,7 +240,7 @@ class MainWindow(QMainWindow):
                             calculation_url = f"https://app.monitait.com/api/elastic-search/batch-report-calculations/?station_id={self.stationID}&order_id={order_id}"
                             order_remaind_value = requests.get(calculation_url, headers=self.headers)
                             if order_remaind_value.status_code == 200:
-                                print("order_remaind_value.status_code", order_remaind_value.status_code, "order_id", order_id, "json data")
+                                print("\n\n\norder_remaind_value.status_code", order_remaind_value.status_code, "order_id", order_id, "json data")
                                 order_remaind_value = order_remaind_value.json() 
                                 station_reports = order_remaind_value[0]['station_reports'][0]
                                 batch_quantity = int(station_reports['batch_quantity'])
@@ -569,8 +569,8 @@ class MainWindow(QMainWindow):
                                 calculation_url = f"https://app.monitait.com/api/elastic-search/batch-report-calculations/?station_id={self.stationID}&order_id={order_id}"
                                 order_remaind_value = requests.get(calculation_url, headers=self.headers)
                                 if order_remaind_value.status_code == 200:
-                                    print(" entry['orders'] before update", entry['orders'])
-                                    print("\n order_remaind_value.status_code", order_remaind_value.status_code, "order_id", order_id)
+                                    print("\n \n entry['orders'] before update", entry['orders'], "order_id", order_id)
+                                    print(" order_remaind_value.status_code", order_remaind_value.status_code, "order_id", order_id)
                                     order_remaind_value = order_remaind_value.json() 
                                     station_reports = order_remaind_value[0]['station_reports'][0]
                                     batch_quantity = int(station_reports['batch_quantity'])
@@ -581,7 +581,7 @@ class MainWindow(QMainWindow):
                                     # Update the order
                                     ord['batches'][0]['quantity'] = batch_quantity - total_completed_quantity
                                     ord['quantity'] = batch_quantity - total_completed_quantity
-                                    print("\n entry['orders'] after update", entry['orders'])
+                                    print("entry['orders'] after update", entry['orders'])
                                 else:
                                     pass
                             is_exist = self.db.order_write(shipment_number=entry["shipment_number"], 
