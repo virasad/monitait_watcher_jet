@@ -136,6 +136,7 @@ class MainWindow(QMainWindow):
         
         self.arduino = arduino
         self.stop_thread = False
+        self.update_table = False
         self.order_list = []
         self.db = db
         self.camera = camera
@@ -145,7 +146,7 @@ class MainWindow(QMainWindow):
         self.sendshipment_url = sendshipment_url
         self.register_id = register_id
         self.usb_serial_flag = usb_serial_flag
-        self.headers = {'Register-ID': self.register_id, 
+        self.headers = {'Register-ID': f'{self.register_id}', 
                         'Content-Type': 'application/json'}
         self.shipment_number = None
         self.shipment_type = None
@@ -181,7 +182,7 @@ class MainWindow(QMainWindow):
     #     else:
     #         pass
     
-    def update_table(self):
+    def counting(self):
 
         # # Restart the timer
         # self.timer = threading.Timer(1.0, self.update_table)
@@ -233,13 +234,20 @@ class MainWindow(QMainWindow):
                         self.shipment_number = self.scanned_box_barcode
                     
                     # Getting the scanned order list from order DB
-                    self.shipment_db = self.db.order_read(self.shipment_number)
+                    self.shipment_db = self.db.order_read('CTR555')
                     
                     if self.shipment_db != []:
                         self.destination = self.shipment_db[2]
                         self.shipment_type = self.shipment_db[3]
                         json_data1 = json.loads(self.shipment_db[4])
-                        print("\n The orders before update", json_data1)
+                        # Defined for shipment table
+                        self.eject_box = {item["id"]: 0 for item in json_data1}
+                        self.wrong_barcode = 0
+                        self.not_detected_barcode = 0
+                        orders_specification = {}
+                        print("json_data1", json_data1)
+                        print(d)
+                        self.update_table = True
                         # Update the quantity by another calculation URL
                         for ord in json_data1:
                             order_id = ord['id'] 
@@ -258,71 +266,13 @@ class MainWindow(QMainWindow):
                                 ord['quantity'] = batch_quantity - total_completed_quantity
                                 print("order_remaind_value after update", ord, "order_id", order_id, "json data")
                             else:
-                                pass
-                           
-                        print("\n The orders after update", json_data1)
-                        # Checking is the scanned order in the order DB or not
-                        if self.shipment_db != []:
-                            order_counting_start_flag = True
-                            # Getting batches, product, and factory from scanned order
-                            self.shipment_orders = json.loads(self.shipment_db[4])
-                        else:
-                            order_counting_start_flag = False
-                            print(f"The order of shipment order {self.shipment_number} is empty")
-                        # Updating the table
-                        # Create and set values 
-                        self.item_row0_col1 = QTableWidgetItem(f"{self.shipment_number}")  
+                                total_completed_quantity = 0
+                                total_remained_quantity = 0
+                            # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy
+                            orders_specification[ord['id']] = [ord['quantity'], total_completed_quantity, total_remained_quantity, 0]
                         
-                        self.item_row0_col3 = QTableWidgetItem(f"{self.shipment_type}")  
-                        self.item_row1_col1 = QTableWidgetItem(f"{self.destination}")  
-                        
-                        self.item_row2_col1 = QTableWidgetItem(f"{0}")  
-                        self.item_row2_col3 = QTableWidgetItem(f"{0}")  
-                        
-                        # Set the stylesheet for the table to increase text size
-                        self.title_table.setStyleSheet("font-size: 25px;")  # Adjust size as needed
-                    
-                        # Set values for the rows and columns
-                        self.title_table.setItem(0, 1, self.item_row0_col1)   
-                        self.title_table.setItem(0, 3, self.item_row0_col3)   
-                        self.title_table.setItem(1, 1, self.item_row1_col1)   
-                        self.title_table.setItem(2, 1, self.item_row2_col1)   
-                        self.title_table.setItem(2, 3, self.item_row2_col3) 
-                        
-                        self.previous_quantities = {item["id"]: item["quantity"] for item in json_data1}
-                        self.total_quantities = {item["id"]: item["quantity"] for item in json_data1}
-                        self.eject = {item["id"]: 0 for item in json_data1}
-                        self.wrong_barcode = 0
-                        self.not_detected_barcode = 0
-                        
-                        self.table_widget.setRowCount(0)  # Clear the table
-                        for item in json_data1:
-                            row_position = self.table_widget.rowCount()
-                            self.table_widget.insertRow(row_position)
-
-                            product_name = item["product_name"]
-
-                            current_quantity = item["quantity"]
-                            previous_quantity = self.previous_quantities[item["id"]]
-                            total_quantity = self.total_quantities[item["id"]]
-                            counted_quantity = abs(total_quantity-previous_quantity)
-                            eject_value = self.eject[item["id"]]
-
-                            # Add items to the table
-                            self.table_widget.setItem(row_position, 0, QTableWidgetItem(str(item["id"])))
-                            self.table_widget.setItem(row_position, 1, QTableWidgetItem(product_name))
-                            self.table_widget.setItem(row_position, 2, QTableWidgetItem(str(counted_quantity)))
-                            self.table_widget.setItem(row_position, 3, QTableWidgetItem(str(0)))  # Set the quantity item
-                            self.table_widget.setItem(row_position, 4, QTableWidgetItem(str(total_quantity)))
-                            self.table_widget.setItem(row_position, 5, QTableWidgetItem(item["delivery_unit"]))
-                            self.table_widget.setItem(row_position, 6, QTableWidgetItem(str(eject_value)))
-                            
-                        #     # self.table_widget.setRowCount(0)  # Clear the table
-                        # if self.live_stream_flag:
-                        #     self.cap = cv2.VideoCapture(live_stream_url)  # Capture from the default camera
-                        #     self.update_frame()
-                        # else:
-                        #     pass
+                        # Write shipment table
+                        self.db.shipments_table_write(self.shipment_number, self.wrong_barcode, not_detected, orders_specification)
                     else:
                         print(f"There is no such shipment number, {self.shipment_number}, {type(self.shipment_number)}")
                 # except Exception as ex2:
@@ -397,7 +347,12 @@ class MainWindow(QMainWindow):
                                                 remainded_item = QTableWidgetItem(str(remainded_quantity))
                                                 remainded_item.setBackground(QColor("yellow"))
                                                 
-                                                eject_item  = QTableWidgetItem(str(int(self.eject[item['id']])))
+                                                eject_item  = QTableWidgetItem(str(int(self.eject_box[item['id']])))
+                                                
+                                                # Update the order of shipment dictionary
+                                                
+                                                # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy
+                                                orders_specification[item['id']] = [item['quantity'], counted_quantity, remainded_quantity, self.eject_box[item['id']]]
                                                 
                                                 print("run > The current assigned id quantity value (remainded value):", batch['quantity'])
                                             elif item['quantity']  == 0:
@@ -412,10 +367,15 @@ class MainWindow(QMainWindow):
                                                 remainded_item.setBackground(QColor("yellow"))
                                                 
                                                 
-                                                self.eject[item["id"]] += 1
-                                                eject_quantity = int(self.eject[item["id"]])
+                                                self.eject_box[item["id"]] += 1
+                                                eject_quantity = int(self.eject_box[item["id"]])
                                                 eject_item = QTableWidgetItem(str(eject_quantity))
                                                 eject_item.setBackground(QColor("red"))
+                                                
+                                                # Update the order of shipment dictionary
+                                                
+                                                # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy
+                                                orders_specification[item['id']] = [item['quantity'], counted_quantity, remainded_quantity, self.eject_box[item['id']]]
                                                 
                                                 print("run > Counted value from this assined is has been finished")
                                                 # The detected barcode is not on the order list
@@ -433,10 +393,15 @@ class MainWindow(QMainWindow):
                                                 remainded_item = QTableWidgetItem(str(remainded_quantity))
                                                 remainded_item.setBackground(QColor("yellow"))
                                                 
-                                                self.eject[item["id"]] += 1
-                                                eject_quantity = int(self.eject[item["id"]])
+                                                self.eject_box[item["id"]] += 1
+                                                eject_quantity = int(self.eject_box[item["id"]])
                                                 eject_item = QTableWidgetItem(str(eject_quantity))
                                                 eject_item.setBackground(QColor("red"))
+                                                
+                                                # Update the order of shipment dictionary
+                                                
+                                                # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy
+                                                orders_specification[item['id']] = [item['quantity'], counted_quantity, remainded_quantity, self.eject_box[item['id']]]
                                                 
                                                 print("run > All value of the quantity is zero")
                                                 # Remove the shipment number **
@@ -457,7 +422,12 @@ class MainWindow(QMainWindow):
                                         else:
                                             quantity_item = QTableWidgetItem(str(abs(total_quantity-item['quantity'])))
                                             remainded_item  = QTableWidgetItem(str(int(item['quantity'])))
-                                            eject_item  = QTableWidgetItem(str(int(self.eject[item['id']])))
+                                            eject_item  = QTableWidgetItem(str(int(self.eject_box[item['id']])))
+                                            
+                                            # Update the order of shipment dictionary
+                                                
+                                            # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy
+                                            orders_specification[item['id']] = [item['quantity'], counted_quantity, remainded_quantity, self.eject_box[item['id']]]
                                     
                                     self.table_widget.setItem(row_position, 2, quantity_item)
                                     self.table_widget.setItem(row_position, 3, remainded_item)  # Set the quantity item
@@ -479,6 +449,10 @@ class MainWindow(QMainWindow):
                                     time.sleep(1)
                                     self.arduino.gpio32_0.on()
                                     time.sleep(1)
+                                else:
+                                    # Update shipment table
+                                    self.db.shipment_update(self.shipment_number, self.wrong_barcode, not_detected, orders_specification)
+                                    self.db.shipment_update(self, shipment_number, wrong=None, not_detected=None, orders_eject=None):
                     # If the NG signal triggered
                     elif abs(b - b_initial) >= 1:
                         print("Recived NG signal")
@@ -496,6 +470,7 @@ class MainWindow(QMainWindow):
                         time.sleep(1)
                         self.arduino.gpio32_0.on()
                         time.sleep(1)
+                    
                 # except Exception as ex3:
                 #     print(f"run > reading scanner to detect OR {ex3}")
                 ##
@@ -712,6 +687,77 @@ class MainWindow(QMainWindow):
                                     pass
                 # except Exception as ex2:
                 #     print(f"db_order_checker > checking the database {ex2}")
+    def update_table():
+        previus_shipment_number = ""
+        table_st = time.time()
+        table_update_interval = 10
+        table_updating_flag = True
+        while not self.stop_thread:
+            try:
+                # Checking order db every {table_update_interval} second
+                if (time.time() - table_st > table_update_interval) and (self.shipment_db != []):
+                    table_st = time.time()
+                    json_data1 = json.loads(self.shipment_db[4])
+                    print("\n shipment db updated", json_data1)
+                    if self.update_table:
+                        self.update_table = False
+                        # Updating the table
+                        # Create and set values 
+                        self.item_row0_col1 = QTableWidgetItem(f"{self.shipment_number}")  
+                        
+                        self.item_row0_col3 = QTableWidgetItem(f"{self.shipment_type}")  
+                        self.item_row1_col1 = QTableWidgetItem(f"{self.destination}")  
+                        
+                        self.item_row2_col1 = QTableWidgetItem(f"{0}")  
+                        self.item_row2_col3 = QTableWidgetItem(f"{0}")  
+                        
+                        # Set the stylesheet for the table to increase text size
+                        self.title_table.setStyleSheet("font-size: 25px;")  # Adjust size as needed
+                    
+                        # Set values for the rows and columns
+                        self.title_table.setItem(0, 1, self.item_row0_col1)   
+                        self.title_table.setItem(0, 3, self.item_row0_col3)   
+                        self.title_table.setItem(1, 1, self.item_row1_col1)   
+                        self.title_table.setItem(2, 1, self.item_row2_col1)   
+                        self.title_table.setItem(2, 3, self.item_row2_col3) 
+                        
+                        self.previous_quantities = {item["id"]: item["quantity"] for item in json_data1}
+                        self.total_quantities = {item["id"]: item["quantity"] for item in json_data1}
+                        
+                        self.table_widget.setRowCount(0)  # Clear the table
+                        for item in json_data1:
+                            row_position = self.table_widget.rowCount()
+                            self.table_widget.insertRow(row_position)
+
+                            product_name = item["product_name"]
+
+                            current_quantity = item["quantity"]
+                            previous_quantity = self.previous_quantities[item["id"]]
+                            total_quantity = self.total_quantities[item["id"]]
+                            counted_quantity = abs(total_quantity-previous_quantity)
+                            eject_value = self.eject_box[item["id"]]
+
+                            # Add items to the table
+                            self.table_widget.setItem(row_position, 0, QTableWidgetItem(str(item["id"])))
+                            self.table_widget.setItem(row_position, 1, QTableWidgetItem(product_name))
+                            self.table_widget.setItem(row_position, 2, QTableWidgetItem(str(counted_quantity)))
+                            self.table_widget.setItem(row_position, 3, QTableWidgetItem(str(0)))  # Set the quantity item
+                            self.table_widget.setItem(row_position, 4, QTableWidgetItem(str(total_quantity)))
+                            self.table_widget.setItem(row_position, 5, QTableWidgetItem(item["delivery_unit"]))
+                            self.table_widget.setItem(row_position, 6, QTableWidgetItem(str(eject_value)))
+                    
+                    
+                    # Showing table
+                    
+                    #     # self.table_widget.setRowCount(0)  # Clear the table
+                    # if self.live_stream_flag:
+                    #     self.cap = cv2.VideoCapture(live_stream_url)  # Capture from the default camera
+                    #     self.update_frame()
+                    # else:
+                    #     pass
+                    
+            except Exception as ex:
+                print(f"table_update > exception {ex}")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -734,10 +780,10 @@ if __name__ == "__main__":
                     stationID_url= stationID_url, sendshipment_url=sendshipment_url, register_id=register_id,
                     usb_serial_flag=usb_serial_flag)
     
-    print("update table")
+    print("counting")
     Thread(target=counter.db_order_checker).start()
     time.sleep(0.1)
-    Thread(target=counter.update_table).start()
+    Thread(target=counter.counting).start()
     time.sleep(0.1)
     counter.show()
     sys.exit(app.exec_())
