@@ -242,11 +242,13 @@ class MainWindow(QMainWindow):
                         # Getting batches, product, and factory from scanned order
                         self.shipment_orders = json.loads(self.shipment_db[4])
 
-                        
                         # Defined for shipment table
                         self.destination = self.shipment_db[2]
                         self.shipment_type = self.shipment_db[3]
                         json_data1 = json.loads(self.shipment_db[4])
+                        
+                        self.previous_quantities = {item["id"]: item["quantity"] for item in json_data1}
+                        self.total_quantities = {item["id"]: item["quantity"] for item in json_data1}
                         
                         self.eject_box = {item["id"]: 0 for item in json_data1}
                         self.wrong_barcode = 0
@@ -324,7 +326,6 @@ class MainWindow(QMainWindow):
                                 exit_flag = True
                             else:
                                 # Checking is the scanned box barcode is in the order batches or not
-                                self.table_widget.setRowCount(0)  # Clear the table
                                 for item in self.shipment_orders:
                                                                         
                                     total_quantity = int(self.total_quantities[item["id"]])
@@ -680,9 +681,6 @@ class MainWindow(QMainWindow):
                         self.title_table.setItem(2, 1, self.item_row2_col1)   
                         self.title_table.setItem(2, 3, self.item_row2_col3) 
                         
-                        self.previous_quantities = {item["id"]: item["quantity"] for item in json_data1}
-                        self.total_quantities = {item["id"]: item["quantity"] for item in json_data1}
-                        
                         self.table_widget.setRowCount(0)  # Clear the table
                         for item in json_data1:
                             row_position = self.table_widget.rowCount()
@@ -707,6 +705,8 @@ class MainWindow(QMainWindow):
                     
                     read_shipment_db = self.db.shipment_read(self.shipment_number)
                     if read_shipment_db != []:
+                        self.table_widget.setRowCount(0)  # Clear the table
+                        
                         wrong_qt = read_shipment_db[2]
                         not_detected_qt= read_shipment_db[3]
                         orders_quantity_specification = json.loads(read_shipment_db[3])
