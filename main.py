@@ -300,7 +300,7 @@ while flag:
     
     # Counting camera index
     j = j + 1
-    if j == 100: 
+    if j == 500: 
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
       try:
@@ -451,7 +451,7 @@ while flag:
     # else:
     #   print(f"File {image_path} does not exist, so no action was taken.")
 
-    if j >= 190:
+    if j >= 650:
       j=0   # reset counting index
       # Start to capture image from the Gauge
       try:
@@ -606,7 +606,7 @@ while flag:
         pass
     
     # Reset image capturing index 
-    if j > 200:
+    if j > 652:
       j = 0
     else:
       pass
