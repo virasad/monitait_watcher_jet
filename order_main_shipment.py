@@ -395,6 +395,8 @@ class MainWindow(QMainWindow):
                                             quantity_item = abs(total_quantity-item['quantity'])
                                             remainded_item  = int(item['quantity'])
                                             
+                                            counted_quantity = abs(total_quantity-item['quantity'])
+                                            
                                             # Update the order of shipment dictionary
                                                 
                                             # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy
