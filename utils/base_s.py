@@ -135,7 +135,7 @@ class DB:
             else:
                 return False
         except Exception as  e_ow:
-            print(f"DB > order write {e_ow}")
+            print(f"DB > shipment write {e_ow}")
             return False
 
     def read(self):
@@ -183,7 +183,7 @@ class DB:
             else:
                 return rows[0]
         except Exception as e:
-            print(f"DB > read {e}")
+            print(f"DB > shipment read {e}")
             return []
     
     def delete(self, id):
@@ -213,7 +213,7 @@ class DB:
             self.dbconnect.commit()
             return True
         except Exception as e_od:
-            print(f"DB > delete order {e_od}")
+            print(f"DB > shipment delete {e_od}")
             return False
         
     def order_update(self, shipment_number, destination=None, shipment_type=None, orders=None, is_done=None):
@@ -275,7 +275,7 @@ class DB:
             self.dbconnect.commit()
             return True
         except Exception as e_ou:
-            print(f"DB > update order {e_ou}")
+            print(f"DB > shipment update {e_ou}")
             return False
         
     # def db_checker(self):
