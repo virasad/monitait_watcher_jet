@@ -275,7 +275,7 @@ class MainWindow(QMainWindow):
                             orders_quantity_specification[ord['id']] = [ord['quantity'], total_completed_quantity, total_remained_quantity, 0]
                         
                         # Write shipment table
-                        self.db.shipments_table_write(self.shipment_number, self.wrong_barcode, not_detected, orders_quantity_specification)
+                        self.db.shipments_table_write(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, orders_quantity_specification)
                     else:
                         order_counting_start_flag = False
                         print(f"There is no such shipment number, {self.shipment_number}, {type(self.shipment_number)}")
@@ -455,8 +455,7 @@ class MainWindow(QMainWindow):
                                     time.sleep(1)
                                 else:
                                     # Update shipment table
-                                    self.db.shipment_update(self.shipment_number, self.wrong_barcode, not_detected, orders_quantity_specification)
-                                    self.db.shipment_update(self, shipment_number, wrong=None, not_detected=None, orders_eject=None):
+                                    self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, orders_quantity_specification)
                     # If the NG signal triggered
                     elif abs(b - b_initial) >= 1:
                         print("Recived NG signal")
