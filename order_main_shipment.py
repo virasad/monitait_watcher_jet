@@ -283,12 +283,12 @@ class MainWindow(QMainWindow):
                 #     print(f"run > reading scanner to detect OR {ex2}")
             ##
             # Start counting process
-            test_flag = True
+            p_flag = True
             while order_counting_start_flag:
                 if True:
-                    if test_flag:
+                    if p_flag:
                         print("In order counting while loop, waiting to the OK signal")
-                        test_flag = False
+                        p_flag = False
                     # Reading the box entrance signal
                     # if self.live_stream_flag:
                     #     self.cap = cv2.VideoCapture(live_stream_url)  # Capture from the default camera
