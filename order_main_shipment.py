@@ -234,20 +234,23 @@ class MainWindow(QMainWindow):
                         self.shipment_number = self.scanned_box_barcode
                     
                     # Getting the scanned order list from order DB
-                    self.shipment_db = self.db.order_read('CTR555')
+                    self.shipment_db = self.db.order_read(self.shipment_number)
                     
                     if self.shipment_db != []:
+                        order_counting_start_flag = True
+                        self.update_table = True
+                        
+                        # Defined for shipment table
                         self.destination = self.shipment_db[2]
                         self.shipment_type = self.shipment_db[3]
                         json_data1 = json.loads(self.shipment_db[4])
-                        # Defined for shipment table
+                        
                         self.eject_box = {item["id"]: 0 for item in json_data1}
                         self.wrong_barcode = 0
                         self.not_detected_barcode = 0
-                        orders_specification = {}
+                        orders_quantity_specification = {}
                         print("json_data1", json_data1)
-                        print(d)
-                        self.update_table = True
+                        
                         # Update the quantity by another calculation URL
                         for ord in json_data1:
                             order_id = ord['id'] 
@@ -269,11 +272,12 @@ class MainWindow(QMainWindow):
                                 total_completed_quantity = 0
                                 total_remained_quantity = 0
                             # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy
-                            orders_specification[ord['id']] = [ord['quantity'], total_completed_quantity, total_remained_quantity, 0]
+                            orders_quantity_specification[ord['id']] = [ord['quantity'], total_completed_quantity, total_remained_quantity, 0]
                         
                         # Write shipment table
-                        self.db.shipments_table_write(self.shipment_number, self.wrong_barcode, not_detected, orders_specification)
+                        self.db.shipments_table_write(self.shipment_number, self.wrong_barcode, not_detected, orders_quantity_specification)
                     else:
+                        order_counting_start_flag = False
                         print(f"There is no such shipment number, {self.shipment_number}, {type(self.shipment_number)}")
                 # except Exception as ex2:
                 #     print(f"run > reading scanner to detect OR {ex2}")
@@ -352,7 +356,7 @@ class MainWindow(QMainWindow):
                                                 # Update the order of shipment dictionary
                                                 
                                                 # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy
-                                                orders_specification[item['id']] = [item['quantity'], counted_quantity, remainded_quantity, self.eject_box[item['id']]]
+                                                orders_quantity_specification[item['id']] = [item['quantity'], counted_quantity, remainded_quantity, self.eject_box[item['id']]]
                                                 
                                                 print("run > The current assigned id quantity value (remainded value):", batch['quantity'])
                                             elif item['quantity']  == 0:
@@ -375,7 +379,7 @@ class MainWindow(QMainWindow):
                                                 # Update the order of shipment dictionary
                                                 
                                                 # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy
-                                                orders_specification[item['id']] = [item['quantity'], counted_quantity, remainded_quantity, self.eject_box[item['id']]]
+                                                orders_quantity_specification[item['id']] = [item['quantity'], counted_quantity, remainded_quantity, self.eject_box[item['id']]]
                                                 
                                                 print("run > Counted value from this assined is has been finished")
                                                 # The detected barcode is not on the order list
@@ -401,7 +405,7 @@ class MainWindow(QMainWindow):
                                                 # Update the order of shipment dictionary
                                                 
                                                 # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy
-                                                orders_specification[item['id']] = [item['quantity'], counted_quantity, remainded_quantity, self.eject_box[item['id']]]
+                                                orders_quantity_specification[item['id']] = [item['quantity'], counted_quantity, remainded_quantity, self.eject_box[item['id']]]
                                                 
                                                 print("run > All value of the quantity is zero")
                                                 # Remove the shipment number **
@@ -427,7 +431,7 @@ class MainWindow(QMainWindow):
                                             # Update the order of shipment dictionary
                                                 
                                             # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy
-                                            orders_specification[item['id']] = [item['quantity'], counted_quantity, remainded_quantity, self.eject_box[item['id']]]
+                                            orders_quantity_specification[item['id']] = [item['quantity'], counted_quantity, remainded_quantity, self.eject_box[item['id']]]
                                     
                                     self.table_widget.setItem(row_position, 2, quantity_item)
                                     self.table_widget.setItem(row_position, 3, remainded_item)  # Set the quantity item
@@ -451,7 +455,7 @@ class MainWindow(QMainWindow):
                                     time.sleep(1)
                                 else:
                                     # Update shipment table
-                                    self.db.shipment_update(self.shipment_number, self.wrong_barcode, not_detected, orders_specification)
+                                    self.db.shipment_update(self.shipment_number, self.wrong_barcode, not_detected, orders_quantity_specification)
                                     self.db.shipment_update(self, shipment_number, wrong=None, not_detected=None, orders_eject=None):
                     # If the NG signal triggered
                     elif abs(b - b_initial) >= 1:
