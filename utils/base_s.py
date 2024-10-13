@@ -86,7 +86,7 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
 
 class DB:
     def __init__(self) -> None:
-        try:
+        if True:
             self.dbconnect = sqlite3.connect("/home/pi/monitait_watcher_jet/monitait.db", check_same_thread=False)
             self.cursor = self.dbconnect.cursor()
             self.cursor.execute('''CREATE TABLE IF NOT EXISTS monitait_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, register_id TEXT, temp_a INTEGER NULL, temp_b INTEGER NULL, image_name TEXT NULL, extra_info JSON, ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)''')
@@ -99,9 +99,9 @@ class DB:
             for column in columns:
                 print(column)
             self.dbconnect.commit()
-        except Exception as e:
-            print(f"DB > init {e}")
-            pass
+        # except Exception as e:
+        #     print(f"DB > init {e}")
+        #     pass
 
     def write(self, register_id=register_id, a=0, b=0, extra_info={}, image_name="", timestamp=datetime.datetime.utcnow()):
         try:
@@ -113,7 +113,7 @@ class DB:
             return False
     
     def order_write(self, shipment_number, destination, shipment_type, orders={}, is_done=0):
-        try:
+        if True:
             self.cursor.execute('SELECT * FROM watcher_order_table WHERE shipment_number = ?', (shipment_number,))
             if self.cursor.fetchone() is None:
                 self.cursor.execute('''insert into watcher_order_table (shipment_number, destination, shipment_type, orders, is_done) values (?,?,?,?,?)''', (shipment_number, destination, shipment_type, orders, is_done))
@@ -121,12 +121,12 @@ class DB:
                 return True
             else:
                 return False
-        except Exception as  e_ow:
-            print(f"DB > order write {e_ow}")
-            return False
+        # except Exception as  e_ow:
+        #     print(f"DB > order write {e_ow}")
+        #     return False
     # shipment_number TEXT NULL, wrong INTEGER NULL, not_detected INTEGER NULL, orders_quantity_specification
     def shipments_table_write(self, shipment_number, wrong, not_detected, orders_quantity_specification={}):
-        try:
+        if True:
             self.cursor.execute('SELECT * FROM shipments_table WHERE shipment_number = ?', (shipment_number,))
             if self.cursor.fetchone() is None:
                 self.cursor.execute('''insert into shipments_table (wrong, not_detected, orders_quantity_specification) values (?,?,?)''', (wrong, not_detected, orders_quantity_specification))
@@ -134,9 +134,9 @@ class DB:
                 return True
             else:
                 return False
-        except Exception as  e_ow:
-            print(f"DB > shipment write {e_ow}")
-            return False
+        # except Exception as  e_ow:
+        #     print(f"DB > shipment write {e_ow}")
+        #     return False
 
     def read(self):
         try:
@@ -151,7 +151,7 @@ class DB:
             return []
     
     def order_read(self, shipment_number=None, is_done=None, status="onetable"):
-        try:
+        if True:
             if status == "total": 
                 self.cursor.execute('SELECT * FROM watcher_order_table')
             elif status == "onetable":
@@ -170,21 +170,21 @@ class DB:
                         return []
                     else:
                         return rows
-        except Exception as e_or:
-            print(f"DB > read order {e_or}")
-            return []
+        # except Exception as e_or:
+        #     print(f"DB > read order {e_or}")
+        #     return []
         
     def shipment_read(self, shipment_number):
-        try:
+        if True:
             self.cursor.execute('SELECT * FROM shipments_table WHERE shipment_number = ?', (shipment_number,))
             rows = self.cursor.fetchall()
             if len(rows) == 0:
                 return []
             else:
                 return rows[0]
-        except Exception as e:
-            print(f"DB > shipment read {e}")
-            return []
+        # except Exception as e:
+        #     print(f"DB > shipment read {e}")
+        #     return []
     
     def delete(self, id):
         try:
@@ -196,28 +196,28 @@ class DB:
             return False
     
     def order_delete(self, shipment_number=None, status="onetable"):
-        try:
+        if True:
             if status == "onetable":
                 self.cursor.execute("""DELETE from watcher_order_table where shipment_number = {}""".format(shipment_number))
             elif status == "total":
                 self.cursor.execute("""DELETE from watcher_order_table""")
             self.dbconnect.commit()
             return True
-        except Exception as e_od:
-            print(f"DB > delete order {e_od}")
-            return False
+        # except Exception as e_od:
+        #     print(f"DB > delete order {e_od}")
+        #     return False
         
     def shipment_delete(self, shipment_number):
-        try:
+        if True:
             self.cursor.execute("""DELETE from shipments_table where shipment_number = {}""".format(shipment_number))
             self.dbconnect.commit()
             return True
-        except Exception as e_od:
-            print(f"DB > shipment delete {e_od}")
-            return False
+        # except Exception as e_od:
+        #     print(f"DB > shipment delete {e_od}")
+        #     return False
         
     def order_update(self, shipment_number, destination=None, shipment_type=None, orders=None, is_done=None):
-        try:
+        if True:
             query = "UPDATE watcher_order_table SET "
             params = []
             # Check which column to updated
@@ -244,12 +244,12 @@ class DB:
             self.cursor.execute(query, params)
             self.dbconnect.commit()
             return True
-        except Exception as e_ou:
-            print(f"DB > update order {e_ou}")
-            return False
+        # except Exception as e_ou:
+        #     print(f"DB > update order {e_ou}")
+        #     return False
         
     def shipment_update(self, shipment_number, wrong=None, not_detected=None, orders_quantity_specification=None):
-        try:
+        if True:
             query = "UPDATE shipments_table SET "
             params = []
             # Check which column to updated
@@ -274,9 +274,9 @@ class DB:
             self.cursor.execute(query, params)
             self.dbconnect.commit()
             return True
-        except Exception as e_ou:
-            print(f"DB > shipment update {e_ou}")
-            return False
+        # except Exception as e_ou:
+        #     print(f"DB > shipment update {e_ou}")
+        #     return False
         
     # def db_checker(self):
     #     try:
