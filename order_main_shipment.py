@@ -726,8 +726,8 @@ class MainWindow(QMainWindow):
                         wrong_qt = read_shipment_db[2]
                         not_detected_qt= read_shipment_db[3]
                         
-                        self.item_row2_col1 = QTableWidgetItem(f"{wrong_qt}")  
-                        self.item_row2_col3 = QTableWidgetItem(f"{not_detected_qt}")  
+                        self.item_row2_col1 = QTableWidgetItem(f"{not_detected_qt}")  
+                        self.item_row2_col3 = QTableWidgetItem(f"{wrong_qt}")  
                         
                         self.title_table.setItem(2, 1, self.item_row2_col1)   
                         self.title_table.setItem(2, 3, self.item_row2_col3) 
