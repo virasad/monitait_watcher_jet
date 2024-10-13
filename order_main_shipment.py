@@ -262,7 +262,6 @@ class MainWindow(QMainWindow):
                             calculation_url = f"https://app.monitait.com/api/elastic-search/batch-report-calculations/?station_id={self.stationID}&order_id={order_id}"
                             order_remaind_value = requests.get(calculation_url, headers=self.headers)
                             if order_remaind_value.status_code == 200:
-                                print("\n\n\norder_remaind_value.status_code", order_remaind_value.status_code, "order_id", order_id, "json data")
                                 order_remaind_value = order_remaind_value.json() 
                                 station_reports = order_remaind_value[0]['station_reports'][0]
                                 batch_quantity = int(station_reports['batch_quantity'])
@@ -272,7 +271,6 @@ class MainWindow(QMainWindow):
                                 # Update the order
                                 ord['batches'][0]['quantity'] = batch_quantity - total_completed_quantity
                                 ord['quantity'] = batch_quantity - total_completed_quantity
-                                print("order_remaind_value after update", ord, "order_id", order_id, "json data")
                             else:
                                 total_completed_quantity = 0
                                 total_remained_quantity = 0
@@ -305,6 +303,7 @@ class MainWindow(QMainWindow):
                     
                     ts = time.time()
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
+                    print(a ,b ,c, d ,dps, "a ,b ,c, d ,dps")
                     # If the OK signal triggered
                     if abs(a - a_initial) >= 1:
                         print("\n ****Catched the OK signal****")
@@ -768,5 +767,6 @@ if __name__ == "__main__":
     time.sleep(0.1)
     Thread(target=counter.counting).start()
     time.sleep(0.1)
+    Thread(target=update_table).start()
     counter.show()
     sys.exit(app.exec_())
