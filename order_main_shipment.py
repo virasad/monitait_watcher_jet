@@ -222,8 +222,8 @@ class MainWindow(QMainWindow):
                 # Reading the scanner to detect OR and start the counting process
                 if True:
                     if not exit_flag:
-                        # shipment_scanned_barcode_byte_string  = self.scanner.read_barcode()
-                        shipment_scanned_barcode_byte_string = self.scanned_value
+                        shipment_scanned_barcode_byte_string  = self.scanner.read_barcode()
+                        # shipment_scanned_barcode_byte_string = self.scanned_value
                         # If the scanner output is serial, convert its output to str
                         if self.usb_serial_flag:    
                             shipment_scanned_barcode = shipment_scanned_barcode_byte_string.decode().strip()
@@ -313,8 +313,8 @@ class MainWindow(QMainWindow):
                         
                         a_initial = a
                         # Waiting to read the box barcode 
-                        scanned_box_barcode_byte_string = self.scanned_value
-                        # scanned_box_barcode_byte_string = self.scanner.read_barcode()
+                        # scanned_box_barcode_byte_string = self.scanned_value
+                        scanned_box_barcode_byte_string = self.scanner.read_barcode()
                         if self.usb_serial_flag:    
                             self.scanned_box_barcode = scanned_box_barcode_byte_string.decode().strip()
                             self.scanned_box_barcode = str(self.scanned_box_barcode)
@@ -781,8 +781,8 @@ if __name__ == "__main__":
                     usb_serial_flag=usb_serial_flag)
     
     print("counting")
-    Thread(target=counter.scanner_read).start()
-    time.sleep(0.1)
+    # Thread(target=counter.scanner_read).start()
+    # time.sleep(0.1)
     Thread(target=counter.db_order_checker).start()
     time.sleep(0.1)
     Thread(target=counter.update_table).start()
