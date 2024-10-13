@@ -635,6 +635,8 @@ class MainWindow(QMainWindow):
                         updated_shipment_number_data_ = self.db.order_read(self.shipment_number)
                         updated_shipment_number_data = json.loads(updated_shipment_number_data_[4])
                         print("updated_shipment_number_data_", updated_shipment_number_data_)
+                        print("\n")
+                        print("\n main_shipment_orders_dict", main_shipment_orders_dict)
                         for item in updated_shipment_number_data:
                             for batch in item['batches']:
                                 # Check if the order finished or not
@@ -671,7 +673,6 @@ class MainWindow(QMainWindow):
             if True:
                 # Checking order db every {table_update_interval} second
                 if (time.time() - table_st > table_update_interval) and (self.shipment_db != []):
-                    print("start table updating")
                     table_st = time.time()
                     json_data1 = json.loads(self.shipment_db[4])
                     if self.update_table_flag:
