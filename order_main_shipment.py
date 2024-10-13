@@ -767,6 +767,6 @@ if __name__ == "__main__":
     time.sleep(0.1)
     Thread(target=counter.counting).start()
     time.sleep(0.1)
-    Thread(target=update_table).start()
+    Thread(target=counter.update_table).start()
     counter.show()
     sys.exit(app.exec_())
