@@ -294,6 +294,7 @@ class MainWindow(QMainWindow):
                     if p_flag:
                         print("In order counting while loop, waiting to the OK signal")
                         p_flag = False
+                        
                     # Reading the box entrance signal
                     # if self.live_stream_flag:
                     #     self.cap = cv2.VideoCapture(live_stream_url)  # Capture from the default camera
@@ -305,7 +306,9 @@ class MainWindow(QMainWindow):
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
                     # If the OK signal triggered
                     if abs(a - a_initial) >= 1:
+                        
                         print("\n ****Catched the OK signal****")
+                        
                         a_initial = a
                         # Waiting to read the box barcode 
                         scanned_box_barcode_byte_string = self.scanner.read_barcode()
@@ -317,6 +320,18 @@ class MainWindow(QMainWindow):
                         print("self.scanned_box_barcode", self.scanned_box_barcode)
                         box_in_order_batch = False
                         if self.scanned_box_barcode != 0:
+                            
+                            # Checking if all barcode value is zeros or not
+                            if all(item['quantity'] == 0 for item in self.shipment_orders):
+                                print("run > All value of the quantity is zero")
+                                # Remove the shipment number **
+                                if self.shipment_number in self.shipment_numbers_list:
+                                    self.shipment_numbers_list.remove(self.shipment_number)
+                                else:
+                                    pass
+                                # Update the order list
+                                self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders),is_done = 1)
+
                             if self.scanned_box_barcode in self.shipment_numbers_list:
                                 # The exit barcode scanned
                                 print("The exit barcode scanned")
@@ -370,34 +385,6 @@ class MainWindow(QMainWindow):
                                                 time.sleep(1)
                                                 self.arduino.gpio32_0.on()
                                                 time.sleep(1)
-                                            elif all(item['quantity'] == 0 for item in self.shipment_orders):
-                                                counted_quantity = total_quantity
-                                                
-                                                remainded_quantity = int(item['quantity'])
-                                                
-                                                self.eject_box[item["id"]] += 1
-                                                
-                                                # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy
-                                                self.orders_quantity_specification[item['id']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['id']], item['product_name'], item['delivery_unit']]
-                                                
-                                                print("run > All value of the quantity is zero")
-                                                # Remove the shipment number **
-                                                if self.shipment_number in self.shipment_numbers_list:
-                                                    self.shipment_numbers_list.remove(self.shipment_number)
-                                                else:
-                                                    pass
-                                                # The detected barcode is not on the order list
-                                                self.arduino.gpio32_0.off()
-                                                time.sleep(1)
-                                                self.arduino.gpio32_0.on()
-                                                time.sleep(1)
-                                                # Update the order list
-                                                self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders),is_done = 1)
-                                                
-                                                # Update shipment table
-                                                self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
-                                                
-                                                order_counting_start_flag = False
                                         else:
                                             quantity_item = abs(total_quantity-item['quantity'])
                                             remainded_item  = int(item['quantity'])
@@ -479,7 +466,11 @@ class MainWindow(QMainWindow):
             
             time.sleep(1)
 
-            
+    def scanner_read(self):
+        scanned_value = self.scanner.read_barcode()
+        print("Value from scanner", scanned_value)
+        return scanned_value
+    
     def db_order_checker(self):
         previus_shipment_number = ""
         b_1 = 0
@@ -610,6 +601,7 @@ class MainWindow(QMainWindow):
                 if True:
                     # Checking order list on the order DB to catch the quantity value
                     main_shipment_number_data = self.db.order_read(self.shipment_number)
+                    print("main_shipment_number_data", main_shipment_number_data)
                     if (main_shipment_number_data != None) and (self.shipment_number != previus_shipment_number):
                         print(f"Shipment values: shipment number {self.shipment_number}, previus shipment number {previus_shipment_number}")
                         main_shipment_orders_dict = {}
@@ -790,5 +782,7 @@ if __name__ == "__main__":
     Thread(target=counter.update_table).start()
     time.sleep(0.1)
     Thread(target=counter.counting).start()
+    time.sleep(0.1)
+    Thread(target=scanner_read).start()
     counter.show()
     sys.exit(app.exec_())
