@@ -346,6 +346,9 @@ class MainWindow(QMainWindow):
                                                 # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy
                                                 orders_quantity_specification[item['id']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['id']], item['product_name'], item['delivery_unit']]
                                                 
+                                                # Update shipment table
+                                                self.db.shipment_update(self.shipment_number, json.dumps(orders_quantity_specification))
+                    
                                                 print("run > The current assigned id quantity value (remainded value):", batch['quantity'])
                                             elif item['quantity']  == 0:
                                                 
@@ -357,6 +360,9 @@ class MainWindow(QMainWindow):
                                                 
                                                 # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy
                                                 orders_quantity_specification[item['id']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['id']], item['product_name'], item['delivery_unit']]
+                                                
+                                                # Update shipment table
+                                                self.db.shipment_update(self.shipment_number, json.dumps(orders_quantity_specification))
                                                 
                                                 print("run > Counted value from this assined is has been finished")
                                                 # The detected barcode is not on the order list
@@ -373,6 +379,9 @@ class MainWindow(QMainWindow):
                                                 
                                                 # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy
                                                 orders_quantity_specification[item['id']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['id']], item['product_name'], item['delivery_unit']]
+                                                
+                                                # Update shipment table
+                                                self.db.shipment_update(self.shipment_number, json.dumps(orders_quantity_specification))
                                                 
                                                 print("run > All value of the quantity is zero")
                                                 # Remove the shipment number **
@@ -399,7 +408,10 @@ class MainWindow(QMainWindow):
                                                 
                                             # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy
                                             orders_quantity_specification[item['id']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['id']], item['product_name'], item['delivery_unit']]
-                                                
+                                            
+                                            # Update shipment table
+                                            self.db.shipment_update(self.shipment_number, json.dumps(orders_quantity_specification))
+                    
                                 # If the scanned barcode is not in the batches, eject it 
                                 if not box_in_order_batch:
                                     print("The barcode is not on the list")
@@ -410,7 +422,10 @@ class MainWindow(QMainWindow):
                                     time.sleep(1)
                                     self.arduino.gpio32_0.on()
                                     time.sleep(1)
-                                
+                                    
+                                    # Update shipment table
+                                    self.db.shipment_update(self.shipment_number, self.wrong_barcode)
+                    
                     # If the NG signal triggered
                     elif abs(b - b_initial) >= 1:
                         print("Recived NG signal")
@@ -423,12 +438,11 @@ class MainWindow(QMainWindow):
                         time.sleep(1)
                         self.arduino.gpio32_0.on()
                         time.sleep(1)
+                        
+                        # Update shipment table
+                        self.db.shipment_update(self.shipment_number, self.not_detected_barcode)
                     
-                    # Update local db
-                    
-                    # Update shipment table
-                    self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(orders_quantity_specification))
-                    
+                
                     # Update the table
                     
                 # except Exception as ex3:
@@ -711,7 +725,7 @@ class MainWindow(QMainWindow):
                         
                         wrong_qt = read_shipment_db[2]
                         not_detected_qt= read_shipment_db[3]
-                        orders_quantity_specification = json.loads(read_shipment_db[3])
+                        orders_quantity_specification = json.loads(read_shipment_db[4])
                         print("\n orders_quantity_specification", orders_quantity_specification)
                         for order_id, item in orders_quantity_specification.items(): 
                             total_qt = item[0]
