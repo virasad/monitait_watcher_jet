@@ -330,7 +330,7 @@ while flag:
           right = 838
           bottom = 152
 
-          estimated_tank_volume = abs(19150)
+          estimated_tank_volume = random.randint(19000, 20000)
           radius = 17.5
           # Crop 200 pixels from top and bottom the image
           # src1 = src[286:880, 498:1188]
