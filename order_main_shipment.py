@@ -469,10 +469,10 @@ class MainWindow(QMainWindow):
             
             time.sleep(1)
 
-    def scanner_read(self):
-        self.scanned_value = self.scanner.read_barcode()
-        print("Value from scanner", self.scanned_value)
-        return self.scanned_value
+    # def scanner_read(self):
+    #     self.scanned_value = self.scanner.read_barcode()
+    #     print("Value from scanner", self.scanned_value)
+    #     return self.scanned_value
     
     def db_order_checker(self):
         previus_shipment_number = ""
@@ -631,8 +631,6 @@ class MainWindow(QMainWindow):
                         updated_shipment_number_data_ = self.db.order_read(self.shipment_number)
                         updated_shipment_number_data = json.loads(updated_shipment_number_data_[4])
                         print("updated_shipment_number_data_", updated_shipment_number_data_)
-                        print("\n")
-                        print("\n main_shipment_orders_dict", main_shipment_orders_dict)
                         for item in updated_shipment_number_data:
                             for batch in item['batches']:
                                 # Check if the order finished or not
