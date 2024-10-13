@@ -783,6 +783,6 @@ if __name__ == "__main__":
     time.sleep(0.1)
     Thread(target=counter.counting).start()
     time.sleep(0.1)
-    Thread(target=scanner_read).start()
+    Thread(target=counter.scanner_read).start()
     counter.show()
     sys.exit(app.exec_())
