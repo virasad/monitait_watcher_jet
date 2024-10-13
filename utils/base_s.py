@@ -88,40 +88,49 @@ class DB:
     def __init__(self) -> None:
         if True:
             self.dbconnect = sqlite3.connect("/home/pi/monitait_watcher_jet/monitait.db", check_same_thread=False)
-            self.cursor1 = self.dbconnect.cursor()
-            self.cursor2 = self.dbconnect.cursor()
-            self.cursor3 = self.dbconnect.cursor()
-            self.cursor1.execute('''CREATE TABLE IF NOT EXISTS monitait_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, register_id TEXT, temp_a INTEGER NULL, temp_b INTEGER NULL, image_name TEXT NULL, extra_info JSON, ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)''')
-            self.cursor2.execute('''CREATE TABLE IF NOT EXISTS watcher_order_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, shipment_number TEXT NULL, destination TEXT NULL, shipment_type TEXT NULL, orders TEXT NULL, is_done INTEGER NULL)''')
-            self.cursor3.execute('''CREATE TABLE IF NOT EXISTS shipments_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, shipment_number TEXT NULL, wrong INTEGER NULL, not_detected INTEGER NULL, orders_quantity_specification TEXT NULL)''')
-            # Check table structure
-            self.cursor2.execute("PRAGMA table_info(watcher_order_table);")
-            columns = self.cursor2.fetchall()
+            cursor1 = self.dbconnect.cursor()
+            cursor2 = self.dbconnect.cursor()
+            cursor3 = self.dbconnect.cursor()
+            cursor1.execute('''CREATE TABLE IF NOT EXISTS monitait_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, register_id TEXT, temp_a INTEGER NULL, temp_b INTEGER NULL, image_name TEXT NULL, extra_info JSON, ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)''')
+            cursor2.execute('''CREATE TABLE IF NOT EXISTS watcher_order_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, shipment_number TEXT NULL, destination TEXT NULL, shipment_type TEXT NULL, orders TEXT NULL, is_done INTEGER NULL)''')
+            cursor3.execute('''CREATE TABLE IF NOT EXISTS shipments_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, shipment_number TEXT NULL, wrong INTEGER NULL, not_detected INTEGER NULL, orders_quantity_specification TEXT NULL)''')
+            # # Check table structure
+            # self.cursor2.execute("PRAGMA table_info(watcher_order_table);")
+            # columns = self.cursor2.fetchall()
 
             # for column in columns:
             #     print(column)
             self.dbconnect.commit()
+            cursor1.close()
+            cursor2.close()
+            cursor3.close()
         # except Exception as e:
         #     print(f"DB > init {e}")
         #     pass
 
     def write(self, register_id=register_id, a=0, b=0, extra_info={}, image_name="", timestamp=datetime.datetime.utcnow()):
         try:
-            self.cursor1.execute('''insert into monitait_table (register_id, temp_a, temp_b, image_name, extra_info, ts) values (?,?,?,?,?,?)''', (register_id, a, b, image_name, json.dumps(extra_info), timestamp))
+            cursor1 = self.dbconnect.cursor()
+            cursor1.execute('''insert into monitait_table (register_id, temp_a, temp_b, image_name, extra_info, ts) values (?,?,?,?,?,?)''', (register_id, a, b, image_name, json.dumps(extra_info), timestamp))
             self.dbconnect.commit()
+            cursor1.close()
             return True
         except Exception as e:
             print(f"DB > write {e}")
+            cursor1.close()
             return False
     
     def order_write(self, shipment_number, destination, shipment_type, orders={}, is_done=0):
         if True:
-            self.cursor2.execute('SELECT * FROM watcher_order_table WHERE shipment_number = ?', (shipment_number,))
-            if self.cursor2.fetchone() is None:
-                self.cursor2.execute('''insert into watcher_order_table (shipment_number, destination, shipment_type, orders, is_done) values (?,?,?,?,?)''', (shipment_number, destination, shipment_type, orders, is_done))
+            cursor2 = self.dbconnect.cursor()
+            cursor2.execute('SELECT * FROM watcher_order_table WHERE shipment_number = ?', (shipment_number,))
+            if cursor2.fetchone() is None:
+                cursor2.execute('''insert into watcher_order_table (shipment_number, destination, shipment_type, orders, is_done) values (?,?,?,?,?)''', (shipment_number, destination, shipment_type, orders, is_done))
                 self.dbconnect.commit()
+                cursor2.close()
                 return True
             else:
+                cursor2.close()
                 return False
         # except Exception as  e_ow:
         #     print(f"DB > order write {e_ow}")
@@ -129,12 +138,15 @@ class DB:
     # shipment_number TEXT NULL, wrong INTEGER NULL, not_detected INTEGER NULL, orders_quantity_specification
     def shipments_table_write(self, shipment_number, wrong, not_detected, orders_quantity_specification={}):
         if True:
-            self.cursor3.execute('SELECT * FROM shipments_table WHERE shipment_number = ?', (shipment_number,))
-            if self.cursor3.fetchone() is None:
-                self.cursor3.execute('''insert into shipments_table (wrong, not_detected, orders_quantity_specification) values (?,?,?)''', (wrong, not_detected, orders_quantity_specification))
+            cursor3 = self.dbconnect.cursor()
+            cursor3.execute('SELECT * FROM shipments_table WHERE shipment_number = ?', (shipment_number,))
+            if cursor3.fetchone() is None:
+                cursor3.execute('''insert into shipments_table (wrong, not_detected, orders_quantity_specification) values (?,?,?)''', (wrong, not_detected, orders_quantity_specification))
                 self.dbconnect.commit()
+                cursor3.close()
                 return True
             else:
+                cursor3.close()
                 return False
         # except Exception as  e_ow:
         #     print(f"DB > shipment write {e_ow}")
@@ -142,11 +154,14 @@ class DB:
 
     def read(self):
         try:
-            self.cursor1.execute('SELECT * FROM monitait_table')
-            rows = self.cursor1.fetchall()
+            cursor1 = self.dbconnect.cursor()
+            cursor1.execute('SELECT * FROM monitait_table')
+            rows = cursor1.fetchall()
             if len(rows) == 0:
+                cursor1.close()
                 return []
             else:
+                cursor1.close()
                 return rows[0]
         except Exception as e:
             print(f"DB > read {e}")
@@ -154,23 +169,29 @@ class DB:
     
     def order_read(self, shipment_number=None, is_done=None, status="onetable"):
         if True:
+            cursor2 = self.dbconnect.cursor()
             if status == "total": 
-                self.cursor2.execute('SELECT * FROM watcher_order_table')
+                cursor2.execute('SELECT * FROM watcher_order_table')
+                cursor2.close()
             elif status == "onetable":
                 if shipment_number is not None:
-                    self.cursor2.execute('SELECT * FROM watcher_order_table WHERE shipment_number = ?', (shipment_number,))
+                    cursor2.execute('SELECT * FROM watcher_order_table WHERE shipment_number = ?', (shipment_number,))
                     rows = self.cursor2.fetchall()
                     if len(rows) == 0:
+                        cursor2.close()
                         return []
                     else:
+                        cursor2.close()
                         return rows[0]
-                    
+                                    
                 if is_done is not None:
-                    self.cursor2.execute('SELECT * FROM watcher_order_table WHERE is_done = ?', (is_done,))
-                    rows = self.cursor2.fetchall()
+                    cursor2.execute('SELECT * FROM watcher_order_table WHERE is_done = ?', (is_done,))
+                    rows = cursor2.fetchall()
                     if len(rows) == 0:
+                        cursor2.close()
                         return []
                     else:
+                        cursor2.close()
                         return rows
         # except Exception as e_or:
         #     print(f"DB > read order {e_or}")
@@ -178,11 +199,14 @@ class DB:
         
     def shipment_read(self, shipment_number):
         if True:
-            self.cursor3.execute('SELECT * FROM shipments_table WHERE shipment_number = ?', (shipment_number,))
-            rows = self.cursor3.fetchall()
+            cursor3 = self.dbconnect.cursor()
+            cursor3.execute('SELECT * FROM shipments_table WHERE shipment_number = ?', (shipment_number,))
+            rows = cursor3.fetchall()
             if len(rows) == 0:
+                cursor3.close()
                 return []
             else:
+                cursor3.close()
                 return rows[0]
         # except Exception as e:
         #     print(f"DB > shipment read {e}")
@@ -190,8 +214,10 @@ class DB:
     
     def delete(self, id):
         try:
-            self.cursor1.execute("""DELETE from monitait_table where id = {}""".format(id))
+            cursor1 = self.dbconnect.cursor()
+            cursor1.execute("""DELETE from monitait_table where id = {}""".format(id))
             self.dbconnect.commit()
+            cursor1.close()
             return True
         except Exception as e:
             print(f"DB > delete {e}")
@@ -199,11 +225,13 @@ class DB:
     
     def order_delete(self, shipment_number=None, status="onetable"):
         if True:
+            cursor2 = self.dbconnect.cursor()
             if status == "onetable":
-                self.cursor2.execute("""DELETE from watcher_order_table where shipment_number = {}""".format(shipment_number))
+                cursor2.execute("""DELETE from watcher_order_table where shipment_number = {}""".format(shipment_number))
             elif status == "total":
-                self.cursor2.execute("""DELETE from watcher_order_table""")
+                cursor2.execute("""DELETE from watcher_order_table""")
             self.dbconnect.commit()
+            cursor2.close()
             return True
         # except Exception as e_od:
         #     print(f"DB > delete order {e_od}")
@@ -211,8 +239,10 @@ class DB:
         
     def shipment_delete(self, shipment_number):
         if True:
-            self.cursor3.execute("""DELETE from shipments_table where shipment_number = {}""".format(shipment_number))
+            cursor3 = self.dbconnect.cursor()
+            cursor3.execute("""DELETE from shipments_table where shipment_number = {}""".format(shipment_number))
             self.dbconnect.commit()
+            cursor3.close()
             return True
         # except Exception as e_od:
         #     print(f"DB > shipment delete {e_od}")
@@ -243,8 +273,10 @@ class DB:
             params.append(shipment_number)
 
             # Execute the UPDATE statement
-            self.cursor2.execute(query, params)
+            cursor2 = self.dbconnect.cursor()
+            cursor2.execute(query, params)
             self.dbconnect.commit()
+            cursor2.close()
             return True
         # except Exception as e_ou:
         #     print(f"DB > update order {e_ou}")
@@ -273,8 +305,10 @@ class DB:
             params.append(shipment_number)
 
             # Execute the UPDATE statement
-            self.cursor3.execute(query, params)
+            cursor3 = self.dbconnect.cursor()
+            cursor3.execute(query, params)
             self.dbconnect.commit()
+            cursor3.close()
             return True
         # except Exception as e_ou:
         #     print(f"DB > shipment update {e_ou}")
