@@ -94,9 +94,6 @@ class DB:
             cursor1.execute('''CREATE TABLE IF NOT EXISTS monitait_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, register_id TEXT, temp_a INTEGER NULL, temp_b INTEGER NULL, image_name TEXT NULL, extra_info JSON, ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)''')
             cursor2.execute('''CREATE TABLE IF NOT EXISTS watcher_order_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, shipment_number TEXT NULL, destination TEXT NULL, shipment_type TEXT NULL, orders TEXT NULL, is_done INTEGER NULL)''')
             cursor3.execute('''CREATE TABLE IF NOT EXISTS shipments_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, shipment_number TEXT NULL, wrong INTEGER NULL, not_detected INTEGER NULL, orders_quantity_specification TEXT NULL)''')
-            # # Check table structure
-            # self.cursor2.execute("PRAGMA table_info(watcher_order_table);")
-            # columns = self.cursor2.fetchall()
 
             # for column in columns:
             #     print(column)
@@ -177,7 +174,7 @@ class DB:
                 cursor2 = self.dbconnect.cursor()
                 if shipment_number is not None:
                     cursor2.execute('SELECT * FROM watcher_order_table WHERE shipment_number = ?', (shipment_number,))
-                    rows = self.cursor2.fetchall()
+                    rows = cursor2.fetchall()
                     if len(rows) == 0:
                         cursor2.close()
                         return []
