@@ -634,6 +634,7 @@ class MainWindow(QMainWindow):
                         # Getting to detect in which batch changes is happend
                         updated_shipment_number_data_ = self.db.order_read(self.shipment_number)
                         updated_shipment_number_data = json.loads(updated_shipment_number_data_[4])
+                        print("updated_shipment_number_data_", updated_shipment_number_data_)
                         for item in updated_shipment_number_data:
                             for batch in item['batches']:
                                 # Check if the order finished or not
@@ -718,7 +719,6 @@ class MainWindow(QMainWindow):
                             self.table_widget.setItem(row_position, 6, QTableWidgetItem(str(eject_value)))
                     
                     read_shipment_db = self.db.shipment_read(self.shipment_number)
-                    print(read_shipment_db, "read_shipment_db", self.shipment_number)
                     if read_shipment_db != []:
                         self.table_widget.setRowCount(0)  # Clear the table
                         
