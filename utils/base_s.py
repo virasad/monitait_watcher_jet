@@ -174,6 +174,7 @@ class DB:
                 cursor2.execute('SELECT * FROM watcher_order_table')
                 cursor2.close()
             elif status == "onetable":
+                cursor2 = self.dbconnect.cursor()
                 if shipment_number is not None:
                     cursor2.execute('SELECT * FROM watcher_order_table WHERE shipment_number = ?', (shipment_number,))
                     rows = self.cursor2.fetchall()
