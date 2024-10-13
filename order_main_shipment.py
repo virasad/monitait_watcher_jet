@@ -253,7 +253,7 @@ class MainWindow(QMainWindow):
                         self.eject_box = {item["id"]: 0 for item in json_data1}
                         self.wrong_barcode = 0
                         self.not_detected_barcode = 0
-                        orders_quantity_specification = {}
+                        self.orders_quantity_specification = {}
                         print("json_data1", json_data1)
                         
                         # Update the quantity by another calculation URL
@@ -277,10 +277,10 @@ class MainWindow(QMainWindow):
                             product_name = ord['product_name'] 
                             unit = ord['delivery_unit']
                             # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy, name, unit
-                            orders_quantity_specification[ord['id']] = [ord['quantity'], total_completed_quantity, total_remained_quantity, 0, product_name, unit]
+                            self.orders_quantity_specification[ord['id']] = [ord['quantity'], total_completed_quantity, total_remained_quantity, 0, product_name, unit]
                         
                         # Write shipment table
-                        self.db.shipments_table_write(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(orders_quantity_specification))
+                        self.db.shipments_table_write(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
                     else:
                         order_counting_start_flag = False
                         print(f"There is no such shipment number, {self.shipment_number}, {type(self.shipment_number)}")
@@ -344,10 +344,10 @@ class MainWindow(QMainWindow):
                                                 self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders),is_done = 0)
                                                 
                                                 # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy
-                                                orders_quantity_specification[item['id']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['id']], item['product_name'], item['delivery_unit']]
+                                                self.orders_quantity_specification[item['id']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['id']], item['product_name'], item['delivery_unit']]
                                                 
                                                 # Update shipment table
-                                                self.db.shipment_update(self.shipment_number, json.dumps(orders_quantity_specification))
+                                                self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
                     
                                                 print("run > The current assigned id quantity value (remainded value):", batch['quantity'])
                                             elif item['quantity']  == 0:
@@ -359,10 +359,10 @@ class MainWindow(QMainWindow):
                                                 # Update the order of shipment dictionary
                                                 
                                                 # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy
-                                                orders_quantity_specification[item['id']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['id']], item['product_name'], item['delivery_unit']]
+                                                self.orders_quantity_specification[item['id']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['id']], item['product_name'], item['delivery_unit']]
                                                 
                                                 # Update shipment table
-                                                self.db.shipment_update(self.shipment_number, json.dumps(orders_quantity_specification))
+                                                self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
                                                 
                                                 print("run > Counted value from this assined is has been finished")
                                                 # The detected barcode is not on the order list
@@ -378,10 +378,7 @@ class MainWindow(QMainWindow):
                                                 self.eject_box[item["id"]] += 1
                                                 
                                                 # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy
-                                                orders_quantity_specification[item['id']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['id']], item['product_name'], item['delivery_unit']]
-                                                
-                                                # Update shipment table
-                                                self.db.shipment_update(self.shipment_number, json.dumps(orders_quantity_specification))
+                                                self.orders_quantity_specification[item['id']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['id']], item['product_name'], item['delivery_unit']]
                                                 
                                                 print("run > All value of the quantity is zero")
                                                 # Remove the shipment number **
@@ -397,6 +394,9 @@ class MainWindow(QMainWindow):
                                                 # Update the order list
                                                 self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders),is_done = 1)
                                                 
+                                                # Update shipment table
+                                                self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
+                                                
                                                 order_counting_start_flag = False
                                         else:
                                             quantity_item = abs(total_quantity-item['quantity'])
@@ -407,10 +407,10 @@ class MainWindow(QMainWindow):
                                             # Update the order of shipment dictionary
                                                 
                                             # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy
-                                            orders_quantity_specification[item['id']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['id']], item['product_name'], item['delivery_unit']]
+                                            self.orders_quantity_specification[item['id']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['id']], item['product_name'], item['delivery_unit']]
                                             
                                             # Update shipment table
-                                            self.db.shipment_update(self.shipment_number, json.dumps(orders_quantity_specification))
+                                            self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
                     
                                 # If the scanned barcode is not in the batches, eject it 
                                 if not box_in_order_batch:
@@ -424,7 +424,7 @@ class MainWindow(QMainWindow):
                                     time.sleep(1)
                                     
                                     # Update shipment table
-                                    self.db.shipment_update(self.shipment_number, self.wrong_barcode)
+                                    self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
                     
                     # If the NG signal triggered
                     elif abs(b - b_initial) >= 1:
@@ -440,9 +440,8 @@ class MainWindow(QMainWindow):
                         time.sleep(1)
                         
                         # Update shipment table
-                        self.db.shipment_update(self.shipment_number, self.not_detected_barcode)
+                        self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
                     
-                
                     # Update the table
                     
                 # except Exception as ex3:
@@ -731,11 +730,11 @@ class MainWindow(QMainWindow):
                         
                         self.title_table.setItem(2, 1, self.item_row2_col1)   
                         self.title_table.setItem(2, 3, self.item_row2_col3) 
+                        self.
                         
-                        
-                        orders_quantity_specification = json.loads(read_shipment_db[4])
-                        print("\n orders_quantity_specification", orders_quantity_specification)
-                        for order_id, item in orders_quantity_specification.items(): 
+                        orders_quantity_value = json.loads(read_shipment_db[4])
+                        print("\n orders_quantity_value", orders_quantity_value)
+                        for order_id, item in orders_quantity_value.items(): 
                             total_qt = item[0]
                             counted_qt = item[1]
                             remainded_qt = item[2]
