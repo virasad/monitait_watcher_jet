@@ -136,7 +136,7 @@ class MainWindow(QMainWindow):
         
         self.arduino = arduino
         self.stop_thread = False
-        self.update_table = False
+        self.update_table_flag = False
         self.order_list = []
         self.db = db
         self.camera = camera
@@ -185,7 +185,7 @@ class MainWindow(QMainWindow):
     def counting(self):
 
         # # Restart the timer
-        # self.timer = threading.Timer(1.0, self.update_table)
+        # self.timer = threading.Timer(1.0, self.update_table_flag)
         # self.timer.start()
         
         
@@ -238,7 +238,7 @@ class MainWindow(QMainWindow):
                     
                     if self.shipment_db != []:
                         order_counting_start_flag = True
-                        self.update_table = True
+                        self.update_table_flag = True
                         # Getting batches, product, and factory from scanned order
                         self.shipment_orders = json.loads(self.shipment_db[4])
 
@@ -661,8 +661,8 @@ class MainWindow(QMainWindow):
                     table_st = time.time()
                     json_data1 = json.loads(self.shipment_db[4])
                     print("\n shipment db updated", json_data1)
-                    if self.update_table:
-                        self.update_table = False
+                    if self.update_table_flag:
+                        self.update_table_flag = False
                         # Updating the table
                         # Create and set values 
                         self.item_row0_col1 = QTableWidgetItem(f"{self.shipment_number}")  
@@ -767,6 +767,7 @@ if __name__ == "__main__":
     Thread(target=counter.db_order_checker).start()
     time.sleep(0.1)
     Thread(target=counter.update_table).start()
+    print("START COUNTING")
     time.sleep(0.1)
     Thread(target=counter.counting).start()
     counter.show()
