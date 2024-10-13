@@ -330,8 +330,8 @@ while flag:
           right = 838
           bottom = 152
 
-          estimated_tank_volume = abs(22150)
-          radius = 18.5
+          estimated_tank_volume = abs(19150)
+          radius = 17.5
           # Crop 200 pixels from top and bottom the image
           # src1 = src[286:880, 498:1188]
           src1 = src[top:height-bottom, left:width-right]
