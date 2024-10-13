@@ -95,15 +95,6 @@ class DB:
             cursor2.execute('''CREATE TABLE IF NOT EXISTS watcher_order_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, shipment_number TEXT NULL, destination TEXT NULL, shipment_type TEXT NULL, orders TEXT NULL, is_done INTEGER NULL)''')
             cursor3.execute('''CREATE TABLE IF NOT EXISTS shipments_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, shipment_number TEXT NULL, wrong INTEGER NULL, not_detected INTEGER NULL, orders_quantity_specification TEXT NULL)''')
             
-            cursor1.execute("SELECT name FROM monitait WHERE type='table' AND name=monitait_table;")
-            cursor2.execute("SELECT name FROM monitait WHERE type='table' AND name=watcher_order_table;")
-            cursor3.execute("SELECT name FROM monitait WHERE type='table' AND name=shipments_table;")
-            
-            print(cursor1.fetchone(), 1)
-            print(cursor2.fetchone(), 2)
-            print(cursor3.fetchone(), 3)
-    
-
             # for column in columns:
             #     print(column)
             self.dbconnect.commit()
@@ -147,7 +138,7 @@ class DB:
             cursor3 = self.dbconnect.cursor()
             cursor3.execute('SELECT * FROM shipments_table WHERE shipment_number = ?', (shipment_number,))
             if cursor3.fetchone() is None:
-                cursor3.execute('''insert into shipments_table (wrong, not_detected, orders_quantity_specification) values (?,?,?)''', (wrong, not_detected, orders_quantity_specification))
+                cursor3.execute('''insert into shipments_table (shipment_number, wrong, not_detected, orders_quantity_specification) values (?,?,?,?)''', (shipment_number, wrong, not_detected, orders_quantity_specification))
                 self.dbconnect.commit()
                 cursor3.close()
                 return True
