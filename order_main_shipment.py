@@ -660,7 +660,6 @@ class MainWindow(QMainWindow):
                     print("start table updating")
                     table_st = time.time()
                     json_data1 = json.loads(self.shipment_db[4])
-                    print("\n shipment db updated", json_data1)
                     if self.update_table_flag:
                         self.update_table_flag = False
                         # Updating the table
@@ -706,6 +705,7 @@ class MainWindow(QMainWindow):
                             self.table_widget.setItem(row_position, 6, QTableWidgetItem(str(eject_value)))
                     
                     read_shipment_db = self.db.shipment_read(self.shipment_number)
+                    print(read_shipment_db, "read_shipment_db")
                     if read_shipment_db != []:
                         self.table_widget.setRowCount(0)  # Clear the table
                         
