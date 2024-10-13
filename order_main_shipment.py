@@ -303,7 +303,6 @@ class MainWindow(QMainWindow):
                     
                     ts = time.time()
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
-                    print(a ,b ,c, d ,dps, "a ,b ,c, d ,dps")
                     # If the OK signal triggered
                     if abs(a - a_initial) >= 1:
                         print("\n ****Catched the OK signal****")
@@ -653,10 +652,12 @@ class MainWindow(QMainWindow):
         table_st = time.time()
         table_update_interval = 10
         table_updating_flag = True
+        print("\n ***Update table function.***")
         while not self.stop_thread:
             if Ture:
                 # Checking order db every {table_update_interval} second
                 if (time.time() - table_st > table_update_interval) and (self.shipment_db != []):
+                    print("start table updating")
                     table_st = time.time()
                     json_data1 = json.loads(self.shipment_db[4])
                     print("\n shipment db updated", json_data1)
