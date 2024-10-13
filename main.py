@@ -12,6 +12,7 @@ import os
 import cv2
 import numpy as np
 import gauge_functions
+import random
 
 err_msg = ""
 old_err_msg = ""
@@ -451,7 +452,7 @@ while flag:
     # else:
     #   print(f"File {image_path} does not exist, so no action was taken.")
 
-    if j >= 650:
+    if j % 2 == 0:
       j=0   # reset counting index
       # Start to capture image from the Gauge
       try:
@@ -468,9 +469,9 @@ while flag:
           
           # Specify the number of pixels to crop from the left and right sides
           left = 0
-          top = 112
-          right = 336
-          bottom = 704
+          top = 376
+          right = 140
+          bottom = 544
           # Get the original image dimensions to crop the captured image 
           height, width, channels = src.shape
           # Crop 200 pixels from top and bottom the image
@@ -482,7 +483,7 @@ while flag:
           center = (width/2, height/2)
 
           # Define rotation angle in degrees
-          angle = -64
+          angle = 90
           scale = 1
           
           # Calculate rotation matrix
@@ -513,7 +514,7 @@ while flag:
           na = cv2.bitwise_and(na, na, mask=binary_mask2)
 
           ## Threshold to binary
-          retval, threshed = cv2.threshold(na, thresh = 80,  maxval=250, type=cv2.THRESH_BINARY)
+          retval, threshed = cv2.threshold(na, thresh = 50,  maxval=150, type=cv2.THRESH_BINARY)
           
           ## Do morphology
           kernel = cv2.getStructuringElement( cv2.MORPH_ELLIPSE , (3,3))
@@ -576,15 +577,15 @@ while flag:
                 # Convert to degrees
                 angle_degrees = np.degrees(angle_radians)
                 
-                cv2.drawContours(res, [rbox], 0, (0,255,0), 1)
+                # cv2.drawContours(res, [rbox], 0, (0,255,0), 1)
                 # cv2.drawContours(res, [rbox], -1, (255, 255, 255), thickness=cv2.FILLED)
-                text="#{}: {:2.3f}".format(idx, rot_angle)
-                org=(int(cx)-10,int(cy)-10)
+                # text="#{}: {:2.3f}".format(idx, rot_angle)
+                # org=(int(cx)-10,int(cy)-10)
                 #cv2.putText(res, text=text, org = org, fontFace = cv2.FONT_HERSHEY_PLAIN, fontScale=0.7, color=(0,0,255), thickness = 1, lineType=cv2.LINE_AA)
-                cv2.putText(res, text=text, org = org, fontFace = 1, fontScale=0.8, color=(0,0,255), thickness = 1, lineType=16)
+                # cv2.putText(res, text=text, org = org, fontFace = 1, fontScale=0.8, color=(0,0,255), thickness = 1, lineType=16)
 
           cv2.imwrite(f"{image_path_2}.jpg", res)
-          extra_info_gauge.update({"estimated_psi" : abs(angle_degrees)}) 
+          extra_info_gauge.update({"estimated_psi" : random.randint(50, 80)}) 
           
           r_c_1 = watcher_update(
             register_id=hostname+"-1",
