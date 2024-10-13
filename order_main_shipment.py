@@ -148,6 +148,7 @@ class MainWindow(QMainWindow):
         self.usb_serial_flag = usb_serial_flag
         self.headers = {'Register-ID': f'{self.register_id}', 
                         'Content-Type': 'application/json'}
+        self.scanned_value = None
         self.shipment_number = None
         self.shipment_type = None
         self.destination = None
@@ -221,7 +222,8 @@ class MainWindow(QMainWindow):
                 # Reading the scanner to detect OR and start the counting process
                 if True:
                     if not exit_flag:
-                        shipment_scanned_barcode_byte_string  = self.scanner.read_barcode()
+                        # shipment_scanned_barcode_byte_string  = self.scanner.read_barcode()
+                        shipment_scanned_barcode_byte_string = self.scanned_value
                         # If the scanner output is serial, convert its output to str
                         if self.usb_serial_flag:    
                             shipment_scanned_barcode = shipment_scanned_barcode_byte_string.decode().strip()
@@ -311,7 +313,8 @@ class MainWindow(QMainWindow):
                         
                         a_initial = a
                         # Waiting to read the box barcode 
-                        scanned_box_barcode_byte_string = self.scanner.read_barcode()
+                        scanned_box_barcode_byte_string = self.scanned_value
+                        # scanned_box_barcode_byte_string = self.scanner.read_barcode()
                         if self.usb_serial_flag:    
                             self.scanned_box_barcode = scanned_box_barcode_byte_string.decode().strip()
                             self.scanned_box_barcode = str(self.scanned_box_barcode)
@@ -467,9 +470,9 @@ class MainWindow(QMainWindow):
             time.sleep(1)
 
     def scanner_read(self):
-        scanned_value = self.scanner.read_barcode()
-        print("Value from scanner", scanned_value)
-        return scanned_value
+        self.scanned_value = self.scanner.read_barcode()
+        print("Value from scanner", self.scanned_value)
+        return self.scanned_value
     
     def db_order_checker(self):
         previus_shipment_number = ""
@@ -613,6 +616,7 @@ class MainWindow(QMainWindow):
                             order_id = item['id']
                             for batch in item['batches']:
                                 if batch['quantity'] != 0:
+                                    print("batch['batch_uuid']", batch['batch_uuid'])
                                     # Put all batches of a shipment orders to dictionary
                                     main_shipment_orders_dict[batch['batch_uuid']]={
                                                                     'quantity': int(batch['quantity']),
@@ -777,12 +781,12 @@ if __name__ == "__main__":
                     usb_serial_flag=usb_serial_flag)
     
     print("counting")
+    Thread(target=counter.scanner_read).start()
+    time.sleep(0.1)
     Thread(target=counter.db_order_checker).start()
     time.sleep(0.1)
     Thread(target=counter.update_table).start()
     time.sleep(0.1)
     Thread(target=counter.counting).start()
-    time.sleep(0.1)
-    Thread(target=counter.scanner_read).start()
     counter.show()
     sys.exit(app.exec_())
