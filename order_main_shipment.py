@@ -559,7 +559,7 @@ class MainWindow(QMainWindow):
                     if completed_orders_list == []:
                         print("\nThere are no completed orders")
                     else:
-                        print("\n Found completed orders", completed_orders_list)
+                        print("\n Found completed orders")
                         for item in completed_orders_list:
                             orders = json.loads(item[4])
                             orders_number = len(orders)
@@ -581,11 +581,11 @@ class MainWindow(QMainWindow):
                                     status_code_number += 1
                                 else:
                                     pass
-                            if status_code_number==orders_number:
-                                print(f"\n status code number {status_code_number}, order numbers {orders_number}")
-                                self.db.order_delete(shipment_number=self.shipment_number, status="onetable")
-                            else:
-                                pass
+                            # if status_code_number==orders_number:
+                            #     print(f"\n status code number {status_code_number}, order numbers {orders_number}")
+                            #     self.db.order_delete(shipment_number=self.shipment_number, status="onetable")
+                            # else:
+                            #     pass
                             
                     # # Removed all datafrom table
                     # table_delete = self.db.order_delete(status="total")
