@@ -137,6 +137,7 @@ class DB:
         if True:
             cursor3 = self.dbconnect.cursor()
             cursor3.execute('SELECT * FROM shipments_table WHERE shipment_number = ?', (shipment_number,))
+            print(cursor3.fetchone(), "cursor3.fetchone()")
             if cursor3.fetchone() is None:
                 cursor3.execute('''insert into shipments_table (wrong, not_detected, orders_quantity_specification) values (?,?,?)''', (wrong, not_detected, orders_quantity_specification))
                 self.dbconnect.commit()
