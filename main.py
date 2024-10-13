@@ -452,7 +452,7 @@ while flag:
     # else:
     #   print(f"File {image_path} does not exist, so no action was taken.")
 
-    if j % 2 == 0:
+    if j >= 650:
       j=0   # reset counting index
       # Start to capture image from the Gauge
       try:
@@ -596,7 +596,7 @@ while flag:
             product_id=0,
             lot_info=0,
             extra_info= extra_info_gauge)
-          
+
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
