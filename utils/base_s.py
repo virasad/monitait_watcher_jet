@@ -271,10 +271,9 @@ class DB:
             params.append(shipment_number)
 
             # Execute the UPDATE statement
-            cursor2 = self.dbconnect.cursor()
-            cursor2.execute(query, params)
+            self.dbconnect.execute("BEGIN")
+            self.dbconnect.execute(query, params)
             self.dbconnect.commit()
-            cursor2.close()
             return True
         # except Exception as e_ou:
         #     print(f"DB > update order {e_ou}")
@@ -303,10 +302,9 @@ class DB:
             params.append(shipment_number)
 
             # Execute the UPDATE statement
-            cursor3 = self.dbconnect.cursor()
-            cursor3.execute(query, params)
+            self.dbconnect.execute("BEGIN")
+            self.dbconnect.execute(query, params)
             self.dbconnect.commit()
-            cursor3.close()
             return True
         # except Exception as e_ou:
         #     print(f"DB > shipment update {e_ou}")
