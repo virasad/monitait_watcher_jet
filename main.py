@@ -526,7 +526,7 @@ while flag:
           ## Draw Contours
           res = region.copy()
 
-          mask = cv2.imread('mask.jpg', cv2.IMREAD_GRAYSCALE)
+          mask = cv2.imread('mask2.jpg', cv2.IMREAD_GRAYSCALE)
           cv2.drawContours(res, contours, -1, (255,0,0), 1)
 
           counter_max_width = 0
