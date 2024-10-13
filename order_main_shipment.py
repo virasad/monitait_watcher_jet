@@ -654,7 +654,7 @@ class MainWindow(QMainWindow):
         table_updating_flag = True
         print("\n ***Update table function.***")
         while not self.stop_thread:
-            if Ture:
+            if True:
                 # Checking order db every {table_update_interval} second
                 if (time.time() - table_st > table_update_interval) and (self.shipment_db != []):
                     print("start table updating")
@@ -767,7 +767,6 @@ if __name__ == "__main__":
     Thread(target=counter.db_order_checker).start()
     time.sleep(0.1)
     Thread(target=counter.update_table).start()
-    print("START COUNTING")
     time.sleep(0.1)
     Thread(target=counter.counting).start()
     counter.show()
