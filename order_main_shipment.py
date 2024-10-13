@@ -725,6 +725,14 @@ class MainWindow(QMainWindow):
                         
                         wrong_qt = read_shipment_db[2]
                         not_detected_qt= read_shipment_db[3]
+                        
+                        self.item_row2_col1 = QTableWidgetItem(f"{wrong_qt}")  
+                        self.item_row2_col3 = QTableWidgetItem(f"{not_detected_qt}")  
+                        
+                        self.title_table.setItem(2, 1, self.item_row2_col1)   
+                        self.title_table.setItem(2, 3, self.item_row2_col3) 
+                        
+                        
                         orders_quantity_specification = json.loads(read_shipment_db[4])
                         print("\n orders_quantity_specification", orders_quantity_specification)
                         for order_id, item in orders_quantity_specification.items(): 
