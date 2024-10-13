@@ -647,7 +647,7 @@ class MainWindow(QMainWindow):
                                     pass
                 # except Exception as ex2:
                 #     print(f"db_order_checker > checking the database {ex2}")
-    def update_table():
+    def update_table(self):
         previus_shipment_number = ""
         table_st = time.time()
         table_update_interval = 10
