@@ -157,7 +157,7 @@ class MainWindow(QMainWindow):
         self.shipment_numbers_list = []
         self.shipment_orders = None
         self.is_done = 0
-        self.db_order_checking_interval = 10 # Secends
+        self.db_order_checking_interval = 12 # Secends
         self.watcher_live_signal = 60 * 5
         self.take_picture_interval = 60 * 5
         self.order_db_remove_interval = 30  # Convert hours to secends
