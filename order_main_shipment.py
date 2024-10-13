@@ -730,10 +730,9 @@ class MainWindow(QMainWindow):
                         
                         self.title_table.setItem(2, 1, self.item_row2_col1)   
                         self.title_table.setItem(2, 3, self.item_row2_col3) 
-                        self.
                         
                         orders_quantity_value = json.loads(read_shipment_db[4])
-                        print("\n orders_quantity_value", orders_quantity_value)
+                        
                         for order_id, item in orders_quantity_value.items(): 
                             total_qt = item[0]
                             counted_qt = item[1]
