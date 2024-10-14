@@ -418,7 +418,7 @@ class MainWindow(QMainWindow):
                                     print("TimeReport:table update and ejector running", time.time()-eject_ts)
                             print("imeReport: box barcode checking total time", time.time()-s_a, "Status: Counted ok value", a)
                         else:
-                           print("Status:the barcode is not on the order list.")
+                            print("Status:the barcode could not catch barcode.")
                             s2 = time.time()
                             self.wrong_barcode += 1
                             print("TimeReport:variable writing.", time.time() - s2)
