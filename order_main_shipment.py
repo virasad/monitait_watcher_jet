@@ -110,24 +110,24 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.title_table)  # Add title above the table
         layout.addWidget(self.table_widget)
         print("Checking the live stream url")
-        # # Checking whether the live stream URL is alive or not
-        # try:
-        #     response = requests.head(live_stream_url, allow_redirects=True)
-        #     if response.status_code == 200: 
-        #         self.live_stream_flag = True
-        #     else:
-        #         self.live_stream_flag = False
-        # except:
-        #     self.live_stream_flag = True
-        #     pass
+        # Checking whether the live stream URL is alive or not
+        try:
+            response = requests.head(live_stream_url, allow_redirects=True)
+            if response.status_code == 200: 
+                self.live_stream_flag = True
+            else:
+                self.live_stream_flag = False
+        except:
+            self.live_stream_flag = True
+            pass
 
-        print("Adding widget if live stream is True")
-        # if self.live_stream_flag:
-        #     # Create a QLabel for the image
-        #     self.image_label = QLabel(self)
-        #     layout.addWidget(self.image_label, alignment=Qt.AlignLeft | Qt.AlignTop)
-        # else:
-        #     pass
+        print(f"Adding widget if live stream is {self.live_stream_flag}", response.status_code)
+        if self.live_stream_flag:
+            # Create a QLabel for the image
+            self.image_label = QLabel(self)
+            layout.addWidget(self.image_label, alignment=Qt.AlignLeft | Qt.AlignTop)
+        else:
+            pass
         
         # Create a container widget to hold the layout and image
         container = QWidget()
@@ -148,7 +148,7 @@ class MainWindow(QMainWindow):
         self.usb_serial_flag = usb_serial_flag
         self.headers = {'Register-ID': f'{self.register_id}', 
                         'Content-Type': 'application/json'}
-        self.scanned_value = None
+        self.scanned_value = ""
         self.shipment_number = None
         self.shipment_type = None
         self.destination = None
@@ -175,13 +175,13 @@ class MainWindow(QMainWindow):
             # # Set the QImage on the QLabel
             self.image_label.setPixmap(QPixmap.fromImage(qimg))
         
-    # def closeEvent(self, event):
-    #     print(1)
-    #     if self.live_stream_flag:
-    #         self.cap.release()  # Release the video capture on close
-    #         event.accept()
-    #     else:
-    #         pass
+    def closeEvent(self, event):
+        print(1)
+        if self.live_stream_flag:
+            self.cap.release()  # Release the video capture on close
+            event.accept()
+        else:
+            pass
     
     def counting(self):
 
@@ -222,8 +222,8 @@ class MainWindow(QMainWindow):
                 # Reading the scanner to detect OR and start the counting process
                 if True:
                     if not exit_flag:
-                        shipment_scanned_barcode_byte_string  = self.scanner.read_barcode()
-                        # shipment_scanned_barcode_byte_string = self.scanned_value
+                        # shipment_scanned_barcode_byte_string  = self.scanner.read_barcode()
+                        shipment_scanned_barcode_byte_string = self.scanned_value
                         # If the scanner output is serial, convert its output to str
                         if self.usb_serial_flag:    
                             shipment_scanned_barcode = shipment_scanned_barcode_byte_string.decode().strip()
@@ -293,31 +293,28 @@ class MainWindow(QMainWindow):
             ##
             # Start counting process
             p_flag = True
+            eject_ts = time.time()
             while order_counting_start_flag:
                 if True:
                     if p_flag:
                         print("In order counting while loop, waiting to the OK signal")
                         p_flag = False
                         
-                    # Reading the box entrance signal
-                    # if self.live_stream_flag:
-                    #     self.cap = cv2.VideoCapture(live_stream_url)  # Capture from the default camera
-                    #     self.update_frame()
-                    # else:
-                    #     pass
+                    if time.time() - eject_ts > 1:
+                        self.arduino.gpio32_0.on()  # Turned off the ejector
                     
                     ts = time.time()
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
                     # If the OK signal triggered
                     if abs(a - a_initial) >= 1:
                         print("\n")
-                        self.arduino.gpio32_0.on()  # Turned off the ejector
                         
                         a_initial = a   # Update the counting value
                         
                         # Waiting to read the box barcode 
                         s56 = time.time()
-                        scanned_box_barcode_byte_string = self.scanner.read_barcode()
+                        scanned_box_barcode_byte_string = self.scanned_value
+                        # scanned_box_barcode_byte_string = self.scanner.read_barcode()
                         if self.usb_serial_flag:    
                             self.scanned_box_barcode = scanned_box_barcode_byte_string.decode().strip()
                             self.scanned_box_barcode = str(self.scanned_box_barcode)
@@ -387,7 +384,7 @@ class MainWindow(QMainWindow):
                                                 self.eject_box[item["id"]] += 1
                                                 print("TimeReport:variable update", time.time()-s4)
                                                 
-                                                s5 = time.time()
+                                                eject_ts = time.time()
                                                 # Update local order db
                                                 self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders), is_done = 0)
                                                 
@@ -397,7 +394,7 @@ class MainWindow(QMainWindow):
                                                 
                                                 # The detected barcode is not on the order list
                                                 self.arduino.gpio32_0.off()
-                                                print("Timereport:db update and buzzer running", time.time()-s5)
+                                                print("Timereport:db update and buzzer running", time.time()-eject_ts)
                     
                                 # If the scanned barcode is not in the batches, eject it 
                                 if not box_in_order_batch:
@@ -406,12 +403,12 @@ class MainWindow(QMainWindow):
                                     self.wrong_barcode += 1
                                     print("TimeReport:variable writing.", time.time() - s2)
                                     
-                                    s3 = time.time()
+                                    eject_ts = time.time()
                                     # The detected barcode is not on the order list
                                     self.arduino.gpio32_0.off()
                                     # Update shipment table
                                     self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
-                                    print("TimeReport:table update and ejector running", time.time()-s3)
+                                    print("TimeReport:table update and ejector running", time.time()-eject_ts)
                             print("imeReport: box barcode checking total time", time.time()-s_a, "Status: Counted ok value", a)
                     # If the NG signal triggered
                     elif abs(b - b_initial) >= 1:
@@ -429,10 +426,10 @@ class MainWindow(QMainWindow):
                         self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
                         print("TimeReport: table updating and buzzer running", time.time() - s2, "Status: Counted ng value", b)
 
-    # def scanner_read(self):
-    #     self.scanned_value = self.scanner.read_barcode()
-    #     print("Value from scanner", self.scanned_value)
-    #     return self.scanned_value
+    def scanner_read(self):
+        while True:
+            self.scanned_value = self.scanner.read_barcode()
+            print("Value from scanner", self.scanned_value)
     
     def db_order_checker(self):
         previus_shipment_number = ""
@@ -629,6 +626,7 @@ class MainWindow(QMainWindow):
                 if (time.time() - table_st > table_update_interval) and (self.shipment_db != []):
                     table_st = time.time()
                     json_data1 = json.loads(self.shipment_db[4])
+                    
                     if self.update_table_flag:
                         self.update_table_flag = False
                         # Updating the table
@@ -677,6 +675,13 @@ class MainWindow(QMainWindow):
                     if read_shipment_db != []:
                         self.table_widget.setRowCount(0)  # Clear the table
                         
+                        # Reading the box entrance signal
+                        if self.live_stream_flag:
+                            self.cap = cv2.VideoCapture(live_stream_url)  # Capture from the default camera
+                            self.update_frame()
+                        else:
+                            pass
+                        
                         wrong_qt = read_shipment_db[2]
                         not_detected_qt= read_shipment_db[3]
                         
@@ -706,14 +711,6 @@ class MainWindow(QMainWindow):
                             self.table_widget.setItem(row_position, 5, QTableWidgetItem(str(unit)))
                             self.table_widget.setItem(row_position, 6, QTableWidgetItem(str(eject_qt)))
                             
-                    # Showing table
-                    
-                    #     # self.table_widget.setRowCount(0)  # Clear the table
-                    # if self.live_stream_flag:
-                    #     self.cap = cv2.VideoCapture(live_stream_url)  # Capture from the default camera
-                    #     self.update_frame()
-                    # else:
-                    #     pass
             # except Exception as ex:
             #     print(f"table_update > exception {ex}")
 
@@ -739,8 +736,8 @@ if __name__ == "__main__":
                     usb_serial_flag=usb_serial_flag)
     
     print("counting")
-    # Thread(target=counter.scanner_read).start()
-    # time.sleep(0.1)
+    Thread(target=counter.scanner_read).start()
+    time.sleep(0.1)
     Thread(target=counter.db_order_checker).start()
     time.sleep(0.1)
     Thread(target=counter.update_table).start()
