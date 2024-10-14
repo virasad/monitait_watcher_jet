@@ -495,8 +495,7 @@ class Ardiuno:
                     self.d = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2
                 else:                       # read arduino data c (A7 in 8 levels [0..7])
                     self.c = 1*in_bit_0 + 2*in_bit_1 + 4*in_bit_2
-                
-                time.sleep(0.01)
+                time.sleep(0.001)
             except Exception as e:
                 print(f"arduino GPIO reader {e}")
 

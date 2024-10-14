@@ -62,12 +62,12 @@ class MainWindow(QMainWindow):
         self.item_row1_col3 = QTableWidgetItem("ساوه")  
         self.title_table.setItem(1, 3, self.item_row1_col3) 
         
-        self.item_row2_col0 = QTableWidgetItem("شناسایی نشده")  
+        self.item_row2_col0 = QTableWidgetItem("اشتباه")  
         self.item_row2_col0.setBackground(QColor("lightGray"))  
         self.item_row2_col0.setFont(self.bold_font)  
         self.title_table.setItem(2, 0, self.item_row2_col0)
         
-        self.item_row2_col2 = QTableWidgetItem("اشتباه")  
+        self.item_row2_col2 = QTableWidgetItem("شناسایی نشده")  
         self.item_row2_col2.setBackground(QColor("lightGray"))  
         self.item_row2_col2.setFont(self.bold_font)  
         self.title_table.setItem(2, 2, self.item_row2_col2) 
@@ -323,10 +323,13 @@ class MainWindow(QMainWindow):
                             self.scanned_box_barcode = str(self.scanned_box_barcode)
                         else:
                             self.scanned_box_barcode = scanned_box_barcode_byte_string
-                        print("scan barcode time", time.time() - s56, "old scanned value", self.scanned_value_old)
+                        print("\n scan barcode time", time.time() - s56, "old scanned value", self.scanned_value_old, self.scanned_value_old != b'')
 
                         box_in_order_batch = False
-                        if self.scanned_box_barcode != 0:
+                        if self.scanned_value_old != b'':
+                            # Update the old scanned value
+                            self.scanned_value_old = b''
+                            
                             s_a = time.time()
                             # Checking if all barcode value is zeros or not
                             if all(item['quantity'] == 0 for item in self.shipment_orders):
@@ -362,6 +365,7 @@ class MainWindow(QMainWindow):
                                                 # Decreasing the quantity in the shipments order and the batches list
                                                 item['quantity'] -= 1 
                                                 batch['quantity'] = str(int(batch['quantity']) - 1) 
+                                                remainded_quantity = item['quantity']
                                                  
                                                 # Calculate the counted value
                                                 counted_quantity = abs(total_quantity-item['quantity'])
@@ -403,7 +407,7 @@ class MainWindow(QMainWindow):
                                 if not box_in_order_batch:
                                     print("Status:the barcode is not on the order list.")
                                     s2 = time.time()
-                                    self.wrong_barcode += 1
+                                    self.not_detected_barcode += 1
                                     print("TimeReport:variable writing.", time.time() - s2)
                                     
                                     eject_ts = time.time()
@@ -413,6 +417,18 @@ class MainWindow(QMainWindow):
                                     self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
                                     print("TimeReport:table update and ejector running", time.time()-eject_ts)
                             print("imeReport: box barcode checking total time", time.time()-s_a, "Status: Counted ok value", a)
+                        else:
+                           print("Status:the barcode is not on the order list.")
+                            s2 = time.time()
+                            self.wrong_barcode += 1
+                            print("TimeReport:variable writing.", time.time() - s2)
+                            
+                            eject_ts = time.time()
+                            # The detected barcode is not on the order list
+                            self.arduino.gpio32_0.off()
+                            # Update shipment table
+                            self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
+                            print("TimeReport:table update and ejector running", time.time()-eject_ts) 
                     # If the NG signal triggered
                     elif abs(b - b_initial) >= 1:
                         print("\n")
