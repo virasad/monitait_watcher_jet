@@ -163,6 +163,7 @@ class MainWindow(QMainWindow):
         self.watcher_live_signal = 60 * 5
         self.take_picture_interval = 60 * 5
         self.order_db_remove_interval = 30  # Convert hours to secends
+        self.trigger_ts = time.time()
     
     def update_frame(self):
         ret, frame = self.cap.read()
@@ -223,8 +224,9 @@ class MainWindow(QMainWindow):
                 # Reading the scanner to detect OR and start the counting process
                 if True:
                     if not exit_flag:
-                        # shipment_scanned_barcode_byte_string  = self.scanner.read_barcode()
-                        shipment_scanned_barcode_byte_string = self.scanned_value_old
+                        self.trigger_ts = time.time()
+                        shipment_scanned_barcode_byte_string  = self.scanner.read_barcode()
+                        # shipment_scanned_barcode_byte_string = self.scanned_value_old
                         # If the scanner output is serial, convert its output to str
                         if self.usb_serial_flag:    
                             shipment_scanned_barcode = shipment_scanned_barcode_byte_string.decode().strip()
@@ -311,22 +313,23 @@ class MainWindow(QMainWindow):
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
                     # If the OK signal triggered
                     if abs(a - a_initial) >= 1:
-                        
                         a_initial = a   # Update the counting value
-                        
+                        self.trigger_ts = time.time()
                         # Waiting to read the box barcode 
                         s56 = time.time()
-                        scanned_box_barcode_byte_string = self.scanned_value_old
-                        # scanned_box_barcode_byte_string = self.scanner.read_barcode()
+                        # scanned_box_barcode_byte_string = self.scanned_value_old
+                        s5 = time.time()
+                        scanned_box_barcode_byte_string = self.scanner.read_barcode()
+                        print("scanner reading time", time.time()-s5)
                         if self.usb_serial_flag:    
                             self.scanned_box_barcode = scanned_box_barcode_byte_string.decode().strip()
                             self.scanned_box_barcode = str(self.scanned_box_barcode)
                         else:
                             self.scanned_box_barcode = scanned_box_barcode_byte_string
-                        print("\n scan barcode time", time.time() - s56, "old scanned value", self.scanned_value_old, self.scanned_value_old != b'')
+                        print("\n scan barcode time", time.time() - s56, "old scanned value", self.scanned_box_barcode, self.scanned_box_barcode != '')
 
                         box_in_order_batch = False
-                        if self.scanned_value_old != b'':
+                        if self.scanned_box_barcode != '':
                             # Update the old scanned value
                             self.scanned_value_old = b''
                             
@@ -445,13 +448,16 @@ class MainWindow(QMainWindow):
                         self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
                         print("TimeReport: table updating and buzzer running", time.time() - s2, "Status: Counted ng value", b)
 
-    def scanner_read(self):
-        while True:
-            self.scanned_value = self.scanner.read_barcode()
-            if self.scanned_value != b'':
-                self.scanned_value_old = self.scanned_value
-            else:
-                pass
+    # def scanner_read(self):
+    #     while True:
+    #         self.scanned_value = self.scanner.read_barcode()
+    #         if (time.time() - self.trigger_ts  < 5):
+    #             if self.scanned_value != b'':
+    #                 self.scanned_value_old = self.scanned_value
+    #                 print("self.scanned_value_old", self.scanned_value_old)
+    #         else:
+    #             print("trigger timeout")
+    #             pass
     
     def db_order_checker(self):
         previus_shipment_number = ""
@@ -755,8 +761,8 @@ if __name__ == "__main__":
                     usb_serial_flag=usb_serial_flag)
     
     print("counting")
-    Thread(target=counter.scanner_read).start()
-    time.sleep(0.1)
+    # Thread(target=counter.scanner_read).start()
+    # time.sleep(0.1)
     Thread(target=counter.db_order_checker).start()
     time.sleep(0.1)
     Thread(target=counter.update_table).start()
