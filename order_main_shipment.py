@@ -399,19 +399,19 @@ class MainWindow(QMainWindow):
                                                 self.arduino.gpio32_0.off()
                                                 print("Timereport:db update and buzzer running", time.time()-s5)
                     
-                                    # If the scanned barcode is not in the batches, eject it 
-                                    if not box_in_order_batch:
-                                        print("Status:the barcode is not on the order list.")
-                                        s2 = time.time()
-                                        self.wrong_barcode += 1
-                                        print("TimeReport:variable writing.", time.time() - s2)
-                                        
-                                        s3 = time.time()
-                                        # The detected barcode is not on the order list
-                                        self.arduino.gpio32_0.off()
-                                        # Update shipment table
-                                        self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
-                                        print("TimeReport:table update and ejector running", time.time()-s3)
+                                # If the scanned barcode is not in the batches, eject it 
+                                if not box_in_order_batch:
+                                    print("Status:the barcode is not on the order list.")
+                                    s2 = time.time()
+                                    self.wrong_barcode += 1
+                                    print("TimeReport:variable writing.", time.time() - s2)
+                                    
+                                    s3 = time.time()
+                                    # The detected barcode is not on the order list
+                                    self.arduino.gpio32_0.off()
+                                    # Update shipment table
+                                    self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
+                                    print("TimeReport:table update and ejector running", time.time()-s3)
                             print("imeReport: box barcode checking total time", time.time()-s_a, "Status: Counted ok value", a)
                     # If the NG signal triggered
                     elif abs(b - b_initial) >= 1:
