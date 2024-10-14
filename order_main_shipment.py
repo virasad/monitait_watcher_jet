@@ -111,23 +111,23 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.table_widget)
         print("Checking the live stream url")
         # Checking whether the live stream URL is alive or not
-        try:
-            response = requests.head(live_stream_url, allow_redirects=True)
-            if response.status_code == 200: 
-                self.live_stream_flag = True
-            else:
-                self.live_stream_flag = False
-        except:
-            self.live_stream_flag = True
-            pass
+        # try:
+        #     response = requests.head(live_stream_url, allow_redirects=True)
+        #     if response.status_code == 200: 
+        #         self.live_stream_flag = True
+        #     else:
+        #         self.live_stream_flag = False
+        # except:
+        #     self.live_stream_flag = True
+        #     pass
 
-        print(f"Adding widget if live stream is {self.live_stream_flag}", response.status_code)
-        if self.live_stream_flag:
-            # Create a QLabel for the image
-            self.image_label = QLabel(self)
-            layout.addWidget(self.image_label, alignment=Qt.AlignLeft | Qt.AlignTop)
-        else:
-            pass
+        print(f"Adding widget if live stream is ")
+        # if self.live_stream_flag:
+        #     # Create a QLabel for the image
+        #     self.image_label = QLabel(self)
+        #     layout.addWidget(self.image_label, alignment=Qt.AlignLeft | Qt.AlignTop)
+        # else:
+        #     pass
         
         # Create a container widget to hold the layout and image
         container = QWidget()
@@ -148,7 +148,8 @@ class MainWindow(QMainWindow):
         self.usb_serial_flag = usb_serial_flag
         self.headers = {'Register-ID': f'{self.register_id}', 
                         'Content-Type': 'application/json'}
-        self.scanned_value = ""
+        self.scanned_value = b''
+        self.scanned_value_old = b''
         self.shipment_number = None
         self.shipment_type = None
         self.destination = None
@@ -175,13 +176,13 @@ class MainWindow(QMainWindow):
             # # Set the QImage on the QLabel
             self.image_label.setPixmap(QPixmap.fromImage(qimg))
         
-    def closeEvent(self, event):
-        print(1)
-        if self.live_stream_flag:
-            self.cap.release()  # Release the video capture on close
-            event.accept()
-        else:
-            pass
+    # def closeEvent(self, event):
+    #     print(1)
+    #     if self.live_stream_flag:
+    #         self.cap.release()  # Release the video capture on close
+    #         event.accept()
+    #     else:
+    #         pass
     
     def counting(self):
 
@@ -223,7 +224,7 @@ class MainWindow(QMainWindow):
                 if True:
                     if not exit_flag:
                         # shipment_scanned_barcode_byte_string  = self.scanner.read_barcode()
-                        shipment_scanned_barcode_byte_string = self.scanned_value
+                        shipment_scanned_barcode_byte_string = self.scanned_value_old
                         # If the scanner output is serial, convert its output to str
                         if self.usb_serial_flag:    
                             shipment_scanned_barcode = shipment_scanned_barcode_byte_string.decode().strip()
@@ -239,6 +240,9 @@ class MainWindow(QMainWindow):
                     self.shipment_db = self.db.order_read(self.shipment_number)
                     
                     if self.shipment_db != []:
+                        # Update the scanner value to its initial state
+                        self.scanned_value_old = b''
+                        
                         self.arduino.gpio32_0.on()  # Turned off the ejector
                         
                         order_counting_start_flag = True
@@ -307,21 +311,20 @@ class MainWindow(QMainWindow):
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
                     # If the OK signal triggered
                     if abs(a - a_initial) >= 1:
-                        print("\n")
                         
                         a_initial = a   # Update the counting value
                         
                         # Waiting to read the box barcode 
                         s56 = time.time()
-                        scanned_box_barcode_byte_string = self.scanned_value
+                        scanned_box_barcode_byte_string = self.scanned_value_old
                         # scanned_box_barcode_byte_string = self.scanner.read_barcode()
                         if self.usb_serial_flag:    
                             self.scanned_box_barcode = scanned_box_barcode_byte_string.decode().strip()
                             self.scanned_box_barcode = str(self.scanned_box_barcode)
                         else:
                             self.scanned_box_barcode = scanned_box_barcode_byte_string
-                        print("scan barcode time", time.time() - s56)
-                        
+                        print("scan barcode time", time.time() - s56, "old scanned value", self.scanned_value_old)
+
                         box_in_order_batch = False
                         if self.scanned_box_barcode != 0:
                             s_a = time.time()
@@ -429,7 +432,10 @@ class MainWindow(QMainWindow):
     def scanner_read(self):
         while True:
             self.scanned_value = self.scanner.read_barcode()
-            print("Value from scanner", self.scanned_value)
+            if self.scanned_value != b'':
+                self.scanned_value_old = self.scanned_value
+            else:
+                pass
     
     def db_order_checker(self):
         previus_shipment_number = ""
@@ -447,7 +453,6 @@ class MainWindow(QMainWindow):
                 if time.time() - st_1 > order_request_time_interval or db_checking_flag:
                     db_checking_flag = False
                     st_1 = time.time()
-                    print("\n start to adding the data to the local database")
                     main_dict = requests.get(self.shipment_url, headers=self.headers) 
                     # Added all batches to a list
                     main_json = main_dict.json()  
@@ -514,9 +519,8 @@ class MainWindow(QMainWindow):
                     # Find the completed orders from watcher local db
                     completed_orders_list = self.db.order_read(is_done=1)
                     if completed_orders_list == []:
-                        print("\nThere are no completed orders")
+                        pass
                     else:
-                        print("\n Found completed orders")
                         for item in completed_orders_list:
                             orders = json.loads(item[4])
                             orders_number = len(orders)
@@ -574,7 +578,6 @@ class MainWindow(QMainWindow):
                             order_id = item['id']
                             for batch in item['batches']:
                                 if batch['quantity'] != 0:
-                                    print("batch['batch_uuid']", batch['batch_uuid'])
                                     # Put all batches of a shipment orders to dictionary
                                     main_shipment_orders_dict[batch['batch_uuid']]={
                                                                     'quantity': int(batch['quantity']),
@@ -675,12 +678,12 @@ class MainWindow(QMainWindow):
                     if read_shipment_db != []:
                         self.table_widget.setRowCount(0)  # Clear the table
                         
-                        # Reading the box entrance signal
-                        if self.live_stream_flag:
-                            self.cap = cv2.VideoCapture(live_stream_url)  # Capture from the default camera
-                            self.update_frame()
-                        else:
-                            pass
+                        # # Reading the box entrance signal
+                        # if self.live_stream_flag:
+                        #     self.cap = cv2.VideoCapture(live_stream_url)  # Capture from the default camera
+                        #     self.update_frame()
+                        # else:
+                        #     pass
                         
                         wrong_qt = read_shipment_db[2]
                         not_detected_qt= read_shipment_db[3]
