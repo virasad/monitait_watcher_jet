@@ -324,7 +324,7 @@ class MainWindow(QMainWindow):
                         print("In order counting while loop, waiting to the OK signal")
                         p_flag = False
                         
-                    if time.time() - eject_ts > 1:
+                    if time.time() - eject_ts < 1:
                         self.arduino.gpio32_0.on()  # Turned off the ejector
                         
                     if self.scanned_box_barcode in self.shipment_numbers_list:
@@ -348,10 +348,11 @@ class MainWindow(QMainWindow):
                         time_out_flag = False
                         
                         # Waiting to read the box barcode 
+                        s_time = time.time()
                         while not catching_signal:
                             a1 ,b1 ,c1, d1 ,dps1 = self.arduino.read_GPIO()
                             
-                            if abs(a1 - a_initial_1) >= 1 or catching_signal:
+                            if abs(a1 - a_initial_1) >= 1 or catching_signal or (time.time() - s_time > 2.5):
                                 print("Catched the second OK signal or barcode read")
                                 # Update the initial value
                                 a_initial_1 = a1
@@ -361,7 +362,7 @@ class MainWindow(QMainWindow):
                             if self.barcode_flag:
                                 catching_signal = True
                                 self.barcode_flag = False
-                                s5 = time.time()
+                                
                                 # scanned_box_barcode_byte_string = self.scanner.read_barcode()
                                 scanned_box_barcode_byte_string = self.scanned_value_old
                                 if self.usb_serial_flag:    
