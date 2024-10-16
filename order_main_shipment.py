@@ -31,7 +31,7 @@ class MainWindow(QMainWindow):
         self.bold_font = QFont()
         self.bold_font.setBold(True)
         
-        self.setWindowTitle("اطلاعات محصول")
+        self.setWindowTitle("اطلاعات محموله")
         self.setGeometry(100, 100, 800, 600)
         
         # Create a QTableWidget for the title
@@ -738,7 +738,7 @@ class MainWindow(QMainWindow):
                     
                     read_shipment_db = self.db.shipment_read(self.shipment_number)
                     if read_shipment_db != []:
-                        self.table_widget.setRowCount(0)  # Clear the table
+                        # self.table_widget.setRowCount(0)  # Clear the table
                         
                         # # Reading the box entrance signal
                         # if self.live_stream_flag:
@@ -750,11 +750,11 @@ class MainWindow(QMainWindow):
                         wrong_qt = read_shipment_db[2]
                         not_detected_qt= read_shipment_db[3]
                         
-                        self.item_row2_col1 = QTableWidgetItem(f"{not_detected_qt}")  
-                        self.item_row2_col3 = QTableWidgetItem(f"{wrong_qt}")  
+                        # self.item_row2_col1 = QTableWidgetItem(f"{not_detected_qt}")  
+                        # self.item_row2_col3 = QTableWidgetItem(f"{wrong_qt}")  
                         
-                        self.title_table.setItem(2, 1, self.item_row2_col1)   
-                        self.title_table.setItem(2, 3, self.item_row2_col3) 
+                        self.title_table.setItem(2, 1, QTableWidgetItem(f"{not_detected_qt}")  )   
+                        self.title_table.setItem(2, 3, QTableWidgetItem(f"{wrong_qt}")) 
                         
                         orders_quantity_value = json.loads(read_shipment_db[4])
                         
@@ -766,8 +766,19 @@ class MainWindow(QMainWindow):
                             product_name = item[4]
                             unit = item[5]
                             
+                            # Check if the row already exists
                             row_position = self.table_widget.rowCount()
-                            self.table_widget.insertRow(row_position)
+                            existing_row = self.table_widget.findItems(str(order_id), Qt.MatchExactly)
+
+                            if existing_row:
+                                # If the order_id already exists, update the existing row
+                                row_position = existing_row[0].row()
+                            else:
+                                # If it does not exist, insert a new row
+                                self.table_widget.insertRow(row_position)
+                            
+                            # row_position = self.table_widget.rowCount()
+                            # self.table_widget.insertRow(row_position)
                             self.table_widget.setItem(row_position, 0, QTableWidgetItem(str(order_id)))
                             self.table_widget.setItem(row_position, 1, QTableWidgetItem(str(product_name)))
                             self.table_widget.setItem(row_position, 2, QTableWidgetItem(str(counted_qt)))
