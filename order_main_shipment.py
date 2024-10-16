@@ -260,8 +260,15 @@ class MainWindow(QMainWindow):
                         self.total_quantities = {item["id"]: item["quantity"] for item in json_data1}
                         
                         self.eject_box = {item["id"]: 0 for item in json_data1}
-                        self.wrong_barcode = 0
-                        self.not_detected_barcode = 0
+                        
+                        # Read wrong and not detected values from db
+                        read_shipment_db = self.db.shipment_read(self.shipment_number) 
+                        if read_shipment_db != []:
+                            self.wrong_barcode = read_shipment_db[2]
+                            self.not_detected_barcode = read_shipment_db[3]
+                        else:
+                            self.wrong_barcode = 0
+                            self.not_detected_barcode = 0
                         self.orders_quantity_specification = {}
                         print("json_data1", json_data1)
                         
