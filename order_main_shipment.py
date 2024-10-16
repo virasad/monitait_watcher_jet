@@ -320,14 +320,14 @@ class MainWindow(QMainWindow):
                     
                     ts = time.time()
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
-                    print(a ,b ,c, d ,dps," a ,b ,c, d ,dps")
                     # If the OK signal triggered
                     if abs(a - a_initial) >= 1:
+                        print(a ,b ,c, d ,dps," a ,b ,c, d ,dps")
                         catching_signal = False
                         a_initial = a   # Update the counting value
                         # Waiting to read the box barcode 
                         t_start = time.time()
-                        while (time.time() - t_start < 5) and (not catching_signal):
+                        while (time.time() - t_start < 0.5) and (not catching_signal):
                             print("self.barcode_flag", self.barcode_flag)
                             if self.barcode_flag:
                                 catching_signal = True
@@ -448,6 +448,19 @@ class MainWindow(QMainWindow):
                                     # Update shipment table
                                     self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
                                     print("TimeReport:table update and ejector running", time.time()-eject_ts) 
+                        # If barcode could not catch a barcode value
+                        if not catching_signal:
+                            print("Status:time out.")
+                            s2 = time.time()
+                            self.wrong_barcode += 1
+                            print("TimeReport:variable writing.", time.time() - s2)
+                            
+                            eject_ts = time.time()
+                            # The detected barcode is not on the order list
+                            self.arduino.gpio32_0.off()
+                            # Update shipment table
+                            self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
+                            print("TimeReport:table update and ejector running", time.time()-eject_ts) 
                     # If the NG signal triggered
                     elif abs(b - b_initial) >= 1:
                         print("\n")
