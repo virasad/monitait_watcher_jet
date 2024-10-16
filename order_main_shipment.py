@@ -406,7 +406,7 @@ class MainWindow(QMainWindow):
                     
                                 # If the scanned barcode is not in the batches, eject it 
                                 if not box_in_order_batch:
-                                    print("Status:the barcode is not on the order list.")
+                                    print("Status:the barcode is not on the order list.", self.not_detected_barcode)
                                     s2 = time.time()
                                     self.not_detected_barcode += 1
                                     print("TimeReport:variable writing.", time.time() - s2)
@@ -416,7 +416,7 @@ class MainWindow(QMainWindow):
                                     self.arduino.gpio32_0.off()
                                     # Update shipment table
                                     self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
-                                    print("TimeReport:table update and ejector running", time.time()-eject_ts)
+                                    print("TimeReport:table update and ejector running", time.time()-eject_ts, self.not_detected_barcode)
                             print("TimeReport: box barcode checking total time", time.time()-s_a, "Status: Counted ok value", a)
                         else:
                             print("Status:the barcode could not catch barcode.")
