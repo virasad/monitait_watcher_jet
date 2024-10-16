@@ -24,7 +24,7 @@ live_stream_url = 'http://192.168.125.103:5000/video_feed/1'
 
 class MainWindow(QMainWindow):
     def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner, shipment_url: shipment_url, stationID_url: stationID_url,
-                 sendshipment_url: sendshipment_url, register_id: register_id, usb_serial_flag):
+                 sendshipment_url: sendshipment_url, register_id: register_id):
         super().__init__()
         
         # Create a QFont for bold text
@@ -145,9 +145,9 @@ class MainWindow(QMainWindow):
         self.stationID_url = stationID_url
         self.sendshipment_url = sendshipment_url
         self.register_id = register_id
-        self.usb_serial_flag = usb_serial_flag
         self.headers = {'Register-ID': f'{self.register_id}', 
                         'Content-Type': 'application/json'}
+        self.scanned_value = b''
         self.scanned_value_old = b''
         self.shipment_number = None
         self.shipment_type = None
@@ -227,10 +227,10 @@ class MainWindow(QMainWindow):
                         # shipment_scanned_barcode_byte_string  = self.scanner.read_barcode()
                         shipment_scanned_barcode_byte_string = self.scanned_value_old
                         # If the scanner output is serial, convert its output to str
-                        if self.usb_serial_flag:    
+                        if isinstance(shipment_scanned_barcode_byte_string, bytes):    
                             shipment_scanned_barcode = shipment_scanned_barcode_byte_string.decode().strip()
                             self.shipment_number = str(shipment_scanned_barcode)
-                        else:
+                        else: 
                             self.shipment_number = shipment_scanned_barcode_byte_string
                     else:
                         exit_flag = False
@@ -315,11 +315,10 @@ class MainWindow(QMainWindow):
                         a_initial = a   # Update the counting value
                         # Waiting to read the box barcode 
                         s56 = time.time()
-                        scanned_box_barcode_byte_string = self.scanned_value_old
-                        s5 = time.time()
+                        scanned_box_barcode_byte_string = self.scanned_value
                         # scanned_box_barcode_byte_string = self.scanner.read_barcode()
                         print("scanner reading time", time.time()-s5)
-                        if self.usb_serial_flag:    
+                        if isinstance(scanned_box_barcode_byte_string, bytes):    
                             self.scanned_box_barcode = scanned_box_barcode_byte_string.decode().strip()
                             self.scanned_box_barcode = str(self.scanned_box_barcode)
                         else:
@@ -448,17 +447,17 @@ class MainWindow(QMainWindow):
 
     def scanner_read(self):
         while True:
-            scanned_value = self.scanner.read_barcode()
+            self.scanned_value = self.scanner.read_barcode()
             
             # Convert scanner value to byte string
-            if isinstance(scanned_value, bytes):
+            if isinstance(self.scanned_value, bytes):
                 pass
-            elif isinstance(scanned_value, str):
-                scanned_value=scanned_value.encode('utf-8')
+            elif isinstance(self.scanned_value, str):
+                self.scanned_value=self.scanned_value.encode('utf-8')
             else:
-                print(f"Value type not supported for conversion to byte string, the type is {type(scanned_value)}")
+                print(f"Value type not supported for conversion to byte string, the type is {type(self.scanned_value)}")
             
-            if scanned_value != b'':
+            if self.scanned_value != b'':
                 self.scanned_value_old = self.scanned_value
                 print("self.scanned_value_old", self.scanned_value_old)
 
@@ -754,16 +753,13 @@ if __name__ == "__main__":
     # List all ttyUSB devices
     ttyUSB_devices = glob.glob('/dev/ttyUSB*')
     if ttyUSB_devices!= []:
-        usb_serial_flag = True 
         print(f"The found UART ttyyUSB: {ttyUSB_devices}")
         scanner = UARTscanner(port=ttyUSB_devices[0], baudrate = 9600, timeout = 1)
     else:
-        usb_serial_flag = False
         scanner = Scanner()
     print("start counter")
     counter = MainWindow(arduino=arduino, db=db, camera=camera, scanner=scanner, shipment_url=shipment_url,
-                    stationID_url= stationID_url, sendshipment_url=sendshipment_url, register_id=register_id,
-                    usb_serial_flag=usb_serial_flag)
+                    stationID_url= stationID_url, sendshipment_url=sendshipment_url, register_id=register_id)
     
     print("counting")
     Thread(target=counter.scanner_read).start()
