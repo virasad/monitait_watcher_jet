@@ -740,7 +740,7 @@ class MainWindow(QMainWindow):
                     
                     read_shipment_db = self.db.shipment_read(self.shipment_number)
                     if read_shipment_db != []:
-                        self.table_widget.setRowCount(0)  # Clear the table
+                        # self.table_widget.setRowCount(0)  # Clear the table
                         
                         # # Reading the box entrance signal
                         # if self.live_stream_flag:
