@@ -355,7 +355,7 @@ class MainWindow(QMainWindow):
                                 print("Catched the second OK signal or barcode read")
                                 # Update the initial value
                                 a_initial_1 = a1
-                                catching_signal = False
+                                catching_signal = True
                                 
                             if self.barcode_flag:
                                 catching_signal = True
