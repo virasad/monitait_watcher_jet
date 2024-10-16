@@ -360,7 +360,7 @@ class MainWindow(QMainWindow):
                                 a_initial_1 = a1
                                 catching_signal = True
                                 time_out_flag = True
-                                
+                            s_t1 = time.time()
                             if self.barcode_flag:
                                 catching_signal = True
                                 self.barcode_flag = False
@@ -467,6 +467,7 @@ class MainWindow(QMainWindow):
                                 
                                 # Update the old scanned value
                                 self.scanned_value_old = b''
+                            print(time.time() - s_t1)
                         # If barcode could not catch a barcode value
                         if time_out_flag:
                             # Update the old scanned value
