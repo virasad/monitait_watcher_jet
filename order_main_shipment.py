@@ -352,8 +352,8 @@ class MainWindow(QMainWindow):
                         while not catching_signal:
                             a1 ,b1 ,c1, d1 ,dps1 = self.arduino.read_GPIO()
                             
-                            if abs(a1 - a_initial_1) >= 1 or catching_signal or (time.time() - s_time > 2.5):
-                                print("Catched the second OK signal or barcode read")
+                            if abs(a1 - a_initial_1) >= 1 or catching_signal or (time.time() - s_time > 5):
+                                print("Catched the second OK signal or barcode read, or time-out")
                                 # Update the initial value
                                 a_initial_1 = a1
                                 catching_signal = True
@@ -716,7 +716,7 @@ class MainWindow(QMainWindow):
                         self.title_table.setItem(2, 1, self.item_row2_col1)   
                         self.title_table.setItem(2, 3, self.item_row2_col3) 
                         
-                        self.table_widget.setRowCount(0)  # Clear the table
+                        # self.table_widget.setRowCount(0)  # Clear the table
                         for item in json_data1:
                             row_position = self.table_widget.rowCount()
                             self.table_widget.insertRow(row_position)
