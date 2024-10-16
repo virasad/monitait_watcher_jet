@@ -611,11 +611,11 @@ class MainWindow(QMainWindow):
                             for batch in item['batches']:
                                 # Check if the order finished or not
                                 is_done_value = updated_shipment_number_data_[5]
-                                if is_done_value == 0:
+                                current_quantity = int(batch['quantity'])
+                                if (is_done_value == 0) and (current_quantity != 0):
                                     main_quantity = main_shipment_orders_dict[batch['batch_uuid']]['quantity']
-                                    current_quantity = int(batch['quantity'])
                                     # If main quantity is not equal to current value update the table
-                                    if (main_quantity != current_quantity) and (current_quantity != 0):
+                                    if main_quantity != current_quantity:
                                         # Update the quantity of the scanned box 
                                         main_shipment_orders_dict[batch['batch_uuid']]['quantity'] = current_quantity
                                         order_id_ = main_shipment_orders_dict[batch['batch_uuid']]['order_id']
