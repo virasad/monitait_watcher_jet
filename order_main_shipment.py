@@ -40,22 +40,22 @@ class MainWindow(QMainWindow):
         self.title_table.setColumnCount(4)  # Set 1 column for values
         
         self.item_row0_col0 = QTableWidgetItem("شماره محموله")  
-        self.item_row0_col0.setBackground(QColor("gray"))  
+        self.item_row0_col0.setBackground(QColor("lightGray"))  
         self.item_row0_col0.setFont(self.bold_font)
         self.title_table.setItem(0, 0, self.item_row0_col0)
         
         self.item_row0_col2 = QTableWidgetItem("نوع محموله")  
-        self.item_row0_col2.setBackground(QColor("gray"))  
+        self.item_row0_col2.setBackground(QColor("lightGray"))  
         self.item_row0_col2.setFont(self.bold_font)  
         self.title_table.setItem(0, 2, self.item_row0_col2)  
         
         self.item_row1_col0 = QTableWidgetItem("مقصد")  
         self.item_row1_col0.setFont(self.bold_font)    
-        self.item_row1_col0.setBackground(QColor("gray")) 
+        self.item_row1_col0.setBackground(QColor("lightGray")) 
         self.title_table.setItem(1, 0, self.item_row1_col0)  
         
         self.item_row1_col2 = QTableWidgetItem("مبدا")  
-        self.item_row1_col2.setBackground(QColor("gray"))  
+        self.item_row1_col2.setBackground(QColor("lightGray"))  
         self.item_row1_col2.setFont(self.bold_font)  
         self.title_table.setItem(1, 2, self.item_row1_col2)  
         
