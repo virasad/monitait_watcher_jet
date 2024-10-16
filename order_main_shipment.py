@@ -98,21 +98,17 @@ class MainWindow(QMainWindow):
         # self.table_widget.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
         self.table_widget.verticalHeader().setVisible(False)  # Hide horizontal header if not needed
         
-        # Set column widths
-        self.table_widget.setColumnWidth(0, 50)  # Set width for column 0
-        self.table_widget.setColumnWidth(1, 250)  # Set width for column 1
-        self.table_widget.setColumnWidth(2, 100)  # Set width for column 2
-        self.table_widget.setColumnWidth(3, 100)  # Set width for column 3
-        self.table_widget.setColumnWidth(4, 100)  # Set width for column 4
-        self.table_widget.setColumnWidth(5, 100)  # Set width for column 5
-        self.table_widget.setColumnWidth(6, 100)  # Set width for column 6
-        
         # Set the stylesheet for the table to increase text size
         self.table_widget.setStyleSheet("font-size: 40px;")  # Adjust size as needed
 
         # Make headers stretch to fill the window
         header = self.table_widget.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.Stretch)
+        
+        header.setResizeMode(0, QtGui.QHeaderView.Stretch)
+        header.setResizeMode(1, QtGui.QHeaderView.ResizeToContents)
+        header.setResizeMode(2, QtGui.QHeaderView.ResizeToContents)
+        header.setResizeMode(3, QtGui.QHeaderView.Stretch)
 
         # Create a layout to arrange the title and table
         layout = QVBoxLayout()
