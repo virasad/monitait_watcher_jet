@@ -241,6 +241,7 @@ class MainWindow(QMainWindow):
                     self.shipment_db = self.db.order_read(self.shipment_number)
                     
                     if self.shipment_db != []:
+                        print("Status: shipment db value", self.shipment_db, self.shipment_number)
                         # Update the scanner value to its initial state
                         self.scanned_value_old = b''
                         
@@ -306,6 +307,7 @@ class MainWindow(QMainWindow):
                         p_flag = False
                         
                     if time.time() - eject_ts > 1:
+                        print("Status: going to turning off the ejector")
                         self.arduino.gpio32_0.on()  # Turned off the ejector
                     
                     ts = time.time()
