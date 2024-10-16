@@ -271,6 +271,8 @@ class MainWindow(QMainWindow):
                         self.previous_quantities = {item["id"]: item["quantity"] for item in json_data1}
                         self.total_quantities = {item["id"]: item["quantity"] for item in json_data1}
                         
+                        print("self.total_quantities", self.total_quantities)
+                        
                         self.eject_box = {item["id"]: 0 for item in json_data1}
                         
                         # Read wrong and not detected values from db
@@ -740,7 +742,7 @@ class MainWindow(QMainWindow):
                     
                     read_shipment_db = self.db.shipment_read(self.shipment_number)
                     if read_shipment_db != []:
-                        # self.table_widget.setRowCount(0)  # Clear the table
+                        self.table_widget.setRowCount(0)  # Clear the table
                         
                         # # Reading the box entrance signal
                         # if self.live_stream_flag:
