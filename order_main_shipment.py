@@ -98,6 +98,15 @@ class MainWindow(QMainWindow):
         # self.table_widget.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
         self.table_widget.verticalHeader().setVisible(False)  # Hide horizontal header if not needed
         
+        # Set column widths
+        self.table_widget.setColumnWidth(0, 100)  # Set width for column 0
+        self.table_widget.setColumnWidth(1, 150)  # Set width for column 1
+        self.table_widget.setColumnWidth(2, 100)  # Set width for column 2
+        self.table_widget.setColumnWidth(3, 100)  # Set width for column 3
+        self.table_widget.setColumnWidth(4, 100)  # Set width for column 4
+        self.table_widget.setColumnWidth(5, 100)  # Set width for column 5
+        self.table_widget.setColumnWidth(6, 100)  # Set width for column 6
+        
         # Set the stylesheet for the table to increase text size
         self.table_widget.setStyleSheet("font-size: 40px;")  # Adjust size as needed
 
@@ -235,7 +244,7 @@ class MainWindow(QMainWindow):
                     else:
                         exit_flag = False
                         print("****Exit barcode scanned", self.scanned_box_barcode)
-                        self.shipment_number = self.scanned_box_barcode
+                        self.shipment_number = self.scanned_value_old
                     
                     # Getting the scanned order list from order DB
                     self.shipment_db = self.db.order_read(self.shipment_number)
@@ -317,38 +326,52 @@ class MainWindow(QMainWindow):
                         
                     if time.time() - eject_ts > 1:
                         self.arduino.gpio32_0.on()  # Turned off the ejector
+                        
+                    if self.scanned_box_barcode in self.shipment_numbers_list:
+                        # The exit barcode scanned
+                        print("The exit barcode scanned")
+                        order_counting_start_flag = False
+                        exit_flag = True
+                        catching_signal = True
+                        self.barcode_flag = False
                     
                     ts = time.time()
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
                     # If the OK signal triggered
                     if abs(a - a_initial) >= 1:
-                        print(a ,b ,c, d ,dps," a ,b ,c, d ,dps")
+                        print("\n Catched the first OK signal")
+                        a_initial = a
+                        a_initial_1 = a
+                        
+                        # Going to catch second OK signal
                         catching_signal = False
-                        a_initial = a   # Update the counting value
+                        
                         # Waiting to read the box barcode 
                         t_start = time.time()
-                        while (time.time() - t_start < 1.5) and (not catching_signal):
-                            print("self.barcode_flag", self.barcode_flag)
-                            if self.barcode_flag:
+                        while not catching_signal:
+                            a1 ,b1 ,c1, d1 ,dps1 = self.arduino.read_GPIO()
+                            
+                            if abs(a1 - a_initial_1) >= 1 or catching_signal:
+                                print("Catched the second OK signal or barcode read")
+                                # Update the initial value
+                                a_initial_1 = a1
+                                catching_signal = False
                                 
+                            if self.barcode_flag:
                                 catching_signal = True
                                 self.barcode_flag = False
                                 s5 = time.time()
                                 # scanned_box_barcode_byte_string = self.scanner.read_barcode()
                                 scanned_box_barcode_byte_string = self.scanned_value_old
-                                print("scanner reading time", time.time()-s5)
                                 if self.usb_serial_flag:    
                                     self.scanned_box_barcode = scanned_box_barcode_byte_string.decode().strip()
                                     self.scanned_box_barcode = str(self.scanned_box_barcode)
                                 else:
                                     self.scanned_box_barcode = scanned_box_barcode_byte_string
-                                print("\n scan barcode time", time.time() - s5, "old scanned value", self.scanned_box_barcode, self.scanned_box_barcode != '')
-                                # Update the old scanned value
-                                self.scanned_value_old = b''
+
                                 box_in_order_batch = False
                                 if self.scanned_box_barcode != '':
                                     
-                                    s_a = time.time()
                                     # Checking if all barcode value is zeros or not
                                     if all(item['quantity'] == 0 for item in self.shipment_orders):
                                         print("All value of the quantity is zero")
@@ -365,6 +388,8 @@ class MainWindow(QMainWindow):
                                         print("The exit barcode scanned")
                                         order_counting_start_flag = False
                                         exit_flag = True
+                                        catching_signal = True
+                                        self.barcode_flag = False
                                     else:
                                         # Checking is the scanned box barcode is in the order batches or not
                                         for item in self.shipment_orders:
@@ -378,8 +403,6 @@ class MainWindow(QMainWindow):
                                                     box_in_order_batch = True
                                                     # Decrease quantity by 1 if it's greater than 0, else eject it
                                                     if item['quantity'] > 0:
-                                                        print("Status: the scanned box barcode is counted.")
-                                                        s1 = time.time()
                                                         # Decreasing the quantity in the shipments order and the batches list
                                                         item['quantity'] -= 1 
                                                         batch['quantity'] = str(int(batch['quantity']) - 1) 
@@ -387,18 +410,14 @@ class MainWindow(QMainWindow):
                                                         
                                                         # Calculate the counted value
                                                         counted_quantity = abs(total_quantity-item['quantity'])
-                                                        print("TimeReport: variable update", time.time()-s1)
-                                                        s7 = time.time()
                                                         # Update order table
                                                         self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders), is_done = 0)
                                                         
                                                         # Update the orders quantity specification dictionary and shipment table
                                                         self.orders_quantity_specification[item['id']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['id']], item['product_name'], item['delivery_unit']]
                                                         self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
-                                                        print("TimeReport: update order table", time.time()-s7)
+
                                                     elif item['quantity'] == 0:
-                                                        print("Status: the scanned box barcode has been finished.")
-                                                        s4 = time.time()
                                                         # Updatinging the quantity in the shipments order and the batches list
                                                         item['quantity'] = 0 
                                                         batch['quantity'] = 0 
@@ -407,7 +426,6 @@ class MainWindow(QMainWindow):
                                                         counted_quantity = total_quantity
                                                         remainded_quantity = 0
                                                         self.eject_box[item["id"]] += 1
-                                                        print("TimeReport:variable update", time.time()-s4)
                                                         
                                                         eject_ts = time.time()
                                                         # Update local order db
@@ -419,49 +437,41 @@ class MainWindow(QMainWindow):
                                                         
                                                         # The detected barcode is not on the order list
                                                         self.arduino.gpio32_0.off()
-                                                        print("Timereport:db update and buzzer running", time.time()-eject_ts)
                             
                                         # If the scanned barcode is not in the batches, eject it 
                                         if not box_in_order_batch:
-                                            print("Status:the barcode is not on the order list.", self.not_detected_barcode)
-                                            s2 = time.time()
                                             self.not_detected_barcode += 1
-                                            print("TimeReport:variable writing.", time.time() - s2)
                                             
                                             eject_ts = time.time()
                                             # The detected barcode is not on the order list
                                             self.arduino.gpio32_0.off()
                                             # Update shipment table
-                                            self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
-                                            print("TimeReport:table update and ejector running", time.time()-eject_ts, self.not_detected_barcode)
-                                    print("TimeReport: box barcode checking total time", time.time()-s_a, "Status: Counted ok value", a)
+                                            self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode)
+
                                 else:
                                     print("Status:the barcode could not catch barcode.")
-                                    s2 = time.time()
                                     self.wrong_barcode += 1
-                                    print("TimeReport:variable writing.", time.time() - s2)
                                     
                                     eject_ts = time.time()
                                     # The detected barcode is not on the order list
                                     self.arduino.gpio32_0.off()
                                     # Update shipment table
                                     self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
-                                    print("TimeReport:table update and ejector running", time.time()-eject_ts) 
+                                
+                                # Update the old scanned value
+                                self.scanned_value_old = b''
                         # If barcode could not catch a barcode value
                         if not catching_signal:
                             # Update the old scanned value
                             self.scanned_value_old = b''
                             print("Status:time out.")
-                            s2 = time.time()
                             self.wrong_barcode += 1
-                            print("TimeReport:variable writing.", time.time() - s2)
                             
                             eject_ts = time.time()
                             # The detected barcode is not on the order list
                             self.arduino.gpio32_0.off()
                             # Update shipment table
-                            self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
-                            print("TimeReport:table update and ejector running", time.time()-eject_ts) 
+                            self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification)) 
                     # If the NG signal triggered
                     elif abs(b - b_initial) >= 1:
                         print("\n")
@@ -473,17 +483,15 @@ class MainWindow(QMainWindow):
                         
                         # Duo to reciving NG signal, the box should be ejected
                         self.arduino.gpio32_0.off()
-                        
                         # Update shipment table
                         self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
-                        print("TimeReport: table updating and buzzer running", time.time() - s2, "Status: Counted ng value", b)
 
     def scanner_read(self):
         while True:
             self.scanned_value = self.scanner.read_barcode()
             if self.scanned_value != b'':
                 self.scanned_value_old = self.scanned_value
-                print("self.scanned_value_old", self.scanned_value_old)
+                print("\n self.scanned_value_old", self.scanned_value_old)
                 self.barcode_flag = True
 
     
