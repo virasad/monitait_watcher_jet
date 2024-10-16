@@ -436,7 +436,7 @@ class MainWindow(QMainWindow):
                         s2 = time.time()
                         b_initial = b
                         
-                        self.not_detected_barcode += 1
+                        self.wrong_barcode += 1
                         
                         # Duo to reciving NG signal, the box should be ejected
                         self.arduino.gpio32_0.off()
