@@ -195,6 +195,7 @@ class MainWindow(QMainWindow):
         db_checking_flag = True
         self.old_barcode = ''
         a ,b ,c, d ,dps = self.arduino.read_GPIO()
+        print("Arduino initial values", a ,b ,c, d ,dps)
         a_initial = a
         b_initial = b
         
@@ -416,7 +417,7 @@ class MainWindow(QMainWindow):
                                     # Update shipment table
                                     self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
                                     print("TimeReport:table update and ejector running", time.time()-eject_ts)
-                            print("imeReport: box barcode checking total time", time.time()-s_a, "Status: Counted ok value", a)
+                            print("TimeReport: box barcode checking total time", time.time()-s_a, "Status: Counted ok value", a)
                         else:
                             print("Status:the barcode could not catch barcode.")
                             s2 = time.time()
