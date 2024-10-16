@@ -483,9 +483,9 @@ class MainWindow(QMainWindow):
         while True:
             self.scanned_value = self.scanner.read_barcode()
             if self.scanned_value != b'':
-                self.barcode_flag = True
                 self.scanned_value_old = self.scanned_value
                 print("self.scanned_value_old", self.scanned_value_old)
+                self.barcode_flag = True
 
     
     def db_order_checker(self):
