@@ -320,7 +320,7 @@ class MainWindow(QMainWindow):
                         s56 = time.time()
                         scanned_box_barcode_byte_string = self.scanned_value
                         # scanned_box_barcode_byte_string = self.scanner.read_barcode()
-                        print("scanner reading time", time.time()-s5)
+                        print("scanner reading time", time.time()-s56)
                         if isinstance(scanned_box_barcode_byte_string, bytes):    
                             self.scanned_box_barcode = scanned_box_barcode_byte_string.decode().strip()
                             self.scanned_box_barcode = str(self.scanned_box_barcode)
