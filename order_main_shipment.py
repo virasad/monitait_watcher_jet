@@ -348,11 +348,10 @@ class MainWindow(QMainWindow):
                         time_out_flag = False
                         
                         # Waiting to read the box barcode 
-                        t_start = time.time()
                         while not catching_signal:
                             a1 ,b1 ,c1, d1 ,dps1 = self.arduino.read_GPIO()
                             
-                            if abs(a1 - a_initial_1) >= 1 or catching_signal or (time.time() - t_start < 2.5):
+                            if abs(a1 - a_initial_1) >= 1 or catching_signal:
                                 print("Catched the second OK signal or barcode read")
                                 # Update the initial value
                                 a_initial_1 = a1
