@@ -195,8 +195,9 @@ class MainWindow(QMainWindow):
         self.last_image = time.time()
         db_checking_flag = True
         self.old_barcode = ''
-        a_initial = 0
-        b_initial = 0
+        a ,b ,c, d ,dps = self.arduino.read_GPIO()
+        a_initial = a
+        b_initial = b
         
         # Getting the stationID from API 
         try:
