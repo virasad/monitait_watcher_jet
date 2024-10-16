@@ -148,7 +148,6 @@ class MainWindow(QMainWindow):
         self.usb_serial_flag = usb_serial_flag
         self.headers = {'Register-ID': f'{self.register_id}', 
                         'Content-Type': 'application/json'}
-        self.scanned_value = b''
         self.scanned_value_old = b''
         self.shipment_number = None
         self.shipment_type = None
@@ -448,8 +447,17 @@ class MainWindow(QMainWindow):
 
     def scanner_read(self):
         while True:
-            self.scanned_value = self.scanner.read_barcode()
-            if self.scanned_value != b'':
+            scanned_value = self.scanner.read_barcode()
+            
+            # Convert scanner value to byte string
+            if isinstance(scanned_value, bytes):
+                pass
+            elif isinstance(scanned_value, str):
+                scanned_value=scanned_value.encode('utf-8')
+            else:
+                print(f"Value type not supported for conversion to byte string, the type is {type(scanned_value)}")
+            
+            if scanned_value != b'':
                 self.scanned_value_old = self.scanned_value
                 print("self.scanned_value_old", self.scanned_value_old)
 
