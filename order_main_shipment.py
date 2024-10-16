@@ -307,6 +307,7 @@ class MainWindow(QMainWindow):
                         p_flag = False
                         
                     if time.time() - eject_ts > 1:
+                        eject_ts = time.time()
                         print("Status: going to turning off the ejector")
                         self.arduino.gpio32_0.on()  # Turned off the ejector
                     
