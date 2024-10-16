@@ -327,27 +327,27 @@ class MainWindow(QMainWindow):
                         a_initial = a   # Update the counting value
                         # Waiting to read the box barcode 
                         t_start = time.time()
-                        while (time.time() - t_start < 0.5) and (not catching_signal):
+                        while (time.time() - t_start < 1.5) and (not catching_signal):
                             print("self.barcode_flag", self.barcode_flag)
                             if self.barcode_flag:
+                                # Update the old scanned value
+                                self.scanned_value_old = b''
+                                
                                 catching_signal = True
                                 self.barcode_flag = False
-                                s56 = time.time()
-                                scanned_box_barcode_byte_string = self.scanned_value_old
                                 s5 = time.time()
                                 # scanned_box_barcode_byte_string = self.scanner.read_barcode()
+                                scanned_box_barcode_byte_string = self.scanned_value_old
                                 print("scanner reading time", time.time()-s5)
                                 if self.usb_serial_flag:    
                                     self.scanned_box_barcode = scanned_box_barcode_byte_string.decode().strip()
                                     self.scanned_box_barcode = str(self.scanned_box_barcode)
                                 else:
                                     self.scanned_box_barcode = scanned_box_barcode_byte_string
-                                print("\n scan barcode time", time.time() - s56, "old scanned value", self.scanned_box_barcode, self.scanned_box_barcode != '')
+                                print("\n scan barcode time", time.time() - s5, "old scanned value", self.scanned_box_barcode, self.scanned_box_barcode != '')
 
                                 box_in_order_batch = False
                                 if self.scanned_box_barcode != '':
-                                    # Update the old scanned value
-                                    self.scanned_value_old = b''
                                     
                                     s_a = time.time()
                                     # Checking if all barcode value is zeros or not
@@ -450,6 +450,8 @@ class MainWindow(QMainWindow):
                                     print("TimeReport:table update and ejector running", time.time()-eject_ts) 
                         # If barcode could not catch a barcode value
                         if not catching_signal:
+                            # Update the old scanned value
+                            self.scanned_value_old = b''
                             print("Status:time out.")
                             s2 = time.time()
                             self.wrong_barcode += 1
