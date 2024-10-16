@@ -320,6 +320,7 @@ class MainWindow(QMainWindow):
                     
                     ts = time.time()
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
+                    print(a ,b ,c, d ,dps," a ,b ,c, d ,dps")
                     # If the OK signal triggered
                     if abs(a - a_initial) >= 1:
                         catching_signal = False
