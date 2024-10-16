@@ -105,11 +105,9 @@ class MainWindow(QMainWindow):
         header = self.table_widget.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.Stretch)
         
-        header.setSectionResizeMode(0, QHeaderView.Stretch)
-        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(3, QHeaderView.Stretch)
-
+        for i in range(7):
+            header.setSectionResizeMode(i, QHeaderView.ResizeToContents)
+            
         # Create a layout to arrange the title and table
         layout = QVBoxLayout()
         layout.addWidget(self.title_table)  # Add title above the table
