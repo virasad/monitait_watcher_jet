@@ -319,11 +319,14 @@ class MainWindow(QMainWindow):
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
                     # If the OK signal triggered
                     if abs(a - a_initial) >= 1:
+                        catching_signal = False
                         a_initial = a   # Update the counting value
                         # Waiting to read the box barcode 
                         t_start = time.time()
-                        while time.time() - t_start < 5:
+                        while (time.time() - t_start < 5) and (not catching_signal):
+                            print("self.barcode_flag", self.barcode_flag)
                             if self.barcode_flag:
+                                catching_signal = True
                                 s56 = time.time()
                                 scanned_box_barcode_byte_string = self.scanned_value_old
                                 s5 = time.time()
@@ -769,11 +772,8 @@ if __name__ == "__main__":
     
     print("counting")
     Thread(target=counter.scanner_read).start()
-    time.sleep(0.1)
     Thread(target=counter.db_order_checker).start()
-    time.sleep(0.1)
     Thread(target=counter.update_table).start()
-    time.sleep(0.1)
     Thread(target=counter.counting).start()
     counter.show()
     sys.exit(app.exec_())
