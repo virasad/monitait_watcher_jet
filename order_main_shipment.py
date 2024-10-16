@@ -99,8 +99,8 @@ class MainWindow(QMainWindow):
         self.table_widget.verticalHeader().setVisible(False)  # Hide horizontal header if not needed
         
         # Set column widths
-        self.table_widget.setColumnWidth(0, 100)  # Set width for column 0
-        self.table_widget.setColumnWidth(1, 150)  # Set width for column 1
+        self.table_widget.setColumnWidth(0, 50)  # Set width for column 0
+        self.table_widget.setColumnWidth(1, 250)  # Set width for column 1
         self.table_widget.setColumnWidth(2, 100)  # Set width for column 2
         self.table_widget.setColumnWidth(3, 100)  # Set width for column 3
         self.table_widget.setColumnWidth(4, 100)  # Set width for column 4
@@ -339,23 +339,25 @@ class MainWindow(QMainWindow):
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
                     # If the OK signal triggered
                     if abs(a - a_initial) >= 1:
-                        print("\n Catched the first OK signal")
+                        print("\n ****Catched the first OK signal.****")
                         a_initial = a
                         a_initial_1 = a
                         
                         # Going to catch second OK signal
                         catching_signal = False
+                        time_out_flag = False
                         
                         # Waiting to read the box barcode 
                         t_start = time.time()
                         while not catching_signal:
                             a1 ,b1 ,c1, d1 ,dps1 = self.arduino.read_GPIO()
                             
-                            if abs(a1 - a_initial_1) >= 1 or catching_signal:
+                            if abs(a1 - a_initial_1) >= 1 or catching_signal or (time.time() - t_start < 2.5):
                                 print("Catched the second OK signal or barcode read")
                                 # Update the initial value
                                 a_initial_1 = a1
                                 catching_signal = True
+                                time_out_flag = True
                                 
                             if self.barcode_flag:
                                 catching_signal = True
@@ -403,6 +405,7 @@ class MainWindow(QMainWindow):
                                                     box_in_order_batch = True
                                                     # Decrease quantity by 1 if it's greater than 0, else eject it
                                                     if item['quantity'] > 0:
+                                                        print(f"Status:{self.scanned_box_barcode} is grabbed.")
                                                         # Decreasing the quantity in the shipments order and the batches list
                                                         item['quantity'] -= 1 
                                                         batch['quantity'] = str(int(batch['quantity']) - 1) 
@@ -418,6 +421,7 @@ class MainWindow(QMainWindow):
                                                         self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
 
                                                     elif item['quantity'] == 0:
+                                                        print(f"Status:{self.scanned_box_barcode} is finished.")
                                                         # Updatinging the quantity in the shipments order and the batches list
                                                         item['quantity'] = 0 
                                                         batch['quantity'] = 0 
@@ -440,6 +444,7 @@ class MainWindow(QMainWindow):
                             
                                         # If the scanned barcode is not in the batches, eject it 
                                         if not box_in_order_batch:
+                                            print(f"Status:{self.scanned_box_barcode} not in the orders.")
                                             self.not_detected_barcode += 1
                                             
                                             eject_ts = time.time()
@@ -461,7 +466,7 @@ class MainWindow(QMainWindow):
                                 # Update the old scanned value
                                 self.scanned_value_old = b''
                         # If barcode could not catch a barcode value
-                        if not catching_signal:
+                        if time_out_flag:
                             # Update the old scanned value
                             self.scanned_value_old = b''
                             print("Status:time out.")
