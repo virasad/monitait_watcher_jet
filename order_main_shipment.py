@@ -137,6 +137,7 @@ class MainWindow(QMainWindow):
         self.arduino = arduino
         self.stop_thread = False
         self.update_table_flag = False
+        self.barcode_flag = False
         self.order_list = []
         self.db = db
         self.camera = camera
@@ -190,7 +191,6 @@ class MainWindow(QMainWindow):
         # self.timer = threading.Timer(1.0, self.update_table_flag)
         # self.timer.start()
         
-        self.barcode_flag = False
         self.last_server_signal = time.time()
         self.last_image = time.time()
         db_checking_flag = True
@@ -241,6 +241,9 @@ class MainWindow(QMainWindow):
                     self.shipment_db = self.db.order_read(self.shipment_number)
                     
                     if self.shipment_db != []:
+                        # Defined to watcher not catched a additional signal
+                        self.barcode_flag = False
+                        
                         # Update the scanner value to its initial state
                         self.scanned_value_old = b''
                         
@@ -327,6 +330,7 @@ class MainWindow(QMainWindow):
                             print("self.barcode_flag", self.barcode_flag)
                             if self.barcode_flag:
                                 catching_signal = True
+                                self.barcode_flag = False
                                 s56 = time.time()
                                 scanned_box_barcode_byte_string = self.scanned_value_old
                                 s5 = time.time()
