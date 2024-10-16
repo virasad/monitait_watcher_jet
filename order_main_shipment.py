@@ -330,8 +330,6 @@ class MainWindow(QMainWindow):
                         while (time.time() - t_start < 1.5) and (not catching_signal):
                             print("self.barcode_flag", self.barcode_flag)
                             if self.barcode_flag:
-                                # Update the old scanned value
-                                self.scanned_value_old = b''
                                 
                                 catching_signal = True
                                 self.barcode_flag = False
@@ -345,7 +343,8 @@ class MainWindow(QMainWindow):
                                 else:
                                     self.scanned_box_barcode = scanned_box_barcode_byte_string
                                 print("\n scan barcode time", time.time() - s5, "old scanned value", self.scanned_box_barcode, self.scanned_box_barcode != '')
-
+                                # Update the old scanned value
+                                self.scanned_value_old = b''
                                 box_in_order_batch = False
                                 if self.scanned_box_barcode != '':
                                     
