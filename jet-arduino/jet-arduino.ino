@@ -47,7 +47,7 @@ void(* resetFunc) (void) = 0;
 
 void setup() {
   wdt_enable( WDTO_8S);
-  Serial.begin(9600); 
+  Serial.begin(57600); 
   for(int i = 0; i < 4; i++){
     pinMode(input_pins[i], INPUT_PULLUP);
     pinMode(output_pins[i],OUTPUT);
