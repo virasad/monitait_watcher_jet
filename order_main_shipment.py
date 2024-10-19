@@ -357,10 +357,6 @@ class MainWindow(QMainWindow):
                         a_initial = a
                         a_initial_1 = a
                         self.arduino_ok_value = a
-                        for i in range(5):
-                            time.sleep(1)
-                            data = self.redis.rpop('dms')
-                            print(data, "data")
                         
                         # Going to catch second OK signal
                         catching_signal = False
@@ -381,6 +377,9 @@ class MainWindow(QMainWindow):
                             if self.barcode_flag:
                                 catching_signal = True
                                 self.barcode_flag = False
+                                
+                                data = self.redis.rpop('dms')
+                                print(data, "data")
                                 
                                 # scanned_box_barcode_byte_string = self.scanner.read_barcode()
                                 scanned_box_barcode_byte_string = self.scanned_value_old
