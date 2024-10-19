@@ -13,7 +13,7 @@ import os
 import cv2
 from threading import Thread
 import evdev
-from redis import Redis
+import redis
 
 register_id = str(socket.gethostname())
 
@@ -768,7 +768,7 @@ class RedisConnection:
 
     # Connecting to Radis database
     def connect_to_redis(self):
-        return Redis(self.redis_hostname, self.redis_port, db=3)
+        return redis.Redis(self.redis_hostname, self.redis_port, db=3)
 
     def set_flag(self, list_lenght):
         with self.redis_connection.pipeline() as pipe:
@@ -799,7 +799,7 @@ class RedisConnection:
             # pipe2.delete("dms")
             # for i in range(dms):
             dms_list = pipe2.rpop("dms")
-            pipe2.execute()
+            # pipe2.execute()
             if dms_list:
                 return dms_list
             else:

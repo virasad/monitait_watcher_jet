@@ -357,9 +357,10 @@ class MainWindow(QMainWindow):
                         a_initial = a
                         a_initial_1 = a
                         self.arduino_ok_value = a
-                        
-                        dms_list = self.redis.get_dms_redis()
-                        print(dms_list)
+                        for i in range(50):
+                            time.sleep(1)
+                            dms_list = self.redis.get_dms_redis()
+                            print(dms_list)
                         
                         # Going to catch second OK signal
                         catching_signal = False
@@ -822,7 +823,19 @@ if __name__ == "__main__":
     arduino = Ardiuno()
     camera = Camera()
     db = DB()
-    redis_connection = RedisConnection("192.168.125.103", 6379)
+    redis_connection = redis.StrictRedis("192.168.125.103", 6379, db=3)
+    try:
+        response = redis_connection.ping()
+        data = redis_connection.rpop('dms')
+        print(data)
+        print(response)
+        if response:
+            print("Redis connection is successful!")
+        else:
+            print("Redis connection failed.")
+    except redis.ConnectionError:
+        print("Could not connect to Redis.")
+    print(redis_connection)
     
     # Connected to the found scanner 
     # List all ttyUSB devices
