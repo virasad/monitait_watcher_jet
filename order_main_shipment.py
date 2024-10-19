@@ -36,7 +36,7 @@ class MainWindow(QMainWindow):
         
         # Create a QTableWidget for the title
         self.title_table = QTableWidget()  # No need to specify rows and columns at this point
-        self.title_table.setRowCount(3)  # Set 2 rows for 'a' and 'b'
+        self.title_table.setRowCount(4)  # Set 2 rows for 'a' and 'b'
         self.title_table.setColumnCount(4)  # Set 1 column for values
         
         self.item_row0_col0 = QTableWidgetItem("شماره محموله")  
@@ -62,7 +62,7 @@ class MainWindow(QMainWindow):
         self.item_row1_col3 = QTableWidgetItem("ساوه")  
         self.title_table.setItem(1, 3, self.item_row1_col3) 
         
-        self.item_row2_col0 = QTableWidgetItem("اشتباه")  
+        self.item_row2_col0 = QTableWidgetItem("کالای اشتباه")  
         self.item_row2_col0.setBackground(QColor("lightGray"))  
         self.item_row2_col0.setFont(self.bold_font)  
         self.title_table.setItem(2, 0, self.item_row2_col0)
@@ -70,7 +70,18 @@ class MainWindow(QMainWindow):
         self.item_row2_col2 = QTableWidgetItem("شناسایی نشده")  
         self.item_row2_col2.setBackground(QColor("lightGray"))  
         self.item_row2_col2.setFont(self.bold_font)  
-        self.title_table.setItem(2, 2, self.item_row2_col2) 
+        self.title_table.setItem(2, 2, self.item_row2_col2)
+        
+        
+        self.item_row3_col0 = QTableWidgetItem("شمارش شده")  
+        self.item_row3_col0.setBackground(QColor("lightGray"))  
+        self.item_row3_col0.setFont(self.bold_font)  
+        self.title_table.setItem(3, 0, self.item_row3_col0)
+        
+        self.item_row3_col2 = QTableWidgetItem("کالای درست")  
+        self.item_row3_col2.setBackground(QColor("lightGray"))  
+        self.item_row3_col2.setFont(self.bold_font)  
+        self.title_table.setItem(3, 2, self.item_row3_col2) 
          
         # Set the column and rows width and height
         self.title_table.setColumnWidth(0, 200)  
@@ -81,6 +92,7 @@ class MainWindow(QMainWindow):
         self.title_table.setRowHeight(0, 100)  
         self.title_table.setRowHeight(1, 100)  
         self.title_table.setRowHeight(2, 100)  
+        self.title_table.setRowHeight(3, 100)  
 
         # Set layout direction to right-to-left
         self.title_table.setLayoutDirection(Qt.RightToLeft)
@@ -169,6 +181,8 @@ class MainWindow(QMainWindow):
         self.watcher_live_signal = 60 * 5
         self.take_picture_interval = 60 * 5
         self.order_db_remove_interval = 30  # Convert hours to secends
+        self.arduino_ok_value = 0
+        self.barcod_read_value = 0
     
     def update_frame(self):
         ret, frame = self.cap.read()
@@ -203,6 +217,8 @@ class MainWindow(QMainWindow):
         a ,b ,c, d ,dps = self.arduino.read_GPIO()
         a_initial = a
         b_initial = b
+        self.arduino_ok_value = a
+        
         
         # Getting the stationID from API 
         try:
@@ -246,6 +262,7 @@ class MainWindow(QMainWindow):
                     self.shipment_db = self.db.order_read(self.shipment_number)
                     
                     if self.shipment_db != []:
+                        self.barcod_read_value = 0
                         # Defined to watcher not catched a additional signal
                         self.barcode_flag = False
                         
@@ -340,6 +357,7 @@ class MainWindow(QMainWindow):
                         print("\n ****Catched the first OK signal.****")
                         a_initial = a
                         a_initial_1 = a
+                        self.arduino_ok_value = a
                         
                         # Going to catch second OK signal
                         catching_signal = False
@@ -408,6 +426,8 @@ class MainWindow(QMainWindow):
                                                         item['quantity'] -= 1 
                                                         batch['quantity'] = str(int(batch['quantity']) - 1) 
                                                         remainded_quantity = item['quantity']
+                                                        
+                                                        self.barcod_read_value += 1
                                                         
                                                         # Calculate the counted value
                                                         counted_quantity = abs(total_quantity-item['quantity'])
@@ -682,7 +702,7 @@ class MainWindow(QMainWindow):
     def update_table(self):
         previus_shipment_number = ""
         table_st = time.time()
-        table_update_interval = 3
+        table_update_interval = 1
         table_updating_flag = True
         print("\n ***Update table function.***")
         while not self.stop_thread:
@@ -755,6 +775,8 @@ class MainWindow(QMainWindow):
                         
                         self.title_table.setItem(2, 1, QTableWidgetItem(f"{not_detected_qt}")  )   
                         self.title_table.setItem(2, 3, QTableWidgetItem(f"{wrong_qt}")) 
+                        self.title_table.setItem(3, 1, QTableWidgetItem(f"{self.arduino_ok_value}")) 
+                        self.title_table.setItem(3, 3, QTableWidgetItem(f"{self.barcod_read_value}")) 
                         
                         orders_quantity_value = json.loads(read_shipment_db[4])
                         
