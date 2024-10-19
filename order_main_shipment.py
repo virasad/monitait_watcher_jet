@@ -357,10 +357,10 @@ class MainWindow(QMainWindow):
                         a_initial = a
                         a_initial_1 = a
                         self.arduino_ok_value = a
-                        for i in range(50):
+                        for i in range(5):
                             time.sleep(1)
-                            dms_list = self.redis.get_dms_redis()
-                            print(dms_list)
+                            data = self.redis.rpop('dms')
+                            print(data, "data")
                         
                         # Going to catch second OK signal
                         catching_signal = False
