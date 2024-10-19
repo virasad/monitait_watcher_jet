@@ -23,7 +23,7 @@ live_stream_url = 'http://192.168.125.103:5000/video_feed/1'
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner, redis:redis, shipment_url: shipment_url, stationID_url: stationID_url,
+    def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner, redis, shipment_url: shipment_url, stationID_url: stationID_url,
                  sendshipment_url: sendshipment_url, register_id: register_id, usb_serial_flag):
         super().__init__()
         
