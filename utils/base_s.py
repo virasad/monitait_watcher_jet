@@ -13,7 +13,7 @@ import os
 import cv2
 from threading import Thread
 import evdev
-
+from redis import Redis
 
 register_id = str(socket.gethostname())
 
@@ -92,7 +92,7 @@ class DB:
             cursor2 = self.dbconnect.cursor()
             cursor3 = self.dbconnect.cursor()
             cursor1.execute('''CREATE TABLE IF NOT EXISTS monitait_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, register_id TEXT, temp_a INTEGER NULL, temp_b INTEGER NULL, image_name TEXT NULL, extra_info JSON, ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)''')
-            cursor2.execute('''CREATE TABLE IF NOT EXISTS watcher_order_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, shipment_number TEXT NULL, destination TEXT NULL, shipment_type TEXT NULL, orders TEXT NULL, is_done INTEGER NULL)''')
+            cursor2.execute('''CREATE TABLE IF NOT EXISTS watcher_order_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, shipment_number TEXT NULL, destination TEXT NULL, shipment_type TEXT NULL, orders TEXT NULL, unchanged_orders TEXT NULL, is_done INTEGER NULL)''')
             cursor3.execute('''CREATE TABLE IF NOT EXISTS shipments_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, shipment_number TEXT NULL, wrong INTEGER NULL, not_detected INTEGER NULL, orders_quantity_specification TEXT NULL)''')
             
             # for column in columns:
@@ -117,12 +117,12 @@ class DB:
             cursor1.close()
             return False
     
-    def order_write(self, shipment_number, destination, shipment_type, orders={}, is_done=0):
+    def order_write(self, shipment_number, destination, shipment_type, orders={}, unchanged_orders = {}, is_done=0):
         if True:
             cursor2 = self.dbconnect.cursor()
             cursor2.execute('SELECT * FROM watcher_order_table WHERE shipment_number = ?', (shipment_number,))
             if cursor2.fetchone() is None:
-                cursor2.execute('''insert into watcher_order_table (shipment_number, destination, shipment_type, orders, is_done) values (?,?,?,?,?)''', (shipment_number, destination, shipment_type, orders, is_done))
+                cursor2.execute('''insert into watcher_order_table (shipment_number, destination, shipment_type, orders, unchanged_orders, is_done) values (?,?,?,?,?,?)''', (shipment_number, destination, shipment_type, orders, unchanged_orders, is_done))
                 self.dbconnect.commit()
                 cursor2.close()
                 return True
@@ -246,11 +246,14 @@ class DB:
         #     print(f"DB > shipment delete {e_od}")
         #     return False
         
-    def order_update(self, shipment_number, destination=None, shipment_type=None, orders=None, is_done=None):
+    def order_update(self, shipment_number, destination=None, shipment_type=None, orders=None, unchanged_orders=None, is_done=None):
         if True:
             query = "UPDATE watcher_order_table SET "
             params = []
             # Check which column to updated
+            if unchanged_orders is not None:
+                query += "unchanged_orders = ?,"
+                params.append(unchanged_orders)
             if orders is not None:
                 query += "orders = ?, "
                 params.append(orders)
@@ -757,5 +760,49 @@ class UARTscanner:
             return None
            
         
+class RedisConnection:
+    def __init__(self, redis_hostname, redis_port):
+        self.redis_hostname = redis_hostname
+        self.redis_port = redis_port
+        self.redis_connection = self.connect_to_redis()
+
+    # Connecting to Radis database
+    def connect_to_redis(self):
+        return Redis(self.redis_hostname, self.redis_port, db=3)
+
+    def set_flag(self, list_lenght):
+        with self.redis_connection.pipeline() as pipe:
+            pipe.delete("camera_list")
+            for i in range(list_lenght):
+                pipe.rpush("camera_list", 0)
+            pipe.execute()
+
+    def update_encoder_redis(self, encoder):
+        self.redis_connection.set("encoder_values", json.dumps(encoder))
+
+    def set_captuting_flag(self, key):
+        self.redis_connection.set(key, 1)
+
+    def set_light_mode(self, mode):
+        self.redis_connection.set("light_mode", mode)
+
+    def update_dms_redis(self, dms):
+        with self.redis_connection.pipeline() as pipe2:
+            # pipe2.delete("dms")
+            # for i in range(dms):
+            pipe2.rpush("dms", dms)
+            pipe2.execute()
+        # self.redis_connection.set('dms', dms)
+
+    def get_dms_redis(self):
+        with self.redis_connection.pipeline() as pipe2:
+            # pipe2.delete("dms")
+            # for i in range(dms):
+            dms_list = pipe2.rpop("dms")
+            pipe2.execute()
+            if dms_list:
+                return dms_list
+            else:
+                return []
         
-        
+        # self.redis_connection.set('dms', dms)

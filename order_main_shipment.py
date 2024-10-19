@@ -23,7 +23,7 @@ live_stream_url = 'http://192.168.125.103:5000/video_feed/1'
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner, shipment_url: shipment_url, stationID_url: stationID_url,
+    def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner, redis:redis shipment_url: shipment_url, stationID_url: stationID_url,
                  sendshipment_url: sendshipment_url, register_id: register_id, usb_serial_flag):
         super().__init__()
         
@@ -156,10 +156,10 @@ class MainWindow(QMainWindow):
         self.update_table_flag = False
         self.start_counting_flag = False
         self.barcode_flag = False
-        self.order_list = []
         self.db = db
         self.camera = camera
         self.scanner = scanner
+        self.redis = redis
         self.shipment_url = shipment_url
         self.stationID_url = stationID_url
         self.sendshipment_url = sendshipment_url
@@ -185,17 +185,17 @@ class MainWindow(QMainWindow):
         self.arduino_ok_value = 0
         self.barcod_read_value = 0
     
-    def update_frame(self):
-        ret, frame = self.cap.read()
-        if ret:
-            # Convert frame to RGB
-            rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            # Get the dimensions of the frame
-            h, w, ch = rgb_image.shape
-            # # Create QImage from the RGB frame
-            qimg = QImage(rgb_image.data, w, h, ch * w, QImage.Format_RGB888)
-            # # Set the QImage on the QLabel
-            self.image_label.setPixmap(QPixmap.fromImage(qimg))
+    # def update_frame(self):
+    #     ret, frame = self.cap.read()
+    #     if ret:
+    #         # Convert frame to RGB
+    #         rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    #         # Get the dimensions of the frame
+    #         h, w, ch = rgb_image.shape
+    #         # # Create QImage from the RGB frame
+    #         qimg = QImage(rgb_image.data, w, h, ch * w, QImage.Format_RGB888)
+    #         # # Set the QImage on the QLabel
+    #         self.image_label.setPixmap(QPixmap.fromImage(qimg))
         
     # def closeEvent(self, event):
     #     print(1)
@@ -218,7 +218,7 @@ class MainWindow(QMainWindow):
         a ,b ,c, d ,dps = self.arduino.read_GPIO()
         a_initial = a
         b_initial = b
-        self.arduino_ok_value = a
+        self.arduino_ok_value = 0
         
         
         # Getting the stationID from API 
@@ -234,8 +234,6 @@ class MainWindow(QMainWindow):
         ##
         ## Main WHILE loop
         while not self.stop_thread:
-            data_saved = False
-            send_image = False
             order_counting_start_flag = False # To start counting process, this flag set as True when OR detected
             exit_flag = False
             image_name = ""
@@ -281,9 +279,10 @@ class MainWindow(QMainWindow):
                         self.destination = self.shipment_db[2]
                         self.shipment_type = self.shipment_db[3]
                         json_data1 = json.loads(self.shipment_db[4])
+                        json_data2 = json.loads(self.shipment_db[5])
                         
                         self.previous_quantities = {item["id"]: item["quantity"] for item in json_data1}
-                        self.total_quantities = {item["id"]: item["quantity"] for item in json_data1}
+                        self.total_quantities = {item["id"]: item["quantity"] for item in json_data2}
                         
                         print("self.total_quantities", self.total_quantities)
                         
@@ -358,6 +357,9 @@ class MainWindow(QMainWindow):
                         a_initial = a
                         a_initial_1 = a
                         self.arduino_ok_value = a
+                        
+                        dms_list = self.redis.get_dms_redis()
+                        print(dms_list)
                         
                         # Going to catch second OK signal
                         catching_signal = False
@@ -576,7 +578,9 @@ class MainWindow(QMainWindow):
                             is_exist = self.db.order_write(shipment_number=entry["shipment_number"], 
                                                             destination=entry["destination"], 
                                                             shipment_type=entry["type"],
-                                                            orders=json.dumps(entry['orders']), is_done=0)
+                                                            orders=json.dumps(entry['orders']),
+                                                            unchanged_orders=json.dumps(entry['orders']),
+                                                            is_done=0)
                             # if is_exist:
                             #     print(f"{entry['shipment_number']} is not exists")
                             # else:
@@ -711,7 +715,7 @@ class MainWindow(QMainWindow):
                 if (time.time() - table_st > table_update_interval) and (self.shipment_db != []) and self.start_counting_flag:
                     table_st = time.time()
                     json_data1 = json.loads(self.shipment_db[4])
-                    
+                    json_data2 = json.loads(self.shipment_db[5])
                     if self.update_table_flag:
                         self.update_table_flag = False
                         # Updating the table
@@ -818,7 +822,8 @@ if __name__ == "__main__":
     arduino = Ardiuno()
     camera = Camera()
     db = DB()
-
+    redis_connection = RedisConnection("192.168.125.103", 6379)
+    
     # Connected to the found scanner 
     # List all ttyUSB devices
     ttyUSB_devices = glob.glob('/dev/ttyUSB*')
@@ -830,7 +835,7 @@ if __name__ == "__main__":
         usb_serial_flag = False
         scanner = Scanner()
     print("start counter")
-    counter = MainWindow(arduino=arduino, db=db, camera=camera, scanner=scanner, shipment_url=shipment_url,
+    counter = MainWindow(arduino=arduino, db=db, camera=camera, scanner=scanner, redis=redis_connection, shipment_url=shipment_url,
                     stationID_url= stationID_url, sendshipment_url=sendshipment_url, register_id=register_id,
                     usb_serial_flag=usb_serial_flag)
     
