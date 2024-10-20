@@ -66,7 +66,7 @@ class MainWindow(QMainWindow):
         self.item_row1_col3 = QTableWidgetItem("ساوه")  
         self.title_table.setItem(1, 3, self.item_row1_col3) 
         
-        self.item_row2_col0 = QTableWidgetItem("کالای اشتباه")  
+        self.item_row2_col0 = QTableWidgetItem("عدم تطابق")  
         self.item_row2_col0.setBackground(QColor("lightGray"))  
         self.item_row2_col0.setFont(self.bold_font)  
         self.title_table.setItem(2, 0, self.item_row2_col0)
@@ -93,10 +93,10 @@ class MainWindow(QMainWindow):
         self.title_table.setColumnWidth(1, 500)  
         self.title_table.setColumnWidth(3, 500)  
         self.title_table.setColumnWidth(4, 500) 
-        self.title_table.setRowHeight(0, 100)  
-        self.title_table.setRowHeight(1, 100)  
-        self.title_table.setRowHeight(2, 100)  
-        self.title_table.setRowHeight(3, 100)  
+        self.title_table.setRowHeight(0, 80)  
+        self.title_table.setRowHeight(1, 80)  
+        self.title_table.setRowHeight(2, 80)  
+        self.title_table.setRowHeight(3, 80)  
 
         # Set layout direction to right-to-left
         self.title_table.setLayoutDirection(Qt.RightToLeft)
@@ -120,7 +120,7 @@ class MainWindow(QMainWindow):
         # Make headers stretch to fill the window
         header = self.table_widget.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.Stretch)
-        
+        self.table_widget.setGeometry(100, 50, 600, 400)
         header.setSectionResizeMode(0, QHeaderView.Stretch)
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
@@ -128,6 +128,10 @@ class MainWindow(QMainWindow):
 
         # Create a layout to arrange the title and table
         layout = QVBoxLayout()
+        
+        layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
+        layout.setSpacing(0)  # Remove spacing between widgets
+
         layout.addWidget(self.title_table)  # Add title above the table
         layout.addWidget(self.table_widget)
         print("Checking the live stream url")
@@ -265,6 +269,10 @@ class MainWindow(QMainWindow):
                     self.shipment_db = self.db.order_read(self.shipment_number)
                     
                     if self.shipment_db != []:
+                        
+                        total_completed_quantity = 0
+                        total_remained_quantity = 0 
+                                               
                         self.barcod_read_value = 0
                         # Defined to watcher not catched a additional signal
                         self.barcode_flag = False
@@ -288,8 +296,6 @@ class MainWindow(QMainWindow):
                         self.previous_quantities = {item["id"]: item["quantity"] for item in json_data1}
                         self.total_quantities = {item["id"]: item["quantity"] for item in json_data2}
                         
-                        print("self.total_quantities", self.total_quantities)
-                        
                         self.eject_box = {item["id"]: 0 for item in json_data1}
                         
                         # Read wrong and not detected values from db
@@ -301,7 +307,7 @@ class MainWindow(QMainWindow):
                             self.wrong_barcode = 0
                             self.not_detected_barcode = 0
                         self.orders_quantity_specification = {}
-                        print("json_data1", json_data1)
+                        print("self.shipment_db", self.shipment_db)
                         
                         # Update the quantity by another calculation URL
                         for ord in json_data1:
@@ -319,11 +325,17 @@ class MainWindow(QMainWindow):
                                 ord['batches'][0]['quantity'] = batch_quantity - total_completed_quantity
                                 ord['quantity'] = batch_quantity - total_completed_quantity
                             else:
-                                total_completed_quantity = 0
-                                total_remained_quantity = 0
+                                # Updating remain column value from the unchanged order dictionary
+                                for item2 in json_data2:
+                                    print(item2['id'], order_id)
+                                    if item2['id'] == order_id:
+                                        total_completed_quantity = 0
+                                        total_remained_quantity = item2['quantity']
+
                             product_name = ord['product_name'] 
                             unit = ord['delivery_unit']
                             # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy, name, unit
+                            print("235", [ord['quantity'], total_completed_quantity, total_remained_quantity, 0, product_name, unit])
                             self.orders_quantity_specification[ord['product_number']] = [ord['quantity'], total_completed_quantity, total_remained_quantity, 0, product_name, unit]
                         
                         # Write shipment table
@@ -660,7 +672,7 @@ class MainWindow(QMainWindow):
                 if True:
                     # Checking order list on the order DB to catch the quantity value
                     main_shipment_number_data = self.db.order_read(self.shipment_number)
-                    if (main_shipment_number_data != None) and (self.shipment_number != previus_shipment_number):
+                    if main_shipment_number_data and (self.shipment_number != previus_shipment_number):
                         main_shipment_orders_dict = {}
                         # The shaipment changed, so all data 
                         previus_shipment_number = self.shipment_number
@@ -763,7 +775,7 @@ class MainWindow(QMainWindow):
                             self.table_widget.setItem(row_position, 0, QTableWidgetItem(str(item["product_number"])))
                             self.table_widget.setItem(row_position, 1, QTableWidgetItem(product_name))
                             self.table_widget.setItem(row_position, 2, QTableWidgetItem(str(counted_quantity)))
-                            self.table_widget.setItem(row_position, 3, QTableWidgetItem(str(current_quantity)))  # Set the quantity item
+                            self.table_widget.setItem(row_position, 3, QTableWidgetItem(str(item["quantity"])))  # Set the quantity item
                             self.table_widget.setItem(row_position, 4, QTableWidgetItem(str(total_quantity)))
                             self.table_widget.setItem(row_position, 5, QTableWidgetItem(item["delivery_unit"]))
                             self.table_widget.setItem(row_position, 6, QTableWidgetItem(str(eject_value)))
