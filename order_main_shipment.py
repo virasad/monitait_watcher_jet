@@ -15,12 +15,16 @@ from PyQt5 import QtGui
 
 register_id = str(socket.gethostname())
 
-## URLs slack
+## URLs 
 shipment_url = 'https://app.monitait.com/api/factory/shipment-orders/?status=not_started&page=1'
 stationID_url = f'https://app.monitait.com/api/factory/watcher/{register_id}/'
 sendshipment_url = 'https://app.monitait.com/api/elastic-search/send-batch-report/'
 live_stream_url = 'http://192.168.125.103:5000/video_feed/1'
 
+## Redis 
+redis_api = "192.168.125.103"
+redis_port = 6379 
+redis_db = 3
 
 class MainWindow(QMainWindow):
     def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner, redis, shipment_url: shipment_url, stationID_url: stationID_url,
@@ -378,8 +382,11 @@ class MainWindow(QMainWindow):
                                 catching_signal = True
                                 self.barcode_flag = False
                                 
-                                data = self.redis.rpop('dms')
-                                print(data, "data")
+                                if self.redis == None:
+                                    pass
+                                else: 
+                                    data = self.redis.rpop('dms')
+                                    print(data, "data")
                                 
                                 # scanned_box_barcode_byte_string = self.scanner.read_barcode()
                                 scanned_box_barcode_byte_string = self.scanned_value_old
@@ -822,19 +829,19 @@ if __name__ == "__main__":
     arduino = Ardiuno()
     camera = Camera()
     db = DB()
-    redis_connection = redis.StrictRedis("192.168.125.103", 6379, db=3)
+    
     try:
+        redis_connection = redis.StrictRedis(redis_api, redis_port, db=redis_db)        
         response = redis_connection.ping()
-        data = redis_connection.rpop('dms')
-        print(data)
-        print(response)
+
         if response:
             print("Redis connection is successful!")
         else:
+            redis_connection = None
             print("Redis connection failed.")
     except redis.ConnectionError:
+        redis_connection = None
         print("Could not connect to Redis.")
-    print(redis_connection)
     
     # Connected to the found scanner 
     # List all ttyUSB devices
