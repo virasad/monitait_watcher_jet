@@ -830,18 +830,20 @@ if __name__ == "__main__":
     camera = Camera()
     db = DB()
     
-    try:
-        redis_connection = redis.StrictRedis(redis_api, redis_port, db=redis_db)        
-        response = redis_connection.ping()
+    # try:
+    #     redis_connection = redis.StrictRedis(redis_api, redis_port, db=redis_db)        
+    #     response = redis_connection.ping()
 
-        if response:
-            print("Redis connection is successful!")
-        else:
-            redis_connection = None
-            print("Redis connection failed.")
-    except redis.ConnectionError:
-        redis_connection = None
-        print("Could not connect to Redis.")
+    #     if response:
+    #         print("Redis connection is successful!")
+    #     else:
+    #         redis_connection = None
+    #         print("Redis connection failed.")
+    # except redis.ConnectionError:
+    #     redis_connection = None
+    #     print("Could not connect to Redis.")
+    
+    redis_connection = None
     
     # Connected to the found scanner 
     # List all ttyUSB devices
