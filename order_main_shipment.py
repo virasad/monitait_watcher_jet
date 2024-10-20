@@ -270,6 +270,8 @@ class MainWindow(QMainWindow):
                     
                     if self.shipment_db != []:
                         
+                        self.arduino_ok_value = 0
+                        
                         total_completed_quantity = 0
                         total_remained_quantity = 0 
                                                
@@ -296,7 +298,7 @@ class MainWindow(QMainWindow):
                         self.previous_quantities = {item["id"]: item["quantity"] for item in json_data1}
                         self.total_quantities = {item["id"]: item["quantity"] for item in json_data2}
                         
-                        self.eject_box = {item["id"]: 0 for item in json_data1}
+                        self.eject_box = {item["product_number"]: 0 for item in json_data1}
                         
                         # Read wrong and not detected values from db
                         read_shipment_db = self.db.shipment_read(self.shipment_number) 
@@ -314,6 +316,7 @@ class MainWindow(QMainWindow):
                             order_id = ord['id'] 
                             calculation_url = f"https://app.monitait.com/api/elastic-search/batch-report-calculations/?station_id={self.stationID}&order_id={order_id}"
                             order_remaind_value = requests.get(calculation_url, headers=self.headers)
+                            print(order_id, order_remaind_value.status_code)
                             if order_remaind_value.status_code == 200:
                                 order_remaind_value = order_remaind_value.json() 
                                 station_reports = order_remaind_value[0]['station_reports'][0]
@@ -324,22 +327,29 @@ class MainWindow(QMainWindow):
                                 # Update the order
                                 ord['batches'][0]['quantity'] = batch_quantity - total_completed_quantity
                                 ord['quantity'] = batch_quantity - total_completed_quantity
+                                # Updating remain column value from the unchanged order dictionary
+                                for item2 in json_data2:
+                                    if item2['id'] == order_id:
+                                        total_qt = item2['quantity']
                             else:
                                 # Updating remain column value from the unchanged order dictionary
                                 for item2 in json_data2:
-                                    print(item2['id'], order_id)
+                                    print(item2['id'],order_id, item2['quantity'])
                                     if item2['id'] == order_id:
                                         total_completed_quantity = 0
                                         total_remained_quantity = item2['quantity']
+                                        total_qt = item2['quantity']
 
                             product_name = ord['product_name'] 
                             unit = ord['delivery_unit']
                             # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy, name, unit
-                            print("235", [ord['quantity'], total_completed_quantity, total_remained_quantity, 0, product_name, unit])
-                            self.orders_quantity_specification[ord['product_number']] = [ord['quantity'], total_completed_quantity, total_remained_quantity, 0, product_name, unit]
+                            self.orders_quantity_specification[ord['product_number']] = [total_qt, total_completed_quantity, total_remained_quantity, 0, product_name, unit]
+                            print(self.orders_quantity_specification[ord['product_number']], "Order qts")
                         
                         # Write shipment table
                         self.db.shipments_table_write(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
+                        # Update shipment table
+                        self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
                         
                         self.start_counting_flag = True
                     else:
@@ -372,7 +382,7 @@ class MainWindow(QMainWindow):
                         print("\n ****Catched the first OK signal.****")
                         a_initial = a
                         a_initial_1 = a
-                        self.arduino_ok_value = a
+                        self.arduino_ok_value += 1
                         
                         # Going to catch second OK signal
                         catching_signal = False
@@ -431,7 +441,9 @@ class MainWindow(QMainWindow):
                                         self.barcode_flag = False
                                     else:
                                         # Checking is the scanned box barcode is in the order batches or not
+                                        print("self.orders_quantity_specification", self.orders_quantity_specification)
                                         for item in self.shipment_orders:
+                                            print("\n ITEM", item)
                                             # Updating total and remainded value                                    
                                             total_quantity = int(self.total_quantities[item["id"]])
                                             remainded_quantity = int(item['quantity'])
@@ -456,6 +468,7 @@ class MainWindow(QMainWindow):
                                                         self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders), is_done = 0)
                                                         
                                                         # Update the orders quantity specification dictionary and shipment table
+                                                        print(self.orders_quantity_specification, item['product_number'], "item['product_number']")
                                                         self.orders_quantity_specification[item['product_number']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['product_number']], item['product_name'], item['delivery_unit']]
                                                         self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
 
@@ -468,7 +481,7 @@ class MainWindow(QMainWindow):
                                                         # Updating the quantity value
                                                         counted_quantity = total_quantity
                                                         remainded_quantity = 0
-                                                        self.eject_box[item["id"]] += 1
+                                                        self.eject_box[item["product_number"]] += 1
                                                         
                                                         eject_ts = time.time()
                                                         # Update local order db
@@ -483,7 +496,7 @@ class MainWindow(QMainWindow):
                             
                                         # If the scanned barcode is not in the batches, eject it 
                                         if not box_in_order_batch:
-                                            print(f"Status:{self.scanned_box_barcode} not in the orders.")
+                                            print(f"Status:{self.scanned_box_barcode} is not in the orders.")
                                             self.not_detected_barcode += 1
                                             
                                             eject_ts = time.time()
@@ -491,9 +504,8 @@ class MainWindow(QMainWindow):
                                             self.arduino.gpio32_0.off()
                                             # Update shipment table
                                             self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode)
-
                                 else:
-                                    print("Status:the barcode could not catch barcode.")
+                                    print("Status:the scanner could not catch the barcode.")
                                     self.wrong_barcode += 1
                                     
                                     eject_ts = time.time()
@@ -516,19 +528,7 @@ class MainWindow(QMainWindow):
                             self.arduino.gpio32_0.off()
                             # Update shipment table
                             self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification)) 
-                    # If the NG signal triggered
-                    elif abs(b - b_initial) >= 1:
-                        print("\n")
-                        print("Status: catche NG signal")
-                        s2 = time.time()
-                        b_initial = b
-                        
-                        self.wrong_barcode += 1
-                        
-                        # Duo to reciving NG signal, the box should be ejected
-                        self.arduino.gpio32_0.off()
-                        # Update shipment table
-                        self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
+
 
     def scanner_read(self):
         while True:
@@ -707,7 +707,6 @@ class MainWindow(QMainWindow):
                                         # Update the quantity of the scanned box 
                                         main_shipment_orders_dict[batch['batch_uuid']]['quantity'] = current_quantity
                                         order_id_ = main_shipment_orders_dict[batch['batch_uuid']]['order_id']
-                                        print("order_id_", order_id_)
                                         # Post requests
                                         # Sending batch to batch URL
                                         batch_report_body = {"batch_uuid":batch['batch_uuid'], "assigned_id":batch['assigned_id'],
@@ -717,7 +716,7 @@ class MainWindow(QMainWindow):
                                                                 "defect_image":[], "action_type": "stop"}  
                                         s2 = time.time()
                                         send_shipment_response = requests.post(self.sendshipment_url, json=batch_report_body, headers=self.headers)
-                                        print("\n ****Send batch status code", send_shipment_response.status_code, "Post time", time.time()-s2)
+                                        print("****Send batch status code", send_shipment_response.status_code, "Post time", time.time()-s2)
                                 else:
                                     pass
                 # except Exception as ex2:
@@ -727,7 +726,6 @@ class MainWindow(QMainWindow):
         table_st = time.time()
         table_update_interval = 1
         table_updating_flag = True
-        print("\n ***Update table function.***")
         while not self.stop_thread:
             if True:
                 # Checking order db every {table_update_interval} second
@@ -759,7 +757,6 @@ class MainWindow(QMainWindow):
                         
                         # self.table_widget.setRowCount(0)  # Clear the table
                         for item in json_data1:
-                            print("item", item["product_name"], item["quantity"])
                             row_position = self.table_widget.rowCount()
                             self.table_widget.insertRow(row_position)
 
@@ -769,7 +766,7 @@ class MainWindow(QMainWindow):
                             previous_quantity = self.previous_quantities[item["id"]]
                             total_quantity = self.total_quantities[item["id"]]
                             counted_quantity = abs(total_quantity-previous_quantity)
-                            eject_value = self.eject_box[item["id"]]
+                            eject_value = self.eject_box[item["product_number"]]
 
                             # Add items to the table
                             self.table_widget.setItem(row_position, 0, QTableWidgetItem(str(item["product_number"])))
