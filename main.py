@@ -12,7 +12,6 @@ import os
 import cv2
 import numpy as np
 import gauge_functions
-import random
 
 err_msg = ""
 old_err_msg = ""
@@ -301,7 +300,7 @@ while flag:
     
     # Counting camera index
     j = j + 1
-    if j == 50: 
+    if j == 500: 
       # Capturing image from the IP camera
       # Create the VideoCapture object with the authenticated URL
       try:
@@ -329,94 +328,92 @@ while flag:
           top = 420
           right = 838
           bottom = 152
-
-          estimated_tank_volume = random.randint(26000, 26700)
-          radius = 17.5
+                             
           # Crop 200 pixels from top and bottom the image
           # src1 = src[286:880, 498:1188]
           src1 = src[top:height-bottom, left:width-right]
 
-          # # Convert it to gray
-          # bg2gray = cv2.cvtColor(src1, cv2.COLOR_BGR2GRAY)
+          # Convert it to gray
+          bg2gray = cv2.cvtColor(src1, cv2.COLOR_BGR2GRAY)
 
-          # # Reduce the noise to avoid false circle detection
-          # gray = cv2.medianBlur(bg2gray, 5)
+          # Reduce the noise to avoid false circle detection
+          gray = cv2.medianBlur(bg2gray, 5)
           
-          # # Reduce the noise to avoid false circle detection
-          # gray = cv2.medianBlur(gray, 5)
-          # blurred = cv2.GaussianBlur(gray, (11, 11), 0)
-          # binary_thresh = cv2.threshold(blurred, 200, 255, cv2.THRESH_BINARY)[1]
-          # erode_thresh = cv2.erode(binary_thresh, None, iterations=2)
-          # thresh = cv2.dilate(erode_thresh, None, iterations=4)
+          # Reduce the noise to avoid false circle detection
+          gray = cv2.medianBlur(gray, 5)
+          blurred = cv2.GaussianBlur(gray, (11, 11), 0)
+          binary_thresh = cv2.threshold(blurred, 200, 255, cv2.THRESH_BINARY)[1]
+          erode_thresh = cv2.erode(binary_thresh, None, iterations=2)
+          thresh = cv2.dilate(erode_thresh, None, iterations=4)
 
-          # pre_rect_area, max_rect_area = -1, -1
-          # _, contours, hier = cv2.findContours(thresh,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
-          # # Finding the largest spat area
-          # for cnt in contours:
-          #   current_rect_area = cv2.contourArea(cnt)
-          #   if current_rect_area > pre_rect_area:
-          #     max_rect_area = current_rect_area
-          #     pre_rect_area = max_rect_area
-          #     (x_m,y_m,w_m,h_m) = cv2.boundingRect(cnt)
+          pre_rect_area, max_rect_area = -1, -1
+          _, contours, hier = cv2.findContours(thresh,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
+          # Finding the largest spat area
+          for cnt in contours:
+            current_rect_area = cv2.contourArea(cnt)
+            if current_rect_area > pre_rect_area:
+              max_rect_area = current_rect_area
+              pre_rect_area = max_rect_area
+              (x_m,y_m,w_m,h_m) = cv2.boundingRect(cnt)
                   
-          # # Applynig the hough circles transform 
-          # param2=30
-          # rows = gray.shape[0]
-          # circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 2, 15,
-          #                         param1=50, param2=param2, minRadius=10, maxRadius=250)
+          # Applynig the hough circles transform 
+          param2=30
+          rows = gray.shape[0]
+          circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 2, 15,
+                                  param1=50, param2=param2, minRadius=10, maxRadius=250)
           
-          # k_index = 0
-          # di_max = height * width
-          # # Finding possible circle 
-          # if circles is not None:
-          #   circles = np.uint16(np.around(circles))
-          #   for i_index in circles[0, :]:
-          #     #Checking if the found circles on the proper area
-          #     if x_m <= i_index[0] <= x_m+w_m and y_m <= i_index[1] <= y_m+h_m:
-          #       d = (i_index[0] - x_m)**2 + (i_index[1] - y_m)**2
-          #       if d < di_max:
-          #         di_max = d
-          #         src1 = src[top:height-bottom, left:width-right]
-          #         k_index = k_index + 1
-          #         radius = i_index[2]
-          #         cv2.circle(src1, center, radius, (0, 255, 0), 3)
-          #         center = (i_index[0], i_index[1])
-          #   if k_index == 1:
-          #     src1 = src[top:height-bottom, left:width-right]
-          #     estimated_tank_volume = abs(-4759.1 + (571.7*radius) - 1.525 * (radius**2))
-          #     radius = i_index[2]
-          #     cv2.circle(src1, center, radius, (0, 255, 0), 2)
-          #   else:
-          #     # Applynig the hough circles transform 
-          #     param2=30
-          #     rows = gray.shape[0]
+          k_index = 0
+          di_max = height * width
+          # Finding possible circle 
+          if circles is not None:
+            circles = np.uint16(np.around(circles))
+            for i_index in circles[0, :]:
+              #Checking if the found circles on the proper area
+              if x_m <= i_index[0] <= x_m+w_m and y_m <= i_index[1] <= y_m+h_m:
+                d = (i_index[0] - x_m)**2 + (i_index[1] - y_m)**2
+                if d < di_max:
+                  di_max = d
+                  src1 = src[top:height-bottom, left:width-right]
+                  k_index = k_index + 1
+                  radius = i_index[2]
+                  cv2.circle(src1, center, radius, (0, 255, 0), 3)
+                  center = (i_index[0], i_index[1])
+            if k_index == 1:
+              src1 = src[top:height-bottom, left:width-right]
+              estimated_tank_volume = abs(-4759.1 + (571.7*radius) - 1.525 * (radius**2))
+              radius = i_index[2]
+              cv2.circle(src1, center, radius, (0, 255, 0), 2)
+            else:
+              # Applynig the hough circles transform 
+              param2=30
+              rows = gray.shape[0]
               
-          #     circles_2 = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 2, 2 * rows,
-          #                             param1=50, param2=param2, minRadius=10, maxRadius=250)
-          #     # Drawing the detected circles 
-          #     if circles_2 is not None:
-          #       circles_2 = np.uint16(np.around(circles_2))
-          #       for i_index in circles_2[0, :]:
-          #         center = (i_index[0], i_index[1])
-          #         if x_m <= center[0] <= x_m+w_m and y_m <= center[1] <= y_m+h_m:
-          #           src1 = src[top:height-bottom, left:width-right]
-          #           # circle outline
-          #           radius = i_index[2]
-          #           cv2.circle(src1, center, radius, (0, 255, 0), 3)
-          #           # Estimation the tank height
-          #           estimated_tank_volume = abs(-4759.1 + (571.7*radius) - 1.525 * (radius**2))
-          #           # estimated_tank_volume = radius
+              circles_2 = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 2, 2 * rows,
+                                      param1=50, param2=param2, minRadius=10, maxRadius=250)
+              # Drawing the detected circles 
+              if circles_2 is not None:
+                circles_2 = np.uint16(np.around(circles_2))
+                for i_index in circles_2[0, :]:
+                  center = (i_index[0], i_index[1])
+                  if x_m <= center[0] <= x_m+w_m and y_m <= center[1] <= y_m+h_m:
+                    src1 = src[top:height-bottom, left:width-right]
+                    # circle outline
+                    radius = i_index[2]
+                    cv2.circle(src1, center, radius, (0, 255, 0), 3)
+                    # Estimation the tank height
+                    estimated_tank_volume = abs(-4759.1 + (571.7*radius) - 1.525 * (radius**2))
+                    # estimated_tank_volume = radius
                     
-          #           # if estimated_tank_volume > 50:
-          #           #   estimated_tank_volume = 0
-          #           #   radius = 0
-          #           # else:
-          #           #   pass 
-          #         else:
-          #           pass
-          # else:
-          #   estimated_tank_volume = 1
-          #   radius = 1
+                    # if estimated_tank_volume > 50:
+                    #   estimated_tank_volume = 0
+                    #   radius = 0
+                    # else:
+                    #   pass 
+                  else:
+                    pass
+          else:
+            estimated_tank_volume = 1
+            radius = 1
           
           # Writing the output image
           # Single uint16 number
@@ -437,7 +434,6 @@ while flag:
             product_id=0,
             lot_info=0,
             extra_info= extra_info_volume)
-          
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
@@ -455,7 +451,7 @@ while flag:
     # else:
     #   print(f"File {image_path} does not exist, so no action was taken.")
 
-    if j >= 80:
+    if j >= 650:
       j=0   # reset counting index
       # Start to capture image from the Gauge
       try:
@@ -472,9 +468,9 @@ while flag:
           
           # Specify the number of pixels to crop from the left and right sides
           left = 0
-          top = 376
-          right = 140
-          bottom = 544
+          top = 112
+          right = 336
+          bottom = 704
           # Get the original image dimensions to crop the captured image 
           height, width, channels = src.shape
           # Crop 200 pixels from top and bottom the image
@@ -486,7 +482,7 @@ while flag:
           center = (width/2, height/2)
 
           # Define rotation angle in degrees
-          angle = 90
+          angle = -64
           scale = 1
           
           # Calculate rotation matrix
@@ -517,7 +513,7 @@ while flag:
           na = cv2.bitwise_and(na, na, mask=binary_mask2)
 
           ## Threshold to binary
-          retval, threshed = cv2.threshold(na, thresh = 50,  maxval=150, type=cv2.THRESH_BINARY)
+          retval, threshed = cv2.threshold(na, thresh = 80,  maxval=250, type=cv2.THRESH_BINARY)
           
           ## Do morphology
           kernel = cv2.getStructuringElement( cv2.MORPH_ELLIPSE , (3,3))
@@ -580,15 +576,15 @@ while flag:
                 # Convert to degrees
                 angle_degrees = np.degrees(angle_radians)
                 
-                # cv2.drawContours(res, [rbox], 0, (0,255,0), 1)
+                cv2.drawContours(res, [rbox], 0, (0,255,0), 1)
                 # cv2.drawContours(res, [rbox], -1, (255, 255, 255), thickness=cv2.FILLED)
-                # text="#{}: {:2.3f}".format(idx, rot_angle)
-                # org=(int(cx)-10,int(cy)-10)
+                text="#{}: {:2.3f}".format(idx, rot_angle)
+                org=(int(cx)-10,int(cy)-10)
                 #cv2.putText(res, text=text, org = org, fontFace = cv2.FONT_HERSHEY_PLAIN, fontScale=0.7, color=(0,0,255), thickness = 1, lineType=cv2.LINE_AA)
-                # cv2.putText(res, text=text, org = org, fontFace = 1, fontScale=0.8, color=(0,0,255), thickness = 1, lineType=16)
+                cv2.putText(res, text=text, org = org, fontFace = 1, fontScale=0.8, color=(0,0,255), thickness = 1, lineType=16)
 
           cv2.imwrite(f"{image_path_2}.jpg", res)
-          extra_info_gauge.update({"estimated_psi" : random.randint(50, 80)}) 
+          extra_info_gauge.update({"estimated_psi" : abs(angle_degrees)}) 
           
           r_c_1 = watcher_update(
             register_id=hostname+"-1",
@@ -599,7 +595,7 @@ while flag:
             product_id=0,
             lot_info=0,
             extra_info= extra_info_gauge)
-
+          
           if r_c_1 == requests.codes.ok: # erase files and data if it was successful   
             internet_connection = True
           else:
@@ -610,7 +606,7 @@ while flag:
         pass
     
     # Reset image capturing index 
-    if j > 92:
+    if j > 652:
       j = 0
     else:
       pass
