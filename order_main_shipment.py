@@ -186,7 +186,10 @@ class MainWindow(QMainWindow):
         self.shipment_db = []
         self.shipment_numbers_list = []
         self.shipment_orders = None
-        self.is_done = 0
+        self.quanitity = 0
+        self.added_counted = 0
+        self.added_not_detected = 0
+        self.added_mismatch = 0
         self.db_order_checking_interval = 4 # Secends
         self.watcher_live_signal = 60 * 5
         self.take_picture_interval = 60 * 5
@@ -270,6 +273,10 @@ class MainWindow(QMainWindow):
                     self.shipment_db = self.db.order_read(self.shipment_number)
                     
                     if self.shipment_db != []:
+                        self.quanitity = 0
+                        self.added_counted = 0
+                        self.added_not_detected = 0
+                        self.added_mismatch = 0
                         
                         self.arduino_ok_value = 0
                         
@@ -385,6 +392,7 @@ class MainWindow(QMainWindow):
                         a_initial = a
                         a_initial_1 = a
                         self.arduino_ok_value += 1
+                        self.added_counted += 1
                         
                         # Going to catch second OK signal
                         catching_signal = False
@@ -463,6 +471,7 @@ class MainWindow(QMainWindow):
                                                         remainded_quantity = item['quantity']
                                                         
                                                         self.barcod_read_value += 1
+                                                        self.quanitity += 1
                                                         
                                                         # Calculate the counted value
                                                         counted_quantity = abs(total_quantity-item['quantity'])
@@ -504,7 +513,7 @@ class MainWindow(QMainWindow):
                                         if not box_in_order_batch:
                                             print(f"Status:{self.scanned_box_barcode} is not in the orders.")
                                             self.not_detected_barcode += 1
-                                            
+                                            self.added_mismatch += 1
                                             eject_ts = time.time()
                                             # The detected barcode is not on the order list
                                             self.arduino.gpio32_0.off()
@@ -513,7 +522,7 @@ class MainWindow(QMainWindow):
                                 else:
                                     print("Status:the scanner could not catch the barcode.")
                                     self.wrong_barcode += 1
-                                    
+                                    self.added_not_detected += 1
                                     eject_ts = time.time()
                                     # The detected barcode is not on the order list
                                     self.arduino.gpio32_0.off()
@@ -528,7 +537,7 @@ class MainWindow(QMainWindow):
                             self.scanned_value_old = b''
                             print("Status:time out.")
                             self.wrong_barcode += 1
-                            
+                            self.added_not_detected += 1
                             eject_ts = time.time()
                             # The detected barcode is not on the order list
                             self.arduino.gpio32_0.off()
@@ -675,12 +684,25 @@ class MainWindow(QMainWindow):
                 #     print(f"db_order_checker > removing database {ex1}")
                 
             # Checking order db every {self.db_order_checking_interval} second
-            print(time.time() - st > self.db_order_checking_interval, self.shipment_number != "", not self.db_checking_flag)
             if (time.time() - st > self.db_order_checking_interval) and (self.shipment_number != "") and (not self.db_checking_flag):
                 st = time.time() 
                 if True:
-                    print("shipment_db_checking_flag", shipment_db_checking_flag)
-                    print(main_shipment_number_data, (self.shipment_number != previus_shipment_number))
+                    
+                    extra_info = {"shipment_number": self.shipment_number,  "added_counted": self.added_counted,
+                                  "added_not_detected":self.added_not_detected, "added_mismatch": self.added_mismatch}
+                    r_c = watcher_update(
+                            register_id=register_id,
+                            quantity=self.quanitity,
+                            defect_quantity=0,
+                            send_img=False,
+                            image_path=None,
+                            product_id=0,
+                            lot_info=0,
+                            extra_info= extra_info)
+                    
+                    print(extra_info, "extra_info")
+                    
+                    
                     # Checking order list on the order DB to catch the quantity value
                     main_shipment_number_data = self.db.order_read(self.shipment_number)
                     if main_shipment_number_data and (self.shipment_number != previus_shipment_number):
@@ -690,7 +712,7 @@ class MainWindow(QMainWindow):
                         shipment_db_checking_flag = True
                         main_shipment_orders = json.loads(main_shipment_number_data[4])
                         for item in main_shipment_orders:
-                            order_id = item['product_number']
+                            order_id = item['id']
                             for batch in item['batches']:
                                 if batch['quantity'] != 0:
                                     # Put all batches of a shipment orders to dictionary
@@ -709,7 +731,7 @@ class MainWindow(QMainWindow):
                         for item in updated_shipment_number_data:
                             for batch in item['batches']:
                                 # Check if the order finished or not
-                                is_done_value = updated_shipment_number_data_[5]
+                                is_done_value = updated_shipment_number_data_[6]
                                 current_quantity = int(batch['quantity'])
                                 if (is_done_value == 0) and (current_quantity != 0):
                                     main_quantity = main_shipment_orders_dict[batch['batch_uuid']]['quantity']
