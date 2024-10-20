@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QTableWidget, QTableWidg
 from PyQt5.QtGui import QColor, QFont, QPixmap, QImage
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5 import QtGui
+from datetime import datetime, timezone
 
 register_id = str(socket.gethostname())
 
@@ -186,12 +187,13 @@ class MainWindow(QMainWindow):
         self.shipment_numbers_list = []
         self.shipment_orders = None
         self.is_done = 0
-        self.db_order_checking_interval = 12 # Secends
+        self.db_order_checking_interval = 4 # Secends
         self.watcher_live_signal = 60 * 5
         self.take_picture_interval = 60 * 5
         self.order_db_remove_interval = 30  # Convert hours to secends
         self.arduino_ok_value = 0
         self.barcod_read_value = 0
+        self.db_checking_flag = True
     
     # def update_frame(self):
     #     ret, frame = self.cap.read()
@@ -221,7 +223,6 @@ class MainWindow(QMainWindow):
         
         self.last_server_signal = time.time()
         self.last_image = time.time()
-        db_checking_flag = True
         self.old_barcode = ''
         a ,b ,c, d ,dps = self.arduino.read_GPIO()
         a_initial = a
@@ -340,12 +341,13 @@ class MainWindow(QMainWindow):
                                         total_remained_quantity = item2['quantity']
                                         total_qt = item2['quantity']
 
+                            utc_time = datetime.now(timezone.utc)
+                            formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S")
                             product_name = ord['product_name'] 
                             unit = ord['delivery_unit']
                             # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy, name, unit
-                            self.orders_quantity_specification[ord['product_number']] = [total_qt, total_completed_quantity, total_remained_quantity, 0, product_name, unit]
-                            print(self.orders_quantity_specification[ord['product_number']], "Order qts")
-                        
+                            self.orders_quantity_specification[ord['product_number']] = [total_qt, total_completed_quantity, total_remained_quantity, 0, product_name, unit, formatted_utc_time]
+
                         # Write shipment table
                         self.db.shipments_table_write(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
                         # Update shipment table
@@ -441,9 +443,7 @@ class MainWindow(QMainWindow):
                                         self.barcode_flag = False
                                     else:
                                         # Checking is the scanned box barcode is in the order batches or not
-                                        print("self.orders_quantity_specification", self.orders_quantity_specification)
                                         for item in self.shipment_orders:
-                                            print("\n ITEM", item)
                                             # Updating total and remainded value                                    
                                             total_quantity = int(self.total_quantities[item["id"]])
                                             remainded_quantity = int(item['quantity'])
@@ -454,6 +454,8 @@ class MainWindow(QMainWindow):
                                                     box_in_order_batch = True
                                                     # Decrease quantity by 1 if it's greater than 0, else eject it
                                                     if item['quantity'] > 0:
+                                                        self.table_widget.setRowCount(0)  # Clear the table
+                                                        
                                                         print(f"Status:{self.scanned_box_barcode} is grabbed.")
                                                         # Decreasing the quantity in the shipments order and the batches list
                                                         item['quantity'] -= 1 
@@ -468,8 +470,9 @@ class MainWindow(QMainWindow):
                                                         self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders), is_done = 0)
                                                         
                                                         # Update the orders quantity specification dictionary and shipment table
-                                                        print(self.orders_quantity_specification, item['product_number'], "item['product_number']")
-                                                        self.orders_quantity_specification[item['product_number']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['product_number']], item['product_name'], item['delivery_unit']]
+                                                        utc_time = datetime.now(timezone.utc)
+                                                        formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S")
+                                                        self.orders_quantity_specification[item['product_number']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['product_number']], item['product_name'], item['delivery_unit'], formatted_utc_time]
                                                         self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
 
                                                     elif item['quantity'] == 0:
@@ -488,7 +491,10 @@ class MainWindow(QMainWindow):
                                                         self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders), is_done = 0)
                                                         
                                                         # Update the orders quantity specification dictionary and the shipment table
-                                                        self.orders_quantity_specification[item['product_number']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['product_number']], item['product_name'], item['delivery_unit']]
+                                                        utc_time = datetime.now(timezone.utc)
+                                                        formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S")
+                                                        
+                                                        self.orders_quantity_specification[item['product_number']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['product_number']], item['product_name'], item['delivery_unit'], formatted_utc_time]
                                                         self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
                                                         
                                                         # The detected barcode is not on the order list
@@ -535,25 +541,20 @@ class MainWindow(QMainWindow):
             self.scanned_value = self.scanner.read_barcode()
             if self.scanned_value != b'':
                 self.scanned_value_old = self.scanned_value
-                print("\n self.scanned_value_old", self.scanned_value_old)
                 self.barcode_flag = True
 
     
-    def db_order_checker(self):
-        previus_shipment_number = ""
-        b_1 = 0
-        st = time.time() 
-        db_st = time.time()
-        db_checking_flag = True
-        shipment_db_checking_flag = False
-        order_request_time_interval = 100 # Every "order_request_time_interval" secends, the order is requested from Monitait
+    def db_updating(self):
         st_1 = time.time()
+        
+        order_request_time_interval = 15 # Every "order_request_time_interval" secends, the order is requested from Monitait
+        
         while not self.stop_thread:
-            
             # The watcher updates his order DB until OR is scanned
             try:
-                if time.time() - st_1 > order_request_time_interval or db_checking_flag:
-                    db_checking_flag = False
+                if time.time() - st_1 > order_request_time_interval or self.db_checking_flag:
+                    print("Start updation db")
+                    self.db_checking_flag = False
                     st_1 = time.time()
                     main_dict = requests.get(self.shipment_url, headers=self.headers) 
                     # Added all batches to a list
@@ -575,7 +576,6 @@ class MainWindow(QMainWindow):
                         results = main_json['results']
                         
                         # Added the order batches to the order DB
-                        s3 = time.time()
                         for entry in results:
                             # Update the quantity by another calculation URL
                             for ord in entry['orders']:
@@ -610,11 +610,19 @@ class MainWindow(QMainWindow):
                                 pass
                             else:
                                 self.shipment_numbers_list.append(entry['shipment_number'])
-                        # print("\n Time of adding shipment to DB", time.time() - s3, "self.shipment_numbers_list", self.shipment_numbers_list)
                 else:
                     pass
             except Exception as ex1:
                 print(f"run > waiting to the OR barcode {ex1}")
+
+
+    def db_order_checker(self):
+        previus_shipment_number = ""
+        b_1 = 0
+        st = time.time() 
+        db_st = time.time()
+        shipment_db_checking_flag = False
+        while not self.stop_thread:
             
             # Removing the order DB every 12 hours
             if time.time() - db_st > self.order_db_remove_interval:
@@ -667,9 +675,12 @@ class MainWindow(QMainWindow):
                 #     print(f"db_order_checker > removing database {ex1}")
                 
             # Checking order db every {self.db_order_checking_interval} second
-            if (time.time() - st > self.db_order_checking_interval) and (self.shipment_number != "") and (not db_checking_flag):
+            print(time.time() - st > self.db_order_checking_interval, self.shipment_number != "", not self.db_checking_flag)
+            if (time.time() - st > self.db_order_checking_interval) and (self.shipment_number != "") and (not self.db_checking_flag):
                 st = time.time() 
                 if True:
+                    print("shipment_db_checking_flag", shipment_db_checking_flag)
+                    print(main_shipment_number_data, (self.shipment_number != previus_shipment_number))
                     # Checking order list on the order DB to catch the quantity value
                     main_shipment_number_data = self.db.order_read(self.shipment_number)
                     if main_shipment_number_data and (self.shipment_number != previus_shipment_number):
@@ -780,7 +791,6 @@ class MainWindow(QMainWindow):
                     read_shipment_db = self.db.shipment_read(self.shipment_number)
                     if read_shipment_db != [] and self.start_counting_flag:
                         # self.table_widget.setRowCount(0)  # Clear the table
-                        
                         # # Reading the box entrance signal
                         # if self.live_stream_flag:
                         #     self.cap = cv2.VideoCapture(live_stream_url)  # Capture from the default camera
@@ -801,7 +811,8 @@ class MainWindow(QMainWindow):
                         
                         orders_quantity_value = json.loads(read_shipment_db[4])
                         
-                        for order_id, item in orders_quantity_value.items(): 
+                        orders_quantity_value_sorted = dict(sorted(orders_quantity_value.items(), key=lambda item: item[1][-1], reverse=True))
+                        for order_id, item in orders_quantity_value_sorted.items(): 
                             total_qt = item[0]
                             counted_qt = item[1]
                             remainded_qt = item[2]
@@ -871,7 +882,9 @@ if __name__ == "__main__":
     
     print("counting")
     Thread(target=counter.scanner_read).start()
+    Thread(target=counter.db_updating).start()
     Thread(target=counter.db_order_checker).start()
+    print("after db checker")
     Thread(target=counter.update_table).start()
     Thread(target=counter.counting).start()
     counter.show()
