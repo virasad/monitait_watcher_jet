@@ -67,12 +67,12 @@ class MainWindow(QMainWindow):
         self.item_row1_col3 = QTableWidgetItem("ساوه")  
         self.title_table.setItem(1, 3, self.item_row1_col3) 
         
-        self.item_row2_col0 = QTableWidgetItem("عدم تطابق")  
+        self.item_row2_col0 = QTableWidgetItem("شناسایی نشده")  
         self.item_row2_col0.setBackground(QColor("lightGray"))  
         self.item_row2_col0.setFont(self.bold_font)  
         self.title_table.setItem(2, 0, self.item_row2_col0)
         
-        self.item_row2_col2 = QTableWidgetItem("شناسایی نشده")  
+        self.item_row2_col2 = QTableWidgetItem("عدم تطابق")  
         self.item_row2_col2.setBackground(QColor("lightGray"))  
         self.item_row2_col2.setFont(self.bold_font)  
         self.title_table.setItem(2, 2, self.item_row2_col2)
