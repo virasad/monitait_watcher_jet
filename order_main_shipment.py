@@ -178,7 +178,7 @@ class MainWindow(QMainWindow):
                         'Content-Type': 'application/json'}
         self.scanned_value = b''
         self.scanned_value_old = b''
-        self.shipment_number = None
+        self.shipment_number = b''
         self.shipment_type = None
         self.destination = None
         self.scanned_box_barcode = 0
@@ -190,7 +190,7 @@ class MainWindow(QMainWindow):
         self.added_counted = 0
         self.added_not_detected = 0
         self.added_mismatch = 0
-        self.db_order_checking_interval = 4 # Secends
+        self.db_order_checking_interval = 10 # Secends
         self.watcher_live_signal = 60 * 5
         self.take_picture_interval = 60 * 5
         self.order_db_remove_interval = 30  # Convert hours to secends
@@ -684,12 +684,14 @@ class MainWindow(QMainWindow):
                 #     print(f"db_order_checker > removing database {ex1}")
                 
             # Checking order db every {self.db_order_checking_interval} second
-            if (time.time() - st > self.db_order_checking_interval) and (self.shipment_number != "") and (not self.db_checking_flag):
+            if (time.time() - st > self.db_order_checking_interval) and (self.shipment_number != b'') and (not self.db_checking_flag):
                 st = time.time() 
                 if True:
                     
-                    extra_info = {"shipment_number": self.shipment_number,  "added_counted": self.added_counted,
-                                  "added_not_detected":self.added_not_detected, "added_mismatch": self.added_mismatch}
+                    extra_info = {"shipment_number": self.shipment_number,  "added_counted": 81,
+                                  "added_not_detected":150, "added_mismatch": 90,
+                                  "completed": self.arduino_ok_value , "counted": self.arduino_ok_value, 
+                                  "not_detected":, "mismatch":}
                     r_c = watcher_update(
                             register_id=register_id,
                             quantity=self.quanitity,
@@ -700,7 +702,7 @@ class MainWindow(QMainWindow):
                             lot_info=0,
                             extra_info= extra_info)
                     
-                    print(extra_info, "extra_info")
+                    print(extra_info, "extra_info", r_c)
                     
                     
                     # Checking order list on the order DB to catch the quantity value
