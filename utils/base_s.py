@@ -93,7 +93,7 @@ class DB:
             cursor3 = self.dbconnect.cursor()
             cursor1.execute('''CREATE TABLE IF NOT EXISTS monitait_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, register_id TEXT, temp_a INTEGER NULL, temp_b INTEGER NULL, image_name TEXT NULL, extra_info JSON, ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)''')
             cursor2.execute('''CREATE TABLE IF NOT EXISTS watcher_order_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, shipment_number TEXT NULL, destination TEXT NULL, shipment_type TEXT NULL, orders TEXT NULL, unchanged_orders TEXT NULL, is_done INTEGER NULL)''')
-            cursor3.execute('''CREATE TABLE IF NOT EXISTS shipments_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, shipment_number TEXT NULL, wrong INTEGER NULL, not_detected INTEGER NULL, orders_quantity_specification TEXT NULL)''')
+            cursor3.execute('''CREATE TABLE IF NOT EXISTS shipments_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, shipment_number TEXT NULL, completed INTEGER NULL, counted INTEGER NULL, mismatch INTEGER NULL, not_detected INTEGER NULL, orders_quantity_specification TEXT NULL)''')
             
             # for column in columns:
             #     print(column)
@@ -132,13 +132,13 @@ class DB:
         # except Exception as  e_ow:
         #     print(f"DB > order write {e_ow}")
         #     return False
-    # shipment_number TEXT NULL, wrong INTEGER NULL, not_detected INTEGER NULL, orders_quantity_specification
-    def shipments_table_write(self, shipment_number, wrong, not_detected, orders_quantity_specification={}):
+    # shipment_number TEXT NULL, completed INTEGER NULL, counted, mismatch INTEGER NULL, not_detected INTEGER NULL, orders_quantity_specification
+    def shipments_table_write(self, shipment_number, completed, counted, mismatch, not_detected, orders_quantity_specification={}):
         if True:
             cursor3 = self.dbconnect.cursor()
             cursor3.execute('SELECT * FROM shipments_table WHERE shipment_number = ?', (shipment_number,))
             if cursor3.fetchone() is None:
-                cursor3.execute('''insert into shipments_table (shipment_number, wrong, not_detected, orders_quantity_specification) values (?,?,?,?)''', (shipment_number, wrong, not_detected, orders_quantity_specification))
+                cursor3.execute('''insert into shipments_table (shipment_number, completed, counted, mismatch, not_detected, orders_quantity_specification) values (?,?,?,?)''', (shipment_number, completed, counted, mismatch, not_detected, orders_quantity_specification))
                 self.dbconnect.commit()
                 cursor3.close()
                 return True
@@ -282,14 +282,20 @@ class DB:
         #     print(f"DB > update order {e_ou}")
         #     return False
         
-    def shipment_update(self, shipment_number, wrong=None, not_detected=None, orders_quantity_specification=None):
+    def shipment_update(self, shipment_number, completed=None, counted=None, mismatch=None, not_detected=None, orders_quantity_specification=None):
         if True:
             query = "UPDATE shipments_table SET "
             params = []
             # Check which column to updated
-            if wrong is not None:
-                query += "wrong = ?, "
-                params.append(wrong)
+            if completed is not None:
+                query += "completed = ?, "
+                params.append(completed)
+            if counted is not None:
+                query += "counted = ?, "
+                params.append(counted)
+            if mismatch is not None:
+                query += "mismatch = ?, "
+                params.append(mismatch)
             if not_detected is not None:
                 query += "not_detected = ?, "
                 params.append(not_detected)

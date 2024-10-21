@@ -309,12 +309,15 @@ class MainWindow(QMainWindow):
                         # Read wrong and not detected values from db
                         read_shipment_db = self.db.shipment_read(self.shipment_number) 
                         if read_shipment_db != []:
-                            self.mismatch = read_shipment_db[2]
-                            self.not_detected = read_shipment_db[3]
+                            self.completed = read_shipment_db[2]
+                            self.counted = read_shipment_db[3]
+                            self.mismatch = read_shipment_db[4]
+                            self.not_detected = read_shipment_db[5]
+                            self.orders_quantity_specification = json.loads(read_shipment_db[6])
                         else:
                             self.mismatch = 0
                             self.not_detected = 0
-                        self.orders_quantity_specification = {}
+                            self.orders_quantity_specification = {}
                         print("self.shipment_db", self.shipment_db)
                         
                         # Update the quantity by another calculation URL
@@ -350,11 +353,11 @@ class MainWindow(QMainWindow):
                             unit = ord['delivery_unit']
                             # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy, name, unit
                             self.orders_quantity_specification[ord['product_number']] = [total_qt, total_completed_quantity, total_remained_quantity, 0, product_name, unit, formatted_utc_time]
-
+                        
                         # Write shipment table
-                        self.db.shipments_table_write(self.shipment_number, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
+                        self.db.shipments_table_write(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
                         # Update shipment table
-                        self.db.shipment_update(self.shipment_number, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
+                        self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
                         
                         self.start_counting_flag = True
                     else:
@@ -478,7 +481,7 @@ class MainWindow(QMainWindow):
                                                         utc_time = datetime.now(timezone.utc)
                                                         formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S")
                                                         self.orders_quantity_specification[item['product_number']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['product_number']], item['product_name'], item['delivery_unit'], formatted_utc_time]
-                                                        self.db.shipment_update(self.shipment_number, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
+                                                        self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
 
                                                     elif item['quantity'] == 0:
                                                         print(f"Status:{self.scanned_box_barcode} is finished.")
@@ -500,7 +503,7 @@ class MainWindow(QMainWindow):
                                                         formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S")
                                                         
                                                         self.orders_quantity_specification[item['product_number']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['product_number']], item['product_name'], item['delivery_unit'], formatted_utc_time]
-                                                        self.db.shipment_update(self.shipment_number, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
+                                                        self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
                                                         
                                                         # The detected barcode is not on the order list
                                                         self.arduino.gpio32_0.off()
@@ -514,7 +517,8 @@ class MainWindow(QMainWindow):
                                             # The detected barcode is not on the order list
                                             self.arduino.gpio32_0.off()
                                             # Update shipment table
-                                            self.db.shipment_update(self.shipment_number, self.mismatch, self.not_detected)
+                                            
+                                            self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected)
                                 else:
                                     print("Status:the scanner could not catch the barcode.")
                                     self.added_not_detected += 1
@@ -523,7 +527,8 @@ class MainWindow(QMainWindow):
                                     # The detected barcode is not on the order list
                                     self.arduino.gpio32_0.off()
                                     # Update shipment table
-                                    self.db.shipment_update(self.shipment_number, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
+                                    
+                                    self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
                                 
                                 # Update the old scanned value
                                 self.scanned_value_old = b''
@@ -538,7 +543,7 @@ class MainWindow(QMainWindow):
                             # The detected barcode is not on the order list
                             self.arduino.gpio32_0.off()
                             # Update shipment table
-                            self.db.shipment_update(self.shipment_number, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification)) 
+                            self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification)) 
 
 
     def scanner_read(self):
@@ -821,18 +826,20 @@ class MainWindow(QMainWindow):
                         # else:
                         #     pass
                         
-                        mismatch_qt = read_shipment_db[2]
-                        not_detected_qt= read_shipment_db[3]
+                        completed_qt = read_shipment_db[2]
+                        counted_qt = read_shipment_db[3]
+                        mismatch_qt = read_shipment_db[4]
+                        not_detected_qt= read_shipment_db[5]
                         
                         # self.item_row2_col1 = QTableWidgetItem(f"{not_detected_qt}")  
                         # self.item_row2_col3 = QTableWidgetItem(f"{mismatch_qt}")  
                         
                         self.title_table.setItem(2, 1, QTableWidgetItem(f"{not_detected_qt}")  )   
                         self.title_table.setItem(2, 3, QTableWidgetItem(f"{mismatch_qt}")) 
-                        self.title_table.setItem(3, 1, QTableWidgetItem(f"{self.counted}")) 
-                        self.title_table.setItem(3, 3, QTableWidgetItem(f"{self.completed}")) 
+                        self.title_table.setItem(3, 1, QTableWidgetItem(f"{counted_qt}")) 
+                        self.title_table.setItem(3, 3, QTableWidgetItem(f"{completed_qt}")) 
                         
-                        orders_quantity_value = json.loads(read_shipment_db[4])
+                        orders_quantity_value = json.loads(read_shipment_db[6])
                         
                         orders_quantity_value_sorted = dict(sorted(orders_quantity_value.items(), key=lambda item: item[1][-1], reverse=True))
                         for order_id, item in orders_quantity_value_sorted.items(): 
