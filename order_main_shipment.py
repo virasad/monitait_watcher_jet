@@ -455,8 +455,8 @@ class MainWindow(QMainWindow):
                                             for batch in item['batches']:
                                                 if batch['assigned_id']==str(self.scanned_box_barcode):
                                                     # Update the counted value
-                                                    self.counted += 1
-                                                    self.added_quanitity += 1
+                                                    self.added_completed += 1
+                                                    self.completed += 1
                                                     # The box barcode is in the order
                                                     box_in_order_batch = True
                                                     # Decrease quantity by 1 if it's greater than 0, else eject it
@@ -685,12 +685,12 @@ class MainWindow(QMainWindow):
                 if True:
                     
                     extra_info = {"shipment_number": self.shipment_number,  "added_counted": self.added_counted,
-                                  "added_not_detected":self.added_not_detected, "added_mismatch": self.not_detected,
-                                  "completed": self.counted, "counted": self.quanitity, 
+                                  "added_not_detected":self.added_not_detected, "added_mismatch": self.added_mismatch,
+                                  "completed": self.completed, "counted": self.counted, 
                                   "not_detected": self.added_not_detected, "mismatch": self.mismatch}
                     r_c = watcher_update(
                             register_id=register_id,
-                            quantity=self.added_quanitity,
+                            quantity=self.added_completed,
                             defect_quantity=0,
                             send_img=False,
                             image_path=None,
@@ -698,8 +698,11 @@ class MainWindow(QMainWindow):
                             lot_info=0,
                             extra_info= extra_info)
                     
-                    print(extra_info, "extra_info", r_c)
-                    
+                    # Reset the added quantity parameters
+                    self.added_completed = 0
+                    self.added_counted = 0
+                    self.added_not_detected = 0
+                    self.added_mismatch = 0
                     
                     # Checking order list on the order DB to catch the quantity value
                     main_shipment_number_data = self.db.order_read(self.shipment_number)
@@ -818,16 +821,16 @@ class MainWindow(QMainWindow):
                         # else:
                         #     pass
                         
-                        wrong_qt = read_shipment_db[2]
+                        mismatch_qt = read_shipment_db[2]
                         not_detected_qt= read_shipment_db[3]
                         
                         # self.item_row2_col1 = QTableWidgetItem(f"{not_detected_qt}")  
-                        # self.item_row2_col3 = QTableWidgetItem(f"{wrong_qt}")  
+                        # self.item_row2_col3 = QTableWidgetItem(f"{mismatch_qt}")  
                         
                         self.title_table.setItem(2, 1, QTableWidgetItem(f"{not_detected_qt}")  )   
-                        self.title_table.setItem(2, 3, QTableWidgetItem(f"{wrong_qt}")) 
-                        self.title_table.setItem(3, 1, QTableWidgetItem(f"{self.quanitity}")) 
-                        self.title_table.setItem(3, 3, QTableWidgetItem(f"{self.counted}")) 
+                        self.title_table.setItem(2, 3, QTableWidgetItem(f"{mismatch_qt}")) 
+                        self.title_table.setItem(3, 1, QTableWidgetItem(f"{self.counted}")) 
+                        self.title_table.setItem(3, 3, QTableWidgetItem(f"{self.completed}")) 
                         
                         orders_quantity_value = json.loads(read_shipment_db[4])
                         
