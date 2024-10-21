@@ -76,7 +76,7 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
         else:
             try:
                 response = requests.post(URL, data=json.dumps(DATA), headers={"content-type": "application/json"})
-                return True
+                return response.status_code
             except Exception as e:
                 print(f"watcher update no image {e}")
                 return False
@@ -678,8 +678,6 @@ class Scanner:
     def get_device(self):
         self.devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
         for self.device in self.devices:
-            print('device:', self.device)
-            print('info:', self.device.info)
             print(self.device.path, self.device.name, self.device.phys)
             for vp in self.VENDOR_PRODUCT:
                 if self.device.info.vendor == vp[0] and self.device.info.product == vp[1]:

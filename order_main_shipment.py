@@ -135,7 +135,7 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(self.title_table)  # Add title above the table
         layout.addWidget(self.table_widget)
-        print("Checking the live stream url")
+        # print("Checking the live stream url")
         # Checking whether the live stream URL is alive or not
         # try:
         #     response = requests.head(live_stream_url, allow_redirects=True)
@@ -147,7 +147,7 @@ class MainWindow(QMainWindow):
         #     self.live_stream_flag = True
         #     pass
 
-        print(f"Adding widget if live stream is ")
+        # print(f"Adding widget if live stream is ")
         # if self.live_stream_flag:
         #     # Create a QLabel for the image
         #     self.image_label = QLabel(self)
@@ -186,16 +186,18 @@ class MainWindow(QMainWindow):
         self.shipment_db = []
         self.shipment_numbers_list = []
         self.shipment_orders = None
-        self.quanitity = 0
+        self.added_completed = 0
+        self.completed = 0
         self.added_counted = 0
+        self.counted = 0
         self.added_not_detected = 0
+        self.not_detected = 0
         self.added_mismatch = 0
+        self.mismatch = 0
         self.db_order_checking_interval = 10 # Secends
         self.watcher_live_signal = 60 * 5
         self.take_picture_interval = 60 * 5
         self.order_db_remove_interval = 30  # Convert hours to secends
-        self.arduino_ok_value = 0
-        self.barcod_read_value = 0
         self.db_checking_flag = True
     
     # def update_frame(self):
@@ -230,8 +232,6 @@ class MainWindow(QMainWindow):
         a ,b ,c, d ,dps = self.arduino.read_GPIO()
         a_initial = a
         b_initial = b
-        self.arduino_ok_value = 0
-        
         
         # Getting the stationID from API 
         try:
@@ -242,14 +242,11 @@ class MainWindow(QMainWindow):
         except Exception as ex:
             print(f"headers except {ex}")
             
-        print("stationID_url", self.stationID)
         ##
         ## Main WHILE loop
         while not self.stop_thread:
             order_counting_start_flag = False # To start counting process, this flag set as True when OR detected
             exit_flag = False
-            image_name = ""
-            extra_info = {}
             # Getting order from batch API
             while not order_counting_start_flag:
                 ##
@@ -266,24 +263,26 @@ class MainWindow(QMainWindow):
                             self.shipment_number = shipment_scanned_barcode_byte_string
                     else:
                         exit_flag = False
-                        print("****Exit barcode scanned", self.scanned_box_barcode)
+                        print("****Exit barcode scanned.****", self.scanned_box_barcode)
                         self.shipment_number = self.scanned_value_old
                     
                     # Getting the scanned order list from order DB
                     self.shipment_db = self.db.order_read(self.shipment_number)
                     
                     if self.shipment_db != []:
-                        self.quanitity = 0
+                        # Set zero the quantity counter value when a new shipment scanned
+                        self.added_completed = 0
+                        self.completed = 0
                         self.added_counted = 0
+                        self.counted = 0
                         self.added_not_detected = 0
+                        self.not_detected = 0
                         self.added_mismatch = 0
-                        
-                        self.arduino_ok_value = 0
+                        self.mismatch = 0
                         
                         total_completed_quantity = 0
                         total_remained_quantity = 0 
-                                               
-                        self.barcod_read_value = 0
+                                              
                         # Defined to watcher not catched a additional signal
                         self.barcode_flag = False
                         
@@ -305,17 +304,16 @@ class MainWindow(QMainWindow):
                         
                         self.previous_quantities = {item["id"]: item["quantity"] for item in json_data1}
                         self.total_quantities = {item["id"]: item["quantity"] for item in json_data2}
-                        
                         self.eject_box = {item["product_number"]: 0 for item in json_data1}
                         
                         # Read wrong and not detected values from db
                         read_shipment_db = self.db.shipment_read(self.shipment_number) 
                         if read_shipment_db != []:
-                            self.wrong_barcode = read_shipment_db[2]
-                            self.not_detected_barcode = read_shipment_db[3]
+                            self.mismatch = read_shipment_db[2]
+                            self.not_detected = read_shipment_db[3]
                         else:
-                            self.wrong_barcode = 0
-                            self.not_detected_barcode = 0
+                            self.mismatch = 0
+                            self.not_detected = 0
                         self.orders_quantity_specification = {}
                         print("self.shipment_db", self.shipment_db)
                         
@@ -324,7 +322,6 @@ class MainWindow(QMainWindow):
                             order_id = ord['id'] 
                             calculation_url = f"https://app.monitait.com/api/elastic-search/batch-report-calculations/?station_id={self.stationID}&order_id={order_id}"
                             order_remaind_value = requests.get(calculation_url, headers=self.headers)
-                            print(order_id, order_remaind_value.status_code)
                             if order_remaind_value.status_code == 200:
                                 order_remaind_value = order_remaind_value.json() 
                                 station_reports = order_remaind_value[0]['station_reports'][0]
@@ -342,7 +339,6 @@ class MainWindow(QMainWindow):
                             else:
                                 # Updating remain column value from the unchanged order dictionary
                                 for item2 in json_data2:
-                                    print(item2['id'],order_id, item2['quantity'])
                                     if item2['id'] == order_id:
                                         total_completed_quantity = 0
                                         total_remained_quantity = item2['quantity']
@@ -356,9 +352,9 @@ class MainWindow(QMainWindow):
                             self.orders_quantity_specification[ord['product_number']] = [total_qt, total_completed_quantity, total_remained_quantity, 0, product_name, unit, formatted_utc_time]
 
                         # Write shipment table
-                        self.db.shipments_table_write(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
+                        self.db.shipments_table_write(self.shipment_number, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
                         # Update shipment table
-                        self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
+                        self.db.shipment_update(self.shipment_number, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
                         
                         self.start_counting_flag = True
                     else:
@@ -391,8 +387,8 @@ class MainWindow(QMainWindow):
                         print("\n ****Catched the first OK signal.****")
                         a_initial = a
                         a_initial_1 = a
-                        self.arduino_ok_value += 1
                         self.added_counted += 1
+                        self.counted += 1
                         
                         # Going to catch second OK signal
                         catching_signal = False
@@ -458,6 +454,9 @@ class MainWindow(QMainWindow):
                                             # Checking is scanned value in the batches
                                             for batch in item['batches']:
                                                 if batch['assigned_id']==str(self.scanned_box_barcode):
+                                                    # Update the counted value
+                                                    self.counted += 1
+                                                    self.added_quanitity += 1
                                                     # The box barcode is in the order
                                                     box_in_order_batch = True
                                                     # Decrease quantity by 1 if it's greater than 0, else eject it
@@ -470,9 +469,6 @@ class MainWindow(QMainWindow):
                                                         batch['quantity'] = str(int(batch['quantity']) - 1) 
                                                         remainded_quantity = item['quantity']
                                                         
-                                                        self.barcod_read_value += 1
-                                                        self.quanitity += 1
-                                                        
                                                         # Calculate the counted value
                                                         counted_quantity = abs(total_quantity-item['quantity'])
                                                         # Update order table
@@ -482,7 +478,7 @@ class MainWindow(QMainWindow):
                                                         utc_time = datetime.now(timezone.utc)
                                                         formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S")
                                                         self.orders_quantity_specification[item['product_number']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['product_number']], item['product_name'], item['delivery_unit'], formatted_utc_time]
-                                                        self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
+                                                        self.db.shipment_update(self.shipment_number, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
 
                                                     elif item['quantity'] == 0:
                                                         print(f"Status:{self.scanned_box_barcode} is finished.")
@@ -504,30 +500,30 @@ class MainWindow(QMainWindow):
                                                         formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S")
                                                         
                                                         self.orders_quantity_specification[item['product_number']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['product_number']], item['product_name'], item['delivery_unit'], formatted_utc_time]
-                                                        self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
+                                                        self.db.shipment_update(self.shipment_number, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
                                                         
                                                         # The detected barcode is not on the order list
                                                         self.arduino.gpio32_0.off()
                             
                                         # If the scanned barcode is not in the batches, eject it 
                                         if not box_in_order_batch:
-                                            print(f"Status:{self.scanned_box_barcode} is not in the orders.")
-                                            self.not_detected_barcode += 1
+                                            print(f"Status:{self.scanned_box_barcode} is not in the shipment.")
                                             self.added_mismatch += 1
+                                            self.mismatch += 1
                                             eject_ts = time.time()
                                             # The detected barcode is not on the order list
                                             self.arduino.gpio32_0.off()
                                             # Update shipment table
-                                            self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode)
+                                            self.db.shipment_update(self.shipment_number, self.mismatch, self.not_detected)
                                 else:
                                     print("Status:the scanner could not catch the barcode.")
-                                    self.wrong_barcode += 1
                                     self.added_not_detected += 1
+                                    self.not_detected += 1
                                     eject_ts = time.time()
                                     # The detected barcode is not on the order list
                                     self.arduino.gpio32_0.off()
                                     # Update shipment table
-                                    self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification))
+                                    self.db.shipment_update(self.shipment_number, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
                                 
                                 # Update the old scanned value
                                 self.scanned_value_old = b''
@@ -536,13 +532,13 @@ class MainWindow(QMainWindow):
                             # Update the old scanned value
                             self.scanned_value_old = b''
                             print("Status:time out.")
-                            self.wrong_barcode += 1
                             self.added_not_detected += 1
+                            self.not_detected += 1
                             eject_ts = time.time()
                             # The detected barcode is not on the order list
                             self.arduino.gpio32_0.off()
                             # Update shipment table
-                            self.db.shipment_update(self.shipment_number, self.wrong_barcode, self.not_detected_barcode, json.dumps(self.orders_quantity_specification)) 
+                            self.db.shipment_update(self.shipment_number, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification)) 
 
 
     def scanner_read(self):
@@ -552,34 +548,34 @@ class MainWindow(QMainWindow):
                 self.scanned_value_old = self.scanned_value
                 self.barcode_flag = True
 
-    
-    def db_updating(self):
+
+    def db_orders_updating(self):
         st_1 = time.time()
         
         order_request_time_interval = 15 # Every "order_request_time_interval" secends, the order is requested from Monitait
         
         while not self.stop_thread:
             # The watcher updates his order DB until OR is scanned
-            try:
+            if True:
                 if time.time() - st_1 > order_request_time_interval or self.db_checking_flag:
-                    print("Start updation db")
                     self.db_checking_flag = False
                     st_1 = time.time()
                     main_dict = requests.get(self.shipment_url, headers=self.headers) 
                     # Added all batches to a list
                     main_json = main_dict.json()  
                     # Checking how much page should be checks?
-                    count = main_json['count']
-                    if count % 10 == 0 :
-                        pagination_number = count // 10
+                    shipments_number = main_json['count']
+                    if shipments_number % 10 == 0 :
+                        pagination_number = shipments_number // 10
                     else:
-                        pagination_number = count // 10 + 1
+                        pagination_number = shipments_number // 10 + 1
                     
                     for index in range(pagination_number):
+                        # Construct pagination url
                         page = index + 1
                         page_shipment_url = f'https://app.monitait.com/api/factory/shipment-orders/?status=not_started&page={page}'
-                        
                         main_dict = requests.get(page_shipment_url, headers=self.headers) 
+                        
                         # Added all batches to a list
                         main_json = main_dict.json()  
                         results = main_json['results']
@@ -621,13 +617,13 @@ class MainWindow(QMainWindow):
                                 self.shipment_numbers_list.append(entry['shipment_number'])
                 else:
                     pass
-            except Exception as ex1:
-                print(f"run > waiting to the OR barcode {ex1}")
+            # except Exception as ex1:
+            #     print(f"run > waiting to the OR barcode {ex1}")
 
 
-    def db_order_checker(self):
+    def db_checker(self):
         previus_shipment_number = ""
-        b_1 = 0
+        extra_info = {}
         st = time.time() 
         db_st = time.time()
         shipment_db_checking_flag = False
@@ -681,20 +677,20 @@ class MainWindow(QMainWindow):
                     #     # Save the orders to database
                     #     is_exist = self.db.order_write(shipment_number=entry["shipment_number"], orders=json.dumps(entry['orders']), is_done=0)
                 # except Exception as ex1:
-                #     print(f"db_order_checker > removing database {ex1}")
+                #     print(f"db_orders_checker > removing database {ex1}")
                 
             # Checking order db every {self.db_order_checking_interval} second
             if (time.time() - st > self.db_order_checking_interval) and (self.shipment_number != b'') and (not self.db_checking_flag):
                 st = time.time() 
                 if True:
                     
-                    extra_info = {"shipment_number": self.shipment_number,  "added_counted": 81,
-                                  "added_not_detected":150, "added_mismatch": 90,
-                                  "completed": self.arduino_ok_value , "counted": self.arduino_ok_value, 
-                                  "not_detected":, "mismatch":}
+                    extra_info = {"shipment_number": self.shipment_number,  "added_counted": self.added_counted,
+                                  "added_not_detected":self.added_not_detected, "added_mismatch": self.not_detected,
+                                  "completed": self.counted, "counted": self.quanitity, 
+                                  "not_detected": self.added_not_detected, "mismatch": self.mismatch}
                     r_c = watcher_update(
                             register_id=register_id,
-                            quantity=self.quanitity,
+                            quantity=self.added_quanitity,
                             defect_quantity=0,
                             send_img=False,
                             image_path=None,
@@ -755,7 +751,7 @@ class MainWindow(QMainWindow):
                                 else:
                                     pass
                 # except Exception as ex2:
-                #     print(f"db_order_checker > checking the database {ex2}")
+                #     print(f"db_orders_checker > checking the database {ex2}")
     def update_table(self):
         previus_shipment_number = ""
         table_st = time.time()
@@ -830,8 +826,8 @@ class MainWindow(QMainWindow):
                         
                         self.title_table.setItem(2, 1, QTableWidgetItem(f"{not_detected_qt}")  )   
                         self.title_table.setItem(2, 3, QTableWidgetItem(f"{wrong_qt}")) 
-                        self.title_table.setItem(3, 1, QTableWidgetItem(f"{self.arduino_ok_value}")) 
-                        self.title_table.setItem(3, 3, QTableWidgetItem(f"{self.barcod_read_value}")) 
+                        self.title_table.setItem(3, 1, QTableWidgetItem(f"{self.quanitity}")) 
+                        self.title_table.setItem(3, 3, QTableWidgetItem(f"{self.counted}")) 
                         
                         orders_quantity_value = json.loads(read_shipment_db[4])
                         
@@ -894,21 +890,18 @@ if __name__ == "__main__":
     ttyUSB_devices = glob.glob('/dev/ttyUSB*')
     if ttyUSB_devices!= []:
         usb_serial_flag = True 
-        print(f"The found UART ttyyUSB: {ttyUSB_devices}")
         scanner = UARTscanner(port=ttyUSB_devices[0], baudrate = 9600, timeout = 1)
     else:
         usb_serial_flag = False
         scanner = Scanner()
-    print("start counter")
+    
     counter = MainWindow(arduino=arduino, db=db, camera=camera, scanner=scanner, redis=redis_connection, shipment_url=shipment_url,
                     stationID_url= stationID_url, sendshipment_url=sendshipment_url, register_id=register_id,
                     usb_serial_flag=usb_serial_flag)
     
-    print("counting")
     Thread(target=counter.scanner_read).start()
-    Thread(target=counter.db_updating).start()
-    Thread(target=counter.db_order_checker).start()
-    print("after db checker")
+    Thread(target=counter.db_orders_updating).start()
+    Thread(target=counter.db_checker).start()
     Thread(target=counter.update_table).start()
     Thread(target=counter.counting).start()
     counter.show()
