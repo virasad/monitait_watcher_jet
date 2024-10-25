@@ -322,6 +322,36 @@ class MainWindow(QMainWindow):
                             self.orders_quantity_specification = {}
                         
                         # Update the quantity by another calculation URL
+                        extra_info_urls = f"https://app.monitait.com/api/elastic-search/watcher/?extra_info.shipment_number={self.shipment_number}"
+                        extra_info_value = requests.get(extra_info_urls, headers=self.headers)
+                        if extra_info_value.status_code == 200:
+                            extra_info_json = extra_info_value.json()
+                            extra_info_dict = extra_info_json["result"][0]['_source']['watcher']['extra_info']
+                            if 'completed' in extra_info_dict.keys():
+                                extra_info_completed = extra_info_dict['completed']
+                            else:
+                                extra_info_completed = 0
+                            
+                            if 'counted' in extra_info_dict.keys():
+                                extra_info_counted = extra_info_dict['counted']
+                            else:
+                                extra_info_counted = 0
+                                
+                            if 'mismatch' in extra_info_dict.keys():
+                                extra_info_mismatch = extra_info_dict['mismatch']
+                            else:
+                                extra_info_mismatch = 0
+                            
+                            if 'not_detected' in extra_info_dict.keys():
+                                extra_info_not_detected = extra_info_dict['not_detected']
+                            else:
+                                extra_info_not_detected = 0
+                        else:
+                            extra_info_completed = self.completed
+                            extra_info_counted = self.counted
+                            extra_info_mismatch = self.mismatch
+                            extra_info_not_detected = self.not_detected
+                        
                         for ord in json_data1:
                             order_id = ord['id'] 
                             calculation_url = f"https://app.monitait.com/api/elastic-search/batch-report-calculations/?station_id={self.stationID}&order_id={order_id}"
@@ -357,10 +387,10 @@ class MainWindow(QMainWindow):
                             self.orders_quantity_specification[ord['product_number']] = [total_qt, total_completed_quantity, total_remained_quantity, 0, product_name, unit, formatted_utc_time]
                         
                         
-                        # Write shipment table
-                        self.db.shipments_table_write(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
-                        # Update shipment table
-                        self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
+                        # Upsert the shipment db
+                        self.db.shipment_upsert(shipment_number = entry["shipment_number"], completed = extra_info_completed,
+                                                counted = extra_info_counted, mismatch = extra_info_mismatch,
+                                                not_detected = extra_info_not_detected, orders_quantity_specification = json.dumps(self.orders_quantity_specification))
                         
                         self.start_counting_flag = True
                     else:
@@ -604,10 +634,25 @@ class MainWindow(QMainWindow):
                             if extra_info_value.status_code == 200:
                                 extra_info_json = extra_info_value.json()
                                 extra_info_dict = extra_info_json["result"][0]['_source']['watcher']['extra_info']
-                                extra_info_completed = extra_info_dict['completed']
-                                extra_info_counted = extra_info_dict['counted']
-                                extra_info_mismatch = extra_info_dict['mismatch']
-                                extra_info_not_detected = extra_info_dict['not_detected']
+                                if 'completed' in extra_info_dict.keys():
+                                    extra_info_completed = extra_info_dict['completed']
+                                else:
+                                    extra_info_completed = 0
+                                
+                                if 'counted' in extra_info_dict.keys():
+                                    extra_info_counted = extra_info_dict['counted']
+                                else:
+                                    extra_info_counted = 0
+                                    
+                                if 'mismatch' in extra_info_dict.keys():
+                                    extra_info_mismatch = extra_info_dict['mismatch']
+                                else:
+                                    extra_info_mismatch = 0
+                                
+                                if 'not_detected' in extra_info_dict.keys():
+                                    extra_info_not_detected = extra_info_dict['not_detected']
+                                else:
+                                    extra_info_not_detected = 0
                             else:
                                 extra_info_completed = self.completed
                                 extra_info_counted = self.counted
@@ -624,7 +669,6 @@ class MainWindow(QMainWindow):
                                 extra_info_is_done = 0
                             
                             for ord in entry['orders']:
-                                print(ord)
                                 order_id = ord['id'] 
                                 calculation_url = f"https://app.monitait.com/api/elastic-search/batch-report-calculations/?station_id={self.stationID}&order_id={order_id}"
                                 order_remaind_value = requests.get(calculation_url, headers=self.headers)
