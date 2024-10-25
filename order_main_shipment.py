@@ -326,26 +326,33 @@ class MainWindow(QMainWindow):
                         extra_info_value = requests.get(extra_info_urls, headers=self.headers)
                         if extra_info_value.status_code == 200:
                             extra_info_json = extra_info_value.json()
-                            extra_info_dict = extra_info_json["result"][0]['_source']['watcher']['extra_info']
-                            if 'completed' in extra_info_dict.keys():
-                                extra_info_completed = extra_info_dict['completed']
-                            else:
-                                extra_info_completed = 0
-                            
-                            if 'counted' in extra_info_dict.keys():
-                                extra_info_counted = extra_info_dict['counted']
-                            else:
-                                extra_info_counted = 0
+                            if extra_info_json["result"]:
                                 
-                            if 'mismatch' in extra_info_dict.keys():
-                                extra_info_mismatch = extra_info_dict['mismatch']
+                                extra_info_dict = extra_info_json["result"][0]['_source']['watcher']['extra_info']
+                                if 'completed' in extra_info_dict.keys():
+                                    extra_info_completed = extra_info_dict['completed']
+                                else:
+                                    extra_info_completed = 0
+                                
+                                if 'counted' in extra_info_dict.keys():
+                                    extra_info_counted = extra_info_dict['counted']
+                                else:
+                                    extra_info_counted = 0
+                                    
+                                if 'mismatch' in extra_info_dict.keys():
+                                    extra_info_mismatch = extra_info_dict['mismatch']
+                                else:
+                                    extra_info_mismatch = 0
+                                
+                                if 'not_detected' in extra_info_dict.keys():
+                                    extra_info_not_detected = extra_info_dict['not_detected']
+                                else:
+                                    extra_info_not_detected = 0
                             else:
-                                extra_info_mismatch = 0
-                            
-                            if 'not_detected' in extra_info_dict.keys():
-                                extra_info_not_detected = extra_info_dict['not_detected']
-                            else:
-                                extra_info_not_detected = 0
+                                extra_info_completed = self.completed
+                                extra_info_counted = self.counted
+                                extra_info_mismatch = self.mismatch
+                                extra_info_not_detected = self.not_detected
                         else:
                             extra_info_completed = self.completed
                             extra_info_counted = self.counted
@@ -633,26 +640,33 @@ class MainWindow(QMainWindow):
                             extra_info_value = requests.get(extra_info_urls, headers=self.headers)
                             if extra_info_value.status_code == 200:
                                 extra_info_json = extra_info_value.json()
-                                extra_info_dict = extra_info_json["result"][0]['_source']['watcher']['extra_info']
-                                if 'completed' in extra_info_dict.keys():
-                                    extra_info_completed = extra_info_dict['completed']
-                                else:
-                                    extra_info_completed = 0
-                                
-                                if 'counted' in extra_info_dict.keys():
-                                    extra_info_counted = extra_info_dict['counted']
-                                else:
-                                    extra_info_counted = 0
+                                print(entry["shipment_number"])
+                                if extra_info_json["result"]:
+                                    extra_info_dict = extra_info_json["result"][0]['_source']['watcher']['extra_info']
+                                    if 'completed' in extra_info_dict.keys():
+                                        extra_info_completed = extra_info_dict['completed']
+                                    else:
+                                        extra_info_completed = 0
                                     
-                                if 'mismatch' in extra_info_dict.keys():
-                                    extra_info_mismatch = extra_info_dict['mismatch']
+                                    if 'counted' in extra_info_dict.keys():
+                                        extra_info_counted = extra_info_dict['counted']
+                                    else:
+                                        extra_info_counted = 0
+                                        
+                                    if 'mismatch' in extra_info_dict.keys():
+                                        extra_info_mismatch = extra_info_dict['mismatch']
+                                    else:
+                                        extra_info_mismatch = 0
+                                    
+                                    if 'not_detected' in extra_info_dict.keys():
+                                        extra_info_not_detected = extra_info_dict['not_detected']
+                                    else:
+                                        extra_info_not_detected = 0
                                 else:
-                                    extra_info_mismatch = 0
-                                
-                                if 'not_detected' in extra_info_dict.keys():
-                                    extra_info_not_detected = extra_info_dict['not_detected']
-                                else:
-                                    extra_info_not_detected = 0
+                                    extra_info_completed = self.completed
+                                    extra_info_counted = self.counted
+                                    extra_info_mismatch = self.mismatch
+                                    extra_info_not_detected = self.not_detected
                             else:
                                 extra_info_completed = self.completed
                                 extra_info_counted = self.counted
