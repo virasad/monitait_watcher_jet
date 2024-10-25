@@ -245,6 +245,32 @@ class DB:
         # except Exception as e_od:
         #     print(f"DB > shipment delete {e_od}")
         #     return False
+    
+    def shipment_upsert(self, shipment_number, completed, counted, mismatch, not_detected, orders_quantity_specification):
+        cursor3 = self.dbconnect.cursor()
+        cursor3.execute('''INSERT INTO shipments_table (shipment_number, completed, counted, mismatch, not_detected, orders_quantity_specification) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET
+                            shipment_number = excluded.shipment_number,
+                            completed = excluded.completed,
+                            counted = excluded.counted,
+                            mismatch = excluded.mismatch,
+                            not_detected = excluded.not_detected, 
+                            orders_quantity_specification = excluded.orders_quantity_specification
+                        ''', (shipment_number, completed, counted, mismatch, not_detected, orders_quantity_specification))
+        self.dbconnect.commit()
+        cursor3.close()
+    
+    def order_upsert(self, shipment_number, destination, shipment_type, orders, unchanged_orders, is_done=None):
+        cursor2 = self.dbconnect.cursor()
+        cursor2.execute('''INSERT INTO watcher_order_table (shipment_number, destination, shipment_type, orders, unchanged_orders, is_done) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET
+                            shipment_number = excluded.shipment_number,
+                            destination = excluded.destination,
+                            shipment_type = excluded.shipment_type,
+                            orders = excluded.orders,
+                            unchanged_orders = excluded.unchanged_orders,
+                            is_done = excluded.is_done
+                        ''', (shipment_number, destination, shipment_type, orders, unchanged_orders, is_done))
+        self.dbconnect.commit()
+        cursor2.close()
         
     def order_update(self, shipment_number, destination=None, shipment_type=None, orders=None, unchanged_orders=None, is_done=None):
         if True:

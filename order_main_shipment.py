@@ -111,7 +111,7 @@ class MainWindow(QMainWindow):
         self.table_widget.setColumnCount(7)
         self.table_widget.setLayoutDirection(Qt.RightToLeft)
         self.table_widget.setHorizontalHeaderLabels([
-            "شماره", "نام", " شمرده", "مانده", "کل", "واحد", "اجکت"])
+            "کد کالا", "نام", " شمرده", "مانده", "کل", "واحد", "اجکت"])
         # self.table_widget.horizontalHeader().setVisible(False)  # Hide horizontal header if not needed
         self.table_widget.verticalHeader().setVisible(False)  # Hide horizontal header if not needed
         
@@ -194,11 +194,12 @@ class MainWindow(QMainWindow):
         self.not_detected = 0
         self.added_mismatch = 0
         self.mismatch = 0
-        self.db_order_checking_interval = 10 # Secends
+        self.db_order_checking_interval = 5 # Secends
         self.watcher_live_signal = 60 * 5
         self.take_picture_interval = 60 * 5
         self.order_db_remove_interval = 30  # Convert hours to secends
         self.db_checking_flag = True
+        self.is_done = 0
     
     # def update_frame(self):
     #     ret, frame = self.cap.read()
@@ -441,7 +442,8 @@ class MainWindow(QMainWindow):
                                         else:
                                             pass
                                         # Update the order list
-                                        self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders),is_done = 1)
+                                        self.is_done = 1
+                                        self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders),is_done = self.is_done)
 
                                     if self.scanned_box_barcode in self.shipment_numbers_list:
                                         # The exit barcode scanned
@@ -477,7 +479,8 @@ class MainWindow(QMainWindow):
                                                         # Calculate the counted value
                                                         counted_quantity = abs(total_quantity-item['quantity'])
                                                         # Update order table
-                                                        self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders), is_done = 0)
+                                                        self.is_done = 0
+                                                        self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders), is_done = self.is_done)
                                                         
                                                         # Update the orders quantity specification dictionary and shipment table
                                                         utc_time = datetime.now(timezone.utc)
@@ -498,7 +501,8 @@ class MainWindow(QMainWindow):
                                                         
                                                         eject_ts = time.time()
                                                         # Update local order db
-                                                        self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders), is_done = 0)
+                                                        self.is_done = 0 
+                                                        self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders), is_done = self.is_done)
                                                         
                                                         # Update the orders quantity specification dictionary and the shipment table
                                                         utc_time = datetime.now(timezone.utc)
@@ -547,7 +551,6 @@ class MainWindow(QMainWindow):
                             # Update shipment table
                             self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected) 
 
-
     def scanner_read(self):
         while True:
             self.scanned_value = self.scanner.read_barcode()
@@ -587,14 +590,46 @@ class MainWindow(QMainWindow):
                         main_json = main_dict.json()  
                         results = main_json['results']
                         
+                        order_updating_flag = False
+                        
                         # Added the order batches to the order DB
                         for entry in results:
                             # Update the quantity by another calculation URL
+                            unchanged_entry_order = entry['orders']
+                            db_orders_quantity_dict = {}
+                            
+                            # Get additional value from extra infor url
+                            extra_info_urls = f"https://app.monitait.com/api/elastic-search/watcher/?extra_info.shipment_number={entry['shipment_number']}"
+                            extra_info_value = requests.get(extra_info_urls, headers=self.headers)
+                            if extra_info_value.status_code == 200:
+                                extra_info_json = extra_info_value.json()
+                                extra_info_dict = extra_info_json["result"][0]['_source']['watcher']['extra_info']
+                                extra_info_completed = extra_info_dict['completed']
+                                extra_info_counted = extra_info_dict['counted']
+                                extra_info_mismatch = extra_info_dict['mismatch']
+                                extra_info_not_detected = extra_info_dict['not_detected']
+                            else:
+                                extra_info_completed = self.completed
+                                extra_info_counted = self.counted
+                                extra_info_mismatch = self.mismatch
+                                extra_info_not_detected = self.not_detected
+                            
+                            # Checking is_done flag with the main value
+                            if entry["shipment_number"] == self.shipment_number:
+                                if self.is_done == 1:
+                                    extra_info_is_done = 1
+                                else:
+                                    extra_info_is_done = 0
+                            else:
+                                extra_info_is_done = 0
+                            
                             for ord in entry['orders']:
+                                print(ord)
                                 order_id = ord['id'] 
                                 calculation_url = f"https://app.monitait.com/api/elastic-search/batch-report-calculations/?station_id={self.stationID}&order_id={order_id}"
                                 order_remaind_value = requests.get(calculation_url, headers=self.headers)
                                 if order_remaind_value.status_code == 200:
+                                    order_updating_flag = True
                                     order_remaind_value = order_remaind_value.json() 
                                     station_reports = order_remaind_value[0]['station_reports'][0]
                                     batch_quantity = int(station_reports['batch_quantity'])
@@ -604,24 +639,43 @@ class MainWindow(QMainWindow):
                                     # Update the order
                                     ord['batches'][0]['quantity'] = batch_quantity - total_completed_quantity
                                     ord['quantity'] = batch_quantity - total_completed_quantity
+                                    for item2 in unchanged_entry_order:
+                                        if item2['id'] == order_id:
+                                            total_qt = item2['quantity']
                                 else:
-                                    pass
-                            is_exist = self.db.order_write(shipment_number=entry["shipment_number"], 
+                                    # Updating remain column value from the unchanged order dictionary
+                                    for item2 in unchanged_entry_order:
+                                        if item2['id'] == order_id:
+                                            total_completed_quantity = 0
+                                            total_remained_quantity = item2['quantity']
+                                            total_qt = item2['quantity']
+                                utc_time = datetime.now(timezone.utc)
+                                
+                                formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+                                product_name = ord['product_name'] 
+                                unit = ord['delivery_unit']
+                                # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy, name, unit
+                                db_orders_quantity_dict[ord['product_number']] = [total_qt, total_completed_quantity, total_remained_quantity, 0, product_name, unit, formatted_utc_time]
+                                
+                            # Upsert the shipment db
+                            self.db.shipment_upsert(shipment_number = entry["shipment_number"], completed = extra_info_completed,
+                                                    counted = extra_info_counted, mismatch = extra_info_mismatch,
+                                                    not_detected = extra_info_not_detected, orders_quantity_specification = json.dumps(db_orders_quantity_dict))
+                            
+                            # Upsert the order db
+                            self.db.order_upsert(shipment_number=entry["shipment_number"], 
                                                             destination=entry["destination"], 
                                                             shipment_type=entry["type"],
                                                             orders=json.dumps(entry['orders']),
-                                                            unchanged_orders=json.dumps(entry['orders']),
-                                                            is_done=0)
-                            # if is_exist:
-                            #     print(f"{entry['shipment_number']} is not exists")
-                            # else:
-                            #     print(f"{entry['shipment_number']} is exists")
+                                                            unchanged_orders=json.dumps(unchanged_entry_order),
+                                                            is_done = extra_info_is_done)
                             
                             # Added shipment number to the shipment list
                             if entry['shipment_number'] in self.shipment_numbers_list:
                                 pass
                             else:
                                 self.shipment_numbers_list.append(entry['shipment_number'])
+                                
                 else:
                     pass
             # except Exception as ex1:
@@ -636,7 +690,7 @@ class MainWindow(QMainWindow):
         shipment_db_checking_flag = False
         while not self.stop_thread:
             
-            # Removing the order DB every 12 hours
+            # Removing the finished shipment after sending its all order to the Monitait db
             if time.time() - db_st > self.order_db_remove_interval:
                 db_st = time.time()
                 if True:
@@ -645,6 +699,7 @@ class MainWindow(QMainWindow):
                     if completed_orders_list == []:
                         pass
                     else:
+                        print("Found a completed order list")
                         for item in completed_orders_list:
                             orders = json.loads(item[4])
                             orders_number = len(orders)
@@ -666,23 +721,15 @@ class MainWindow(QMainWindow):
                                     status_code_number += 1
                                 else:
                                     pass
-                            # if status_code_number==orders_number:
-                            #     print(f"\n status code number {status_code_number}, order numbers {orders_number}")
-                            #     self.db.order_delete(shipment_number=self.shipment_number, status="onetable")
-                            # else:
-                            #     pass
-                            
-                    # # Removed all datafrom table
-                    # table_delete = self.db.order_delete(status="total")
-                    # # Getting update the watcher db
-                    # shipment_resp = requests.get(self.shipment_url, headers=self.headers) 
-                    # # Added all batches to a list
-                    # main_json = main_dict.json()  
-                    # results = main_json['results']
-                    # # Added the order batches to the order DB
-                    # for entry in results:
-                    #     # Save the orders to database
-                    #     is_exist = self.db.order_write(shipment_number=entry["shipment_number"], orders=json.dumps(entry['orders']), is_done=0)
+                            if status_code_number==orders_number:
+                                print(f"status code number {status_code_number}, order numbers {orders_number}")
+                                self.db.order_delete(shipment_number=self.shipment_number, status="onetable")
+                                
+                                # Change the shopment number to prevent updating the local db
+                                self.shipment_number = b''
+                            else:
+                                pass
+                    
                 # except Exception as ex1:
                 #     print(f"db_orders_checker > removing database {ex1}")
                 
@@ -755,9 +802,8 @@ class MainWindow(QMainWindow):
                                                                 "order_id": int(order_id_),
                                                                 "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
                                                                 "defect_image":[], "action_type": "stop"}  
-                                        s2 = time.time()
                                         send_shipment_response = requests.post(self.sendshipment_url, json=batch_report_body, headers=self.headers)
-                                        print("****Send batch status code", send_shipment_response.status_code, "Post time", time.time()-s2)
+                                        print("****Send batch status code", send_shipment_response.status_code)
                                 else:
                                     pass
                 # except Exception as ex2:
