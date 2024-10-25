@@ -138,7 +138,7 @@ class DB:
             cursor3 = self.dbconnect.cursor()
             cursor3.execute('SELECT * FROM shipments_table WHERE shipment_number = ?', (shipment_number,))
             if cursor3.fetchone() is None:
-                cursor3.execute('''insert into shipments_table (shipment_number, completed, counted, mismatch, not_detected, orders_quantity_specification) values (?,?,?,?)''', (shipment_number, completed, counted, mismatch, not_detected, orders_quantity_specification))
+                cursor3.execute('''insert into shipments_table (shipment_number, completed, counted, mismatch, not_detected, orders_quantity_specification) values (?,?,?,?,?,?)''', (shipment_number, completed, counted, mismatch, not_detected, orders_quantity_specification))
                 self.dbconnect.commit()
                 cursor3.close()
                 return True

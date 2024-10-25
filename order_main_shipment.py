@@ -733,7 +733,7 @@ class MainWindow(QMainWindow):
                         # Getting the scanned order list from order DB
                         # Getting to detect in which batch changes is happend
                         updated_shipment_number_data_ = self.db.order_read(self.shipment_number)
-                        updated_shipment_number_data = json.loads(updated_shipment_number_data_[4])
+
                         for item in updated_shipment_number_data:
                             for batch in item['batches']:
                                 # Check if the order finished or not
