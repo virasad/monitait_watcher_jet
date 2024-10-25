@@ -270,6 +270,7 @@ class MainWindow(QMainWindow):
                     self.shipment_db = self.db.order_read(self.shipment_number)
                     
                     if self.shipment_db != []:
+                        print("Shipment detected: ", self.shipment_number)
                         # Set zero the quantity counter value when a new shipment scanned
                         self.added_completed = 0
                         self.completed = 0
@@ -318,13 +319,13 @@ class MainWindow(QMainWindow):
                             self.mismatch = 0
                             self.not_detected = 0
                             self.orders_quantity_specification = {}
-                        print("self.shipment_db", self.shipment_db)
                         
                         # Update the quantity by another calculation URL
                         for ord in json_data1:
                             order_id = ord['id'] 
                             calculation_url = f"https://app.monitait.com/api/elastic-search/batch-report-calculations/?station_id={self.stationID}&order_id={order_id}"
                             order_remaind_value = requests.get(calculation_url, headers=self.headers)
+                            
                             if order_remaind_value.status_code == 200:
                                 order_remaind_value = order_remaind_value.json() 
                                 station_reports = order_remaind_value[0]['station_reports'][0]
@@ -348,11 +349,12 @@ class MainWindow(QMainWindow):
                                         total_qt = item2['quantity']
 
                             utc_time = datetime.now(timezone.utc)
-                            formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S")
+                            formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                             product_name = ord['product_name'] 
                             unit = ord['delivery_unit']
                             # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy, name, unit
                             self.orders_quantity_specification[ord['product_number']] = [total_qt, total_completed_quantity, total_remained_quantity, 0, product_name, unit, formatted_utc_time]
+                        
                         
                         # Write shipment table
                         self.db.shipments_table_write(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
@@ -387,7 +389,7 @@ class MainWindow(QMainWindow):
                     a ,b ,c, d ,dps = self.arduino.read_GPIO()
                     # If the OK signal triggered
                     if abs(a - a_initial) >= 1:
-                        print("\n ****Catched the first OK signal.****")
+                        print("\n ****Catched OK signal.****")
                         a_initial = a
                         a_initial_1 = a
                         self.added_counted += 1
@@ -518,7 +520,7 @@ class MainWindow(QMainWindow):
                                             self.arduino.gpio32_0.off()
                                             # Update shipment table
                                             
-                                            self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected)
+                                            self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
                                 else:
                                     print("Status:the scanner could not catch the barcode.")
                                     self.added_not_detected += 1
@@ -528,7 +530,7 @@ class MainWindow(QMainWindow):
                                     self.arduino.gpio32_0.off()
                                     # Update shipment table
                                     
-                                    self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
+                                    self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected)
                                 
                                 # Update the old scanned value
                                 self.scanned_value_old = b''
@@ -543,7 +545,7 @@ class MainWindow(QMainWindow):
                             # The detected barcode is not on the order list
                             self.arduino.gpio32_0.off()
                             # Update shipment table
-                            self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification)) 
+                            self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected) 
 
 
     def scanner_read(self):
@@ -733,11 +735,11 @@ class MainWindow(QMainWindow):
                         # Getting the scanned order list from order DB
                         # Getting to detect in which batch changes is happend
                         updated_shipment_number_data_ = self.db.order_read(self.shipment_number)
-
+                        updated_shipment_number_data = json.loads(updated_shipment_number_data_[4])
                         for item in updated_shipment_number_data:
                             for batch in item['batches']:
                                 # Check if the order finished or not
-                                is_done_value = updated_shipment_number_data_[6]
+                                is_done_value = updated_shipment_number_data_[5]
                                 current_quantity = int(batch['quantity'])
                                 if (is_done_value == 0) and (current_quantity != 0):
                                     main_quantity = main_shipment_orders_dict[batch['batch_uuid']]['quantity']

@@ -613,7 +613,7 @@ class Camera:
 class Scanner:
     def __init__(self, fps=30, exposure=100, gain=1, gamma=1, contrast=3, roi=[0,0,1920,1080], temperature=5000, brightness=1, step=10, auto_exposure=3) -> None:
         self.VENDOR_PRODUCT = [
-        [0xac90, 0x3002], # [vendor, product]
+        [0x44176, 0x12290], # [vendor, product]
         ]
         self.CHARMAP = {
         evdev.ecodes.KEY_1: ['1', '!'],
@@ -684,9 +684,8 @@ class Scanner:
     def get_device(self):
         self.devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
         for self.device in self.devices:
-            print(self.device.path, self.device.name, self.device.phys)
             for vp in self.VENDOR_PRODUCT:
-                if self.device.info.vendor == vp[0] and self.device.info.product == vp[1]:
+                if "event1" in self.device.path:
                     return self.device
         return None
 
