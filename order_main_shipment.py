@@ -327,8 +327,8 @@ class MainWindow(QMainWindow):
                         if extra_info_value.status_code == 200:
                             extra_info_json = extra_info_value.json()
                             if extra_info_json["result"]:
-                                
-                                extra_info_dict = extra_info_json["result"][0]['_source']['watcher']['extra_info']
+                                print(extra_info_json["result"][-1]['_source']['watcher']['extra_info'], "200 rseponse")
+                                extra_info_dict = extra_info_json["result"][-1]['_source']['watcher']['extra_info']
                                 if 'completed' in extra_info_dict.keys():
                                     extra_info_completed = extra_info_dict['completed']
                                 else:
@@ -642,8 +642,8 @@ class MainWindow(QMainWindow):
                             if extra_info_value.status_code == 200:
                                 extra_info_json = extra_info_value.json()
                                 if extra_info_json["result"]:
-                                    print("\n extra_info_json", extra_info_json["result"], entry['shipment_number'])
-                                    extra_info_dict = extra_info_json["result"][0]['_source']['watcher']['extra_info']
+                                    print("\n extra_info_json, shipment numer", entry['shipment_number'])
+                                    extra_info_dict = extra_info_json["result"][-1]['_source']['watcher']['extra_info']
                                     if 'completed' in extra_info_dict.keys():
                                         extra_info_completed = extra_info_dict['completed']
                                     else:
@@ -811,6 +811,8 @@ class MainWindow(QMainWindow):
                             lot_info=0,
                             extra_info= extra_info)
                     
+                    print("\n *Extra info sending status code: ", r_c)
+                    
                     # Reset the added quantity parameters
                     self.added_completed = 0
                     self.added_counted = 0
@@ -820,6 +822,7 @@ class MainWindow(QMainWindow):
                     # Checking order list on the order DB to catch the quantity value
                     main_shipment_number_data = self.db.order_read(self.shipment_number)
                     if main_shipment_number_data and (self.shipment_number != previus_shipment_number):
+                        print("updated the main dict")
                         main_shipment_orders_dict = {}
                         # The shaipment changed, so all data 
                         previus_shipment_number = self.shipment_number

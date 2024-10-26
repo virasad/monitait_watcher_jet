@@ -278,7 +278,7 @@ class DB:
         except Exception as e2:
             # Rollback in case of error
             print(f"An error occurred in order upsert: {e2}")
-            cursor3.close()
+            cursor2.close()
         
     def order_update(self, shipment_number, destination=None, shipment_type=None, orders=None, unchanged_orders=None, is_done=None):
         if True:
