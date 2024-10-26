@@ -395,7 +395,7 @@ class MainWindow(QMainWindow):
                         
                         
                         # Upsert the shipment db
-                        self.db.shipment_upsert(shipment_number = entry["shipment_number"], completed = extra_info_completed,
+                        self.db.shipment_upsert(shipment_number =  self.shipment_number, completed = extra_info_completed,
                                                 counted = extra_info_counted, mismatch = extra_info_mismatch,
                                                 not_detected = extra_info_not_detected, orders_quantity_specification = json.dumps(self.orders_quantity_specification))
                         
@@ -432,6 +432,7 @@ class MainWindow(QMainWindow):
                         a_initial_1 = a
                         self.added_counted += 1
                         self.counted += 1
+                        
                         
                         # Going to catch second OK signal
                         catching_signal = False
@@ -505,8 +506,6 @@ class MainWindow(QMainWindow):
                                                     box_in_order_batch = True
                                                     # Decrease quantity by 1 if it's greater than 0, else eject it
                                                     if item['quantity'] > 0:
-                                                        self.table_widget.setRowCount(0)  # Clear the table
-                                                        
                                                         print(f"Status:{self.scanned_box_barcode} is grabbed.")
                                                         # Decreasing the quantity in the shipments order and the batches list
                                                         item['quantity'] -= 1 
@@ -587,6 +586,8 @@ class MainWindow(QMainWindow):
                             self.arduino.gpio32_0.off()
                             # Update shipment table
                             self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected) 
+                        
+                        self.table_widget.setRowCount(0)  # Clear the table
 
     def scanner_read(self):
         while True:
@@ -640,8 +641,8 @@ class MainWindow(QMainWindow):
                             extra_info_value = requests.get(extra_info_urls, headers=self.headers)
                             if extra_info_value.status_code == 200:
                                 extra_info_json = extra_info_value.json()
-                                print(entry["shipment_number"])
                                 if extra_info_json["result"]:
+                                    print("\n extra_info_json", extra_info_json["result"], entry['shipment_number'])
                                     extra_info_dict = extra_info_json["result"][0]['_source']['watcher']['extra_info']
                                     if 'completed' in extra_info_dict.keys():
                                         extra_info_completed = extra_info_dict['completed']
@@ -722,11 +723,11 @@ class MainWindow(QMainWindow):
                             
                             # Upsert the order db
                             self.db.order_upsert(shipment_number=entry["shipment_number"], 
-                                                            destination=entry["destination"], 
-                                                            shipment_type=entry["type"],
-                                                            orders=json.dumps(entry['orders']),
-                                                            unchanged_orders=json.dumps(unchanged_entry_order),
-                                                            is_done = extra_info_is_done)
+                                                destination=entry["destination"], 
+                                                shipment_type=entry["type"],
+                                                orders=json.dumps(entry['orders']),
+                                                unchanged_orders=json.dumps(unchanged_entry_order),
+                                                is_done = extra_info_is_done)
                             
                             # Added shipment number to the shipment list
                             if entry['shipment_number'] in self.shipment_numbers_list:
@@ -924,6 +925,8 @@ class MainWindow(QMainWindow):
                     
                     read_shipment_db = self.db.shipment_read(self.shipment_number)
                     if read_shipment_db != [] and self.start_counting_flag:
+                        
+                                                        
                         # self.table_widget.setRowCount(0)  # Clear the table
                         # # Reading the box entrance signal
                         # if self.live_stream_flag:
