@@ -264,8 +264,8 @@ class MainWindow(QMainWindow):
                             self.shipment_number = shipment_scanned_barcode_byte_string
                     else:
                         exit_flag = False
-                        print("****Exit barcode scanned.****", self.scanned_box_barcode)
                         self.shipment_number = self.scanned_value_old
+                        print("****Exit barcode scanned.****", self.scanned_box_barcode, self.shipment_number)
                     
                     # Getting the scanned order list from order DB
                     self.shipment_db = self.db.order_read(self.shipment_number)
@@ -367,7 +367,7 @@ class MainWindow(QMainWindow):
                                 ord['batches'][0]['quantity'] = batch_quantity - total_completed_quantity
                                 ord['quantity'] = batch_quantity - total_completed_quantity
                                 
-                                self.previous_quantities[order_id] = batch_quantity - total_completed_quantity
+                                self.previous_quantities[order_id] = total_remained_quantity
                                 # Updating remain column value from the unchanged order dictionary
                                 for item2 in json_data2:
                                     if item2['id'] == order_id:
@@ -405,7 +405,6 @@ class MainWindow(QMainWindow):
             eject_ts = time.time()
             while order_counting_start_flag:
                 if True:
-                    print("start counting", self.shipment_numbers_list)
                     if time.time() - eject_ts < 1:
                         self.arduino.gpio32_0.on()  # Turned off the ejector
                         
@@ -441,6 +440,7 @@ class MainWindow(QMainWindow):
                                 print("Catched the second OK signal or barcode read, or time-out")
                                 # Update the initial value
                                 a_initial_1 = a1
+                                self.not_detected += 1
                                 catching_signal = True
                                 time_out_flag = True
                             
