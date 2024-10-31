@@ -488,7 +488,7 @@ class MainWindow(QMainWindow):
                     self.db_checking_flag = False
                     st_1 = time.time()
                     
-                    shipments_number, shipment_numbers_list = self.dbcheck.db_checking(old_shipments_number, self.shipment_url, self.shipment_numbers_list, self.shipment_number)
+                    shipments_number, shipment_numbers_list = self.dbcheck.db_checking(old_shipments_number, self.shipment_url, self.shipment_numbers_list, self.shipment_number, self.stationID)
                     old_shipments_number = shipments_number
                     self.shipment_numbers_list = shipment_numbers_list         
                 else:

@@ -776,7 +776,7 @@ class DbChecking:
         self.db = db
         
         
-    def db_checking(self, init_shipments_number, db_api, shipments_list, scanned_shipment_number):
+    def db_checking(self, init_shipments_number, db_api, shipments_list, scanned_shipment_number, stationID):
         db_api_response = requests.get(db_api, headers=self.headers) 
         if db_api_response.status_code == 200:
             # Added all batches to a list
@@ -871,7 +871,7 @@ class DbChecking:
                                     
                                     for ord in entry['orders']:
                                         order_id = ord['id'] 
-                                        calculation_url = f"https://app.monitait.com/api/elastic-search/batch-report-calculations/?station_id={self.stationID}&order_id={order_id}"
+                                        calculation_url = f"https://app.monitait.com/api/elastic-search/batch-report-calculations/?station_id={stationID}&order_id={order_id}"
                                         order_remaind_value = requests.get(calculation_url, headers=self.headers)
                                         if order_remaind_value.status_code == 200:
                                             order_updating_flag = True
