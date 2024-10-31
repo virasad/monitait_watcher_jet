@@ -469,9 +469,10 @@ class MainWindow(QMainWindow):
 
     def scanner_read(self):
         while True:
-            baecode_scanned_value = self.scanner.read_barcode()
-            if baecode_scanned_value != b'':
-                self.scanned_value_old = baecode_scanned_value
+            barcode_scanned_value = self.scanner.read_barcode()
+            print(barcode_scanned_value, "barcode_scanned_value")
+            if barcode_scanned_value != b'':
+                self.scanned_value_old = barcode_scanned_value
                 self.barcode_flag = True
                 print("\n Scanned value is: ", self.scanned_value_old)
 
