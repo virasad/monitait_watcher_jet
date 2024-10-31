@@ -31,7 +31,7 @@ redis_port = 6379
 redis_db = 3
 
 class MainWindow(QMainWindow):
-    def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner, redis, db_checking, url_dict: url_dict,  register_id: register_id, usb_serial_flag):
+    def __init__(self, arduino:Ardiuno, db:DB, camera:Camera, scanner, redis, dbcheck, url_dict: url_dict,  register_id: register_id, usb_serial_flag):
         super().__init__()
         
         # Create a QFont for bold text
@@ -143,7 +143,7 @@ class MainWindow(QMainWindow):
         self.camera = camera
         self.scanner = scanner
         self.redis = redis
-        self.db_checking = db_checking
+        self.dbcheck = dbcheck
         self.shipment_url = url_dict["shipment_url"]
         self.stationID_url = url_dict["stationID_url"]
         self.sendshipment_url = url_dict["sendshipment_url"]
@@ -488,7 +488,7 @@ class MainWindow(QMainWindow):
                     self.db_checking_flag = False
                     st_1 = time.time()
                     
-                    shipments_number, shipment_numbers_list = self.db_checking(old_shipments_number, self.shipment_url, self.shipment_numbers_list, self.shipment_number)
+                    shipments_number, shipment_numbers_list = self.dbcheck.db_checking(old_shipments_number, self.shipment_url, self.shipment_numbers_list, self.shipment_number)
                     old_shipments_number = shipments_number
                     self.shipment_numbers_list = shipment_numbers_list         
                 else:
@@ -819,7 +819,7 @@ if __name__ == "__main__":
     arduino = Ardiuno()
     camera = Camera()
     db = DB()
-    db_checking = DbChecking(register_id=register_id, db = db)
+    dbcheck = DbChecking(register_id=register_id, db = db)
     
     # try:
     #     redis_connection = redis.StrictRedis(redis_api, redis_port, db=redis_db)        
@@ -846,7 +846,7 @@ if __name__ == "__main__":
         usb_serial_flag = False
         scanner = Scanner()
     
-    counter = MainWindow(arduino=arduino, db=db, camera=camera, scanner=scanner, redis=redis_connection, db_checking=db_checking, url_dict=url_dict, register_id=register_id,
+    counter = MainWindow(arduino=arduino, db=db, camera=camera, scanner=scanner, redis=redis_connection, dbcheck=dbcheck, url_dict=url_dict, register_id=register_id,
                     usb_serial_flag=usb_serial_flag)
     
     Thread(target=counter.scanner_read).start()
