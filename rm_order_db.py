@@ -9,10 +9,8 @@ if status == "total":
       rows = cursor2.fetchall()
       if len(rows) == 0:
             cursor2.close()
-            return []
       else:
             cursor2.close()
-            return rows[0]
 
       cursor2.close()
 
