@@ -116,7 +116,7 @@ class DB:
             cursor1.close()
             return False
     
-    def shipment_write(self, shipment_number, destination, shipment_type, orders={}, unchanged_orders = {}, is_done, completed, counted, mismatch, not_detected, orders_quantity_specification={}):
+    def shipment_write(self, shipment_number, destination, shipment_type, orders, unchanged_orders, is_done, completed, counted, mismatch, not_detected, orders_quantity_specification={}):
         if True:
             cursor2 = self.dbconnect.cursor()
             cursor2.execute('SELECT * FROM shipment_table WHERE shipment_number = ?', (shipment_number,))
