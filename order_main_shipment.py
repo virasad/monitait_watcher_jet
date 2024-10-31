@@ -331,14 +331,14 @@ class MainWindow(QMainWindow):
                                     data = self.redis.rpop('dms')
                                     print(data, "data")
                                 
-                                scanned_box_barcode_byte_string = self.scanner.read_barcode()
-                                # scanned_box_barcode_byte_string = self.scanned_value_old
-                                # if self.usb_serial_flag:    
-                                #     self.scanned_box_barcode = scanned_box_barcode_byte_string.decode().strip()
-                                #     self.scanned_box_barcode = str(self.scanned_box_barcode)
-                                # else:
-                                #     self.scanned_box_barcode = scanned_box_barcode_byte_string
-                                # print(self.scanned_box_barcode, "self.scanned_box_barcode")
+                                # scanned_box_barcode_byte_string = self.scanner.read_barcode()
+                                scanned_box_barcode_byte_string = self.scanned_value_old
+                                if self.usb_serial_flag:    
+                                    self.scanned_box_barcode = scanned_box_barcode_byte_string.decode().strip()
+                                    self.scanned_box_barcode = str(self.scanned_box_barcode)
+                                else:
+                                    self.scanned_box_barcode = scanned_box_barcode_byte_string
+                                print(self.scanned_box_barcode, "self.scanned_box_barcode")
                                 box_in_order_batch = False
                                 if self.scanned_box_barcode != '':
                                     
