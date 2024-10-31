@@ -157,12 +157,13 @@ class DB:
             if status == "total": 
                 cursor2.execute('SELECT * FROM shipment_table')
                 rows = cursor2.fetchall()
+                print("len", len(rows))
                 if len(rows) == 0:
                     cursor2.close()
                     return []
                 else:
                     cursor2.close()
-                    return rows[0]
+                    return rows
                 
                 cursor2.close()
             elif status == "onetable":
@@ -817,6 +818,7 @@ class DbChecking:
                         
                         # Added the order batches to the order DB
                         for entry in page_api_results:
+                            print("entry['shipment_number']", entry['shipment_number'])
                             # Added shipment number to the shipment list
                             if entry['shipment_number'] in shipments_list:
                                 pass
