@@ -79,7 +79,6 @@ class MainWindow(QMainWindow):
         self.item_row2_col2.setFont(self.bold_font)  
         self.title_table.setItem(2, 2, self.item_row2_col2)
         
-        
         self.item_row3_col0 = QTableWidgetItem("شمارش شده")  
         self.item_row3_col0.setBackground(QColor("lightGray"))  
         self.item_row3_col0.setFont(self.bold_font)  
@@ -131,10 +130,6 @@ class MainWindow(QMainWindow):
 
         # Create a layout to arrange the title and table
         layout = QVBoxLayout()
-        
-        layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
-        layout.setSpacing(0)  # Remove spacing between widgets
-
         layout.addWidget(self.title_table)  # Add title above the table
         layout.addWidget(self.table_widget)
         
@@ -470,11 +465,12 @@ class MainWindow(QMainWindow):
     def scanner_read(self):
         while True:
             barcode_scanned_value = self.scanner.read_barcode()
-            print(barcode_scanned_value, "barcode_scanned_value")
+            # print(barcode_scanned_value, "barcode_scanned_value")
             if barcode_scanned_value != b'':
                 self.scanned_value_old = barcode_scanned_value
                 self.barcode_flag = True
                 print("\n Scanned value is: ", self.scanned_value_old)
+            time.sleep(0.001)
 
 
     def db_orders_updating(self):
@@ -496,6 +492,7 @@ class MainWindow(QMainWindow):
                     pass
             # except Exception as ex1:
             #     print(f"run > waiting to the OR barcode {ex1}")
+            time.sleep(0.003)
 
 
     def db_checker(self):
@@ -625,6 +622,7 @@ class MainWindow(QMainWindow):
                                     pass
                 # except Exception as ex2:
                 #     print(f"db_orders_checker > checking the database {ex2}")
+            time.sleep(0.001)
     def update_table(self):
         previus_shipment_number = ""
         table_st = time.time()
@@ -701,7 +699,7 @@ class MainWindow(QMainWindow):
                         self.title_table.setItem(3, 1, QTableWidgetItem(f"{counted_qt}")) 
                         self.title_table.setItem(3, 3, QTableWidgetItem(f"{completed_qt}")) 
                         
-                        orders_quantity_value = json.loads(read_shipment_db[6])
+                        orders_quantity_value = json.loads(read_shipment_db[11])
                         
                         orders_quantity_value_sorted = dict(sorted(orders_quantity_value.items(), key=lambda item: item[1][-1], reverse=True))
                         for order_id, item in orders_quantity_value_sorted.items(): 
@@ -811,7 +809,7 @@ class MainWindow(QMainWindow):
                             self.db.shipment_update(shipment_number = self.shipment_number, completed = sel_completed,
                                                     counted = sel_counted, mismatch = sel_mismatch,
                                                     not_detected = sel_not_detected, orders_quantity_specification = json.dumps(sel_orders_quantity_specification))
-                            
+            time.sleep(0.002)          
             # except Exception as ex:
             #     print(f"table_update > exception {ex}")
 

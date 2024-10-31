@@ -570,8 +570,10 @@ class Camera:
     
 class Scanner:
     def __init__(self, fps=30, exposure=100, gain=1, gamma=1, contrast=3, roi=[0,0,1920,1080], temperature=5000, brightness=1, step=10, auto_exposure=3) -> None:
+        self.scanner_default_path = "/dev/input/event0"
         self.VENDOR_PRODUCT = [
-        [0x44176, 0x12290], # [vendor, product]
+        [0x0581, 0x011c], # [vendor, product]0581:011c
+        [0x44176, 0x12290] # [vendor, product]
         ]
         self.CHARMAP = {
         evdev.ecodes.KEY_1: ['1', '!'],
@@ -627,10 +629,10 @@ class Scanner:
         self.VALUE_UP = 0
         self.VALUE_DOWN = 1
         self.barcode_string_output = ''
-        # for path in evdev.list_devices():
-        #     print('path:', path)
+        for path in evdev.list_devices():
+            print('path:', path)
         self.dev = self.get_device()
-        # print('selected device:', self.dev)
+        print('selected device:', self.dev)
         try:
             self.dev.grab()
         except:
@@ -643,9 +645,11 @@ class Scanner:
         self.devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
         for self.device in self.devices:
             for vp in self.VENDOR_PRODUCT:
-                print(self.device.path)
-                if "event1" in self.device.path:
+                print(vp)
+                if self.device.info.vendor == vp[0] and self.device.info.product == vp[1]:
                     return self.device
+                else:
+                    return evdev.InputDevice(scanner_default_path)
         return None
 
     def barcode_reader_evdev(self):
