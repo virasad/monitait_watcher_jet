@@ -1,19 +1,10 @@
 import sqlite3
 from utils.base_s import *
 
-dbconnect = sqlite3.connect("/home/pi/monitait_watcher_jet/monitait.db", check_same_thread=False)
+db = DB()
 
-cursor2 = dbconnect.cursor()
+rows = db.shipment_read(status ="total")
 
-cursor2.execute('SELECT * FROM shipment_table')
-rows = cursor2.fetchall()
-if len(rows) == 0:
-      cursor2.close()
-else:
-      cursor2.close()
+print(rows, "Rows", len(rows))
 
-cursor2.close()
-
-print(rows, "Rows")
-
-dbconnect.commit() # mv monitait.db monitait.db.old
+# dbconnect.commit() # mv monitait.db monitait.db.old
