@@ -12,7 +12,6 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QTableWidget, QTableWidg
 from PyQt5.QtGui import QColor, QFont, QPixmap, QImage
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5 import QtGui
-from datetime import datetime, timezone
 
 register_id = str(socket.gethostname())
 
