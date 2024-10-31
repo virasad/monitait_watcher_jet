@@ -25,7 +25,7 @@ def handler(signal, frame):
 
 signal.signal(signal.SIGINT, handler)
 
-def watcher_update(register_id, quantity, defect_quantity, send_img, image_path="scene_image.jpg", product_id=0, lot_info=0, extra_info=None, timestamp=datetime.datetime.utcnow(), *args, **kwargs):
+def watcher_update(register_id, quantity, defect_quantity, send_img, image_path="scene_image.jpg", product_id=0, lot_info=0, extra_info=None, timestamp=datetime.now(timezone.utc), *args, **kwargs):
     quantity = quantity
     defect_quantity = defect_quantity
     product_id = product_id
@@ -105,7 +105,7 @@ class DB:
         #     print(f"DB > init {e}")
         #     pass
 
-    def write(self, register_id=register_id, a=0, b=0, extra_info={}, image_name="", timestamp=datetime.datetime.utcnow()):
+    def write(self, register_id=register_id, a=0, b=0, extra_info={}, image_name="", timestamp=datetime.now(timezone.utc)):
         try:
             cursor1 = self.dbconnect.cursor()
             cursor1.execute('''insert into monitait_table (register_id, temp_a, temp_b, image_name, extra_info, ts) values (?,?,?,?,?,?)''', (register_id, a, b, image_name, json.dumps(extra_info), timestamp))
@@ -555,7 +555,7 @@ class Camera:
 
         if self.success:
             im = self.read()
-            date = datetime.datetime.utcnow()
+            date = datetime.now(timezone.utc)
             saving_date = f"{date.year}-{date.month}-{date.day}-{date.hour}-{date.minute}-{date.second}-{date.microsecond}"
             os.makedirs("images", exist_ok=True)
             image_name = f"images/{saving_date}.jpg"
