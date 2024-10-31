@@ -905,7 +905,7 @@ class DbChecking:
                                         # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy, name, unit
                                         db_orders_quantity_dict[ord['product_number']] = [total_qt, total_completed_quantity, total_remained_quantity, 0, product_name, unit, formatted_utc_time]
                                     
-                                    self.db.order_upsert(shipment_number=entry["shipment_number"], 
+                                    self.db.shipment_upsert(shipment_number=entry["shipment_number"], 
                                                         destination=entry["destination"], 
                                                         shipment_type=entry["type"],
                                                         orders=json.dumps(entry['orders']),
