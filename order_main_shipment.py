@@ -40,9 +40,9 @@ class MainWindow(QMainWindow):
         self.setGeometry(100, 100, 800, 600)
         
         # Create a QTableWidget for the title
-        self.title_table = QTableWidget()  # No need to specify rows and columns at this point
-        self.title_table.setRowCount(4)  # Set 2 rows for 'a' and 'b'
-        self.title_table.setColumnCount(4)  # Set 1 column for values
+        self.title_table = QTableWidget()  
+        self.title_table.setRowCount(4)  
+        self.title_table.setColumnCount(4)  
         
         self.item_row0_col0 = QTableWidgetItem("شماره محموله")  
         self.item_row0_col0.setBackground(QColor("lightGray"))  
@@ -135,36 +135,8 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(self.title_table)  # Add title above the table
         layout.addWidget(self.table_widget)
-        # print("Checking the live stream url")
-        # Checking whether the live stream URL is alive or not
-        # try:
-        #     response = requests.head(live_stream_url, allow_redirects=True)
-        #     if response.status_code == 200: 
-        #         self.live_stream_flag = True
-        #     else:
-        #         self.live_stream_flag = False
-        # except:
-        #     self.live_stream_flag = True
-        #     pass
-
-        # print(f"Adding widget if live stream is ")
-        # if self.live_stream_flag:
-        #     # Create a QLabel for the image
-        #     self.image_label = QLabel(self)
-        #     layout.addWidget(self.image_label, alignment=Qt.AlignLeft | Qt.AlignTop)
-        # else:
-        #     pass
-        
-        # Create a container widget to hold the layout and image
-        container = QWidget()
-        container.setLayout(layout)
-        self.setCentralWidget(container)
         
         self.arduino = arduino
-        self.stop_thread = False
-        self.update_table_flag = False
-        self.start_counting_flag = False
-        self.barcode_flag = False
         self.db = db
         self.camera = camera
         self.scanner = scanner
@@ -176,7 +148,6 @@ class MainWindow(QMainWindow):
         self.usb_serial_flag = usb_serial_flag
         self.headers = {'Register-ID': f'{self.register_id}', 
                         'Content-Type': 'application/json'}
-        self.scanned_value = b''
         self.scanned_value_old = b''
         self.shipment_number = b''
         self.shipment_type = None
@@ -194,43 +165,19 @@ class MainWindow(QMainWindow):
         self.not_detected = 0
         self.added_mismatch = 0
         self.mismatch = 0
-        self.db_order_checking_interval = 1 # Secends
-        self.watcher_live_signal = 60 * 5
-        self.take_picture_interval = 60 * 5
-        self.order_db_remove_interval = 30  # Convert hours to secends
+        self.db_order_checking_interval = 1 
+        self.order_db_remove_interval = 30 
         self.db_checking_flag = True
         self.updaing_table_from_url_flag = False
+        self.stop_thread = False
+        self.update_table_flag = False
+        self.start_counting_flag = False
+        self.barcode_flag = False
         self.is_done = 0
     
-    # def update_frame(self):
-    #     ret, frame = self.cap.read()
-    #     if ret:
-    #         # Convert frame to RGB
-    #         rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    #         # Get the dimensions of the frame
-    #         h, w, ch = rgb_image.shape
-    #         # # Create QImage from the RGB frame
-    #         qimg = QImage(rgb_image.data, w, h, ch * w, QImage.Format_RGB888)
-    #         # # Set the QImage on the QLabel
-    #         self.image_label.setPixmap(QPixmap.fromImage(qimg))
-        
-    # def closeEvent(self, event):
-    #     print(1)
-    #     if self.live_stream_flag:
-    #         self.cap.release()  # Release the video capture on close
-    #         event.accept()
-    #     else:
-    #         pass
-    
     def counting(self):
-
-        # # Restart the timer
-        # self.timer = threading.Timer(1.0, self.update_table_flag)
-        # self.timer.start()
-        
         self.last_server_signal = time.time()
-        self.last_image = time.time()
-        self.old_barcode = ''
+        
         a ,b ,c, d ,dps = self.arduino.read_GPIO()
         a_initial = a
         b_initial = b
@@ -309,7 +256,6 @@ class MainWindow(QMainWindow):
                         
                         shipment_quantity_value = json.loads(shipment_db_[6])
                         for order_id, item in shipment_quantity_value.items(): 
-                            print("order_id, item ", order_id, item )
                             self.eject_box[order_id] = item[3]
                         
                         self.total_quantities = {item["id"]: item["quantity"] for item in json_data2}
@@ -462,14 +408,14 @@ class MainWindow(QMainWindow):
                                     data = self.redis.rpop('dms')
                                     print(data, "data")
                                 
-                                # scanned_box_barcode_byte_string = self.scanner.read_barcode()
-                                scanned_box_barcode_byte_string = self.scanned_value_old
-                                if self.usb_serial_flag:    
-                                    self.scanned_box_barcode = scanned_box_barcode_byte_string.decode().strip()
-                                    self.scanned_box_barcode = str(self.scanned_box_barcode)
-                                else:
-                                    self.scanned_box_barcode = scanned_box_barcode_byte_string
-
+                                scanned_box_barcode_byte_string = self.scanner.read_barcode()
+                                # scanned_box_barcode_byte_string = self.scanned_value_old
+                                # if self.usb_serial_flag:    
+                                #     self.scanned_box_barcode = scanned_box_barcode_byte_string.decode().strip()
+                                #     self.scanned_box_barcode = str(self.scanned_box_barcode)
+                                # else:
+                                #     self.scanned_box_barcode = scanned_box_barcode_byte_string
+                                # print(self.scanned_box_barcode, "self.scanned_box_barcode")
                                 box_in_order_batch = False
                                 if self.scanned_box_barcode != '':
                                     
@@ -595,9 +541,9 @@ class MainWindow(QMainWindow):
 
     def scanner_read(self):
         while True:
-            self.scanned_value = self.scanner.read_barcode()
-            if self.scanned_value != b'':
-                self.scanned_value_old = self.scanned_value
+            baecode_scanned_value = self.scanner.read_barcode()
+            if baecode_scanned_value != b'':
+                self.scanned_value_old = baecode_scanned_value
                 self.barcode_flag = True
                 print("\n Scanned value is: ", self.scanned_value_old)
 
@@ -618,6 +564,7 @@ class MainWindow(QMainWindow):
                     main_json = main_dict.json()  
                     # Checking how much page should be checks?
                     shipments_number = main_json['count']
+                    
                     if old_shipments_number != shipments_number:
                         old_shipments_number = shipments_number
                         if shipments_number % 10 == 0 :
@@ -630,16 +577,18 @@ class MainWindow(QMainWindow):
                             page = index + 1
                             print(page, "pagination")
                             page_shipment_url = f'https://app.monitait.com/api/factory/shipment-orders/?status=not_started&page={page}'
-                            page_in_progress_url = f'https://app.monitait.com/api/factory/shipment-orders/?status=in_progress&page={page}'
+                            # page_in_progress_url = f'https://app.monitait.com/api/factory/shipment-orders/?status=in_progress&page={page}'
                             main_dict = requests.get(page_shipment_url, headers=self.headers) 
-                            main_dict_in_progress = requests.get(page_in_progress_url, headers=self.headers)
+                            # main_dict_in_progress = requests.get(page_in_progress_url, headers=self.headers)
                             # Added all batches to a list
                             main_json = main_dict.json()  
-                            main_json_in_progress = main_dict_in_progress.json()
                             results = main_json['results']
-                            results_in_progress = main_json_in_progress['results']
-                            results.extend(results_in_progress)
-                            
+                            # if main_dict_in_progress.status_code == 200:
+                            #     main_json_in_progress = main_dict_in_progress.json()
+                            #     results_in_progress = main_json_in_progress['results']
+                            #     results.extend(results_in_progress)
+                            # else:
+                            #     pass
                             order_updating_flag = False
                             
                             # Added the order batches to the order DB
@@ -693,7 +642,6 @@ class MainWindow(QMainWindow):
                                             extra_info_mismatch = 0
                                             extra_info_not_detected = 0
                                         
-                                        extra_info_is_done = 0
                                         
                                         for ord in entry['orders']:
                                             order_id = ord['id'] 

@@ -1,9 +1,21 @@
 import sqlite3
+from utils.base_s import *
 
 dbconnect = sqlite3.connect("/home/pi/monitait_watcher_jet/monitait.db", check_same_thread=False)
-cursor = dbconnect.cursor()
 
+cursor2 = self.dbconnect.cursor()
+if status == "total": 
+      cursor2.execute('SELECT * FROM shipment_table')
+      rows = cursor2.fetchall()
+      if len(rows) == 0:
+            cursor2.close()
+            return []
+      else:
+            cursor2.close()
+            return rows[0]
 
+      cursor2.close()
 
-cursor.execute("""DELETE from watcher_order_table""")
+print(rows, "Rows")
+
 dbconnect.commit() # mv monitait.db monitait.db.old
