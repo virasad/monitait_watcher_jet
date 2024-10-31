@@ -818,7 +818,6 @@ class DbChecking:
                         
                         # Added the order batches to the order DB
                         for entry in page_api_results:
-                            print("entry['shipment_number']", entry['shipment_number'])
                             # Added shipment number to the shipment list
                             if entry['shipment_number'] in shipments_list:
                                 pass
