@@ -649,7 +649,7 @@ class Scanner:
                 if self.device.info.vendor == vp[0] and self.device.info.product == vp[1]:
                     return self.device
                 else:
-                    return evdev.InputDevice(scanner_default_path)
+                    return evdev.InputDevice(self.scanner_default_path)
         return None
 
     def barcode_reader_evdev(self):
