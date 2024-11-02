@@ -115,10 +115,8 @@ class DB:
             if self.cursor.fetchone() is None:
                 self.cursor.execute('''insert into watcher_order_table (shipment_number, destination, shipment_type, orders, unchanged_orders, is_done) values (?,?,?,?,?,?)''', (shipment_number, destination, shipment_type, orders, unchanged_orders, is_done))
                 self.dbconnect.commit()
-                self.cursor.close()
                 return True
             else:
-                self.cursor.close()
                 return False
         # except Exception as  e_ow:
         #     print(f"DB > order write {e_ow}")
@@ -201,7 +199,6 @@ class DB:
             elif status == "total":
                 self.cursor.execute("""DELETE from watcher_order_table""")
             self.dbconnect.commit()
-            self.cursor.close()
             return True
         # except Exception as e_od:
         #     print(f"DB > delete order {e_od}")
@@ -211,7 +208,6 @@ class DB:
         if True:
             self.cursor.execute("""DELETE from shipments_table where shipment_number = {}""".format(shipment_number))
             self.dbconnect.commit()
-            self.cursor.close()
             return True
         # except Exception as e_od:
         #     print(f"DB > shipment delete {e_od}")

@@ -13,6 +13,11 @@ from PyQt5.QtGui import QColor, QFont, QPixmap, QImage
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5 import QtGui
 from datetime import datetime, timezone
+import os
+from threading import Lock
+
+#Define the lock globally to avoid the "recursive use of cursors not allowed" error
+lock= Lock()
 
 register_id = str(socket.gethostname())
 
@@ -269,8 +274,10 @@ class MainWindow(QMainWindow):
                         print("****Exit barcode scanned.****", self.scanned_box_barcode, self.shipment_number)
                     
                     # Getting the scanned order list from order DB
+                    
                     self.order_db = self.db.order_read(self.shipment_number)
                     shipment_db_ = self.db.shipment_read(self.shipment_number)
+                    
                     if self.order_db != []:
                         print("Shipment detected: ", self.shipment_number)
                         # Set zero the quantity counter value when a new shipment scanned
@@ -317,7 +324,9 @@ class MainWindow(QMainWindow):
                         self.previous_quantities = {item["id"]: 0 for item in json_data1}
                         
                         # Read wrong and not detected values from db
+                         
                         read_shipment_db = self.db.shipment_read(self.shipment_number) 
+                        
                         if read_shipment_db != []:
                             self.completed = read_shipment_db[2]
                             self.counted = read_shipment_db[3]
@@ -483,8 +492,9 @@ class MainWindow(QMainWindow):
                                             pass
                                         # Update the order list
                                         self.is_done = 1
+                                        
                                         self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders),is_done = self.is_done)
-
+                                        
                                     if self.scanned_box_barcode in self.shipment_numbers_list:
                                         # The exit barcode scanned
                                         print("The exit barcode scanned")
@@ -519,6 +529,7 @@ class MainWindow(QMainWindow):
                                                         counted_quantity = abs(total_quantity-item['quantity'])
                                                         # Update order table
                                                         self.is_done = 0
+                                                         
                                                         self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders), is_done = self.is_done)
                                                         
                                                         # Update the orders quantity specification dictionary and shipment table
@@ -526,6 +537,7 @@ class MainWindow(QMainWindow):
                                                         formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S")
                                                         self.orders_quantity_specification[item['product_number']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['product_number']], item['product_name'], item['delivery_unit'], formatted_utc_time]
                                                         self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
+                                                        
 
                                                     elif item['quantity'] == 0:
                                                         # print(f"Status:{self.scanned_box_barcode} is finished.")
@@ -542,6 +554,7 @@ class MainWindow(QMainWindow):
                                                         eject_ts = time.time()
                                                         # Update local order db
                                                         self.is_done = 0 
+                                                        
                                                         self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders), is_done = self.is_done)
                                                         
                                                         # Update the orders quantity specification dictionary and the shipment table
@@ -565,6 +578,7 @@ class MainWindow(QMainWindow):
                                             # Update shipment table
                                             
                                             self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
+                                            
                                 else:
                                     # print("Status:the scanner could not catch the barcode.")
                                     self.added_not_detected += 1
@@ -573,8 +587,9 @@ class MainWindow(QMainWindow):
                                     # The detected barcode is not on the order list
                                     self.arduino.gpio32_0.off()
                                     # Update shipment table
-                                    
+                                     
                                     self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected)
+                                    
                                 
                                 # Update the old scanned value
                                 self.scanned_value_old = b''
@@ -589,8 +604,9 @@ class MainWindow(QMainWindow):
                             # The detected barcode is not on the order list
                             self.arduino.gpio32_0.off()
                             # Update shipment table
+                             
                             self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected) 
-                        
+                            
                         self.table_widget.setRowCount(0)  # Clear the table
 
     def scanner_read(self):
@@ -648,7 +664,8 @@ class MainWindow(QMainWindow):
                                     self.shipment_numbers_list.append(entry['shipment_number'])
                                 if entry["shipment_number"] != self.shipment_number:
                                     
-                                    shipment_db_read = self.db.order_read(entry["shipment_number"]) 
+                                    shipment_db_read = self.db.order_read(entry["shipment_number"])
+                                    
                                     if shipment_db_read == []:
                                         # Update the quantity by another calculation URL
                                         unchanged_entry_order = entry['orders']
@@ -727,6 +744,7 @@ class MainWindow(QMainWindow):
                                             db_orders_quantity_dict[ord['product_number']] = [total_qt, total_completed_quantity, total_remained_quantity, 0, product_name, unit, formatted_utc_time]
                                             
                                         # Upsert the shipment db
+                                        
                                         self.db.shipment_upsert(shipment_number = entry["shipment_number"], completed = extra_info_completed,
                                                                 counted = extra_info_counted, mismatch = extra_info_mismatch,
                                                                 not_detected = extra_info_not_detected, orders_quantity_specification = json.dumps(db_orders_quantity_dict))
@@ -738,6 +756,7 @@ class MainWindow(QMainWindow):
                                                             orders=json.dumps(entry['orders']),
                                                             unchanged_orders=json.dumps(unchanged_entry_order),
                                                             is_done = 0)
+                                        
                                     
                 else:
                     pass
@@ -758,7 +777,9 @@ class MainWindow(QMainWindow):
                 db_st = time.time()
                 if True:
                     # Find the completed orders from watcher local db
+                     
                     completed_orders_list = self.db.order_read(is_done=1)
+                    
                     if completed_orders_list == []:
                         pass
                     else:
@@ -786,6 +807,7 @@ class MainWindow(QMainWindow):
                                     pass
                             if status_code_number==orders_number:
                                 print(f"status code number {status_code_number}, order numbers {orders_number}")
+                                 
                                 self.db.order_delete(shipment_number=self.shipment_number, status="onetable")
                                 
                                 # Change the shopment number to prevent updating the local db
@@ -822,7 +844,9 @@ class MainWindow(QMainWindow):
                     self.added_mismatch = 0
                     
                     # Checking order list on the order DB to catch the quantity value
+                     
                     main_shipment_number_data = self.db.order_read(self.shipment_number)
+                    
                     if main_shipment_number_data and (self.shipment_number != previus_shipment_number):
                         print("updated the main dict")
                         main_shipment_orders_dict = {}
@@ -841,8 +865,9 @@ class MainWindow(QMainWindow):
                                                                     'order_id': order_id}
                                 else:
                                     pass
-                    
+                     
                     updated_shipment_number_data_ = self.db.order_read(self.shipment_number)
+                    
                     if shipment_db_checking_flag and updated_shipment_number_data_:
                         # Getting the scanned order list from order DB
                         # Getting to detect in which batch changes is happend
@@ -929,9 +954,13 @@ class MainWindow(QMainWindow):
                             self.table_widget.setItem(row_position, 5, QTableWidgetItem(item["delivery_unit"]))
                             self.table_widget.setItem(row_position, 6, QTableWidgetItem(str(eject_value)))
                     
+                    
                     read_shipment_db = self.db.shipment_read(self.shipment_number)
+                    
                     if read_shipment_db != [] and self.start_counting_flag:
+                         
                         table_order_db = self.db.order_read(self.shipment_number)
+                        
                         # self.table_widget.setRowCount(0)  # Clear the table
                         # # Reading the box entrance signal
                         # if self.live_stream_flag:
@@ -1063,6 +1092,7 @@ class MainWindow(QMainWindow):
                                 sel_orders_quantity_specification[ord['product_number']] = [total_qt, total_completed_quantity, total_remained_quantity, 0, product_name, unit, formatted_utc_time]
                             
                             # Upsert the shipment db
+                             
                             self.db.shipment_upsert(shipment_number =  self.shipment_number, completed = sel_completed,
                                                     counted = sel_counted, mismatch = sel_mismatch,
                                                     not_detected = sel_not_detected, orders_quantity_specification = json.dumps(sel_orders_quantity_specification))
