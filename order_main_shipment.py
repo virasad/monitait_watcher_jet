@@ -1,7 +1,6 @@
 from utils.base_s import *
 import glob
 import sys
-import time
 import cv2, requests
 import numpy as np
 import json
@@ -13,11 +12,14 @@ from PyQt5.QtGui import QColor, QFont, QPixmap, QImage
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5 import QtGui
 from datetime import datetime, timezone
-import os
-from threading import Lock
+import tracemalloc
+import psutil
+import time
 
-#Define the lock globally to avoid the "recursive use of cursors not allowed" error
-lock= Lock()
+# def #print_cpu_usage(label):
+#     # Print the current CPU usage
+#     print(f"{label}: {psutil.cpu_percent(interval=1)}%")
+
 
 register_id = str(socket.gethostname())
 
@@ -226,7 +228,7 @@ class MainWindow(QMainWindow):
     #         event.accept()
     #     else:
     #         pass
-    
+
     def counting(self):
 
         # # Restart the timer
@@ -279,6 +281,8 @@ class MainWindow(QMainWindow):
                     shipment_db_ = self.db.shipment_read(self.shipment_number, cursor = counting_cursor)
                     
                     if self.order_db != []:
+                        # tracemalloc.start()
+                        #print_cpu_usage("Before shipment detection")
                         print("Shipment detected: ", self.shipment_number)
                         # Set zero the quantity counter value when a new shipment scanned
                         self.added_completed = 0
@@ -412,6 +416,10 @@ class MainWindow(QMainWindow):
                         #                         not_detected = self.not_detected, orders_quantity_specification = json.dumps(self.orders_quantity_specification))
                         
                         self.start_counting_flag = True
+                        #print_cpu_usage("After shipment detection")
+                        # current, peak = tracemalloc.get_traced_memory()
+                        # print(f"Function shipment - Current memory usage: {current / 10**6:.2f}MB; Peak: {peak / 10**6:.2f}MB")
+                        # tracemalloc.stop()
                     else:
                         self.start_counting_flag = False
                         order_counting_start_flag = False
@@ -435,16 +443,20 @@ class MainWindow(QMainWindow):
                         self.barcode_flag = False
                     
                     ts = time.time()
-                    a ,b ,c, d ,dps = self.arduino.read_GPIO()
+                    time.sleep(1.2)
+                    a = a + 1
+                    # a ,b ,c, d ,dps = self.arduino.read_GPIO()
                     # If the OK signal triggered
                     if abs(a - a_initial) >= 1:
+                        #print_cpu_usage("Before start counting")
+                        # tracemalloc.start()
                         # print("\n ****Catched OK signal.****")
                         a_initial = a
                         a_initial_1 = a
                         self.added_counted += 1
                         self.counted += 1
                         
-                        
+                        print(a)
                         # Going to catch second OK signal
                         catching_signal = False
                         time_out_flag = False
@@ -565,7 +577,7 @@ class MainWindow(QMainWindow):
                                                         self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification), cursor = counting_cursor)
                                                         
                                                         # The detected barcode is not on the order list
-                                                        self.arduino.gpio32_0.off()
+                                                        # self.arduino.gpio32_0.off()
                             
                                         # If the scanned barcode is not in the batches, eject it 
                                         if not box_in_order_batch:
@@ -574,7 +586,7 @@ class MainWindow(QMainWindow):
                                             self.mismatch += 1
                                             eject_ts = time.time()
                                             # The detected barcode is not on the order list
-                                            self.arduino.gpio32_0.off()
+                                            # self.arduino.gpio32_0.off()
                                             # Update shipment table
                                             
                                             self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification), cursor = counting_cursor)
@@ -585,7 +597,7 @@ class MainWindow(QMainWindow):
                                     self.not_detected += 1
                                     eject_ts = time.time()
                                     # The detected barcode is not on the order list
-                                    self.arduino.gpio32_0.off()
+                                    # self.arduino.gpio32_0.off()
                                     # Update shipment table
                                      
                                     self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, cursor = counting_cursor)
@@ -602,21 +614,25 @@ class MainWindow(QMainWindow):
                             self.not_detected += 1
                             eject_ts = time.time()
                             # The detected barcode is not on the order list
-                            self.arduino.gpio32_0.off()
+                            # self.arduino.gpio32_0.off()
                             # Update shipment table
                              
                             self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, cursor = counting_cursor) 
                             
-                        self.table_widget.setRowCount(0)  # Clear the table
+                        # self.table_widget.setRowCount(0)  # Clear the table
+                        #print_cpu_usage("After start counting")
+                        # current, peak = tracemalloc.get_traced_memory()
+                        # print(f"\nFunction counting - Current memory usage: {current / 10**6:.2f}MB; Peak: {peak / 10**6:.2f}MB")
+                        # tracemalloc.stop()
 
     def scanner_read(self):
         while True:
+            time.sleep(0.001)
             self.scanned_value = self.scanner.read_barcode()
             if self.scanned_value != b'':
                 self.scanned_value_old = self.scanned_value
                 self.barcode_flag = True
                 print("\n Scanned value is: ", self.scanned_value_old)
-
 
     def db_orders_updating(self):
         st_1 = time.time()
@@ -624,9 +640,12 @@ class MainWindow(QMainWindow):
         order_request_time_interval = 2 # Every "order_request_time_interval" secends, the order update
         old_shipments_number = 0
         while not self.stop_thread:
+            time.sleep(0.001)
             # The watcher updates his order DB until OR is scanned
             if True:
                 if time.time() - st_1 > order_request_time_interval or self.db_checking_flag:
+                    # tracemalloc.start()
+                    #print_cpu_usage("Before order updating")
                     self.db_checking_flag = False
                     st_1 = time.time()
                     main_dict = requests.get(self.shipment_url, headers=self.headers) 
@@ -756,6 +775,10 @@ class MainWindow(QMainWindow):
                                                             orders=json.dumps(entry['orders']),
                                                             unchanged_orders=json.dumps(unchanged_entry_order),
                                                             is_done = 0, cursor = updating_cursor)
+                    #print_cpu_usage("after order updating")
+                    # current, peak = tracemalloc.get_traced_memory()
+                    # print(f"Function order update - Current memory usage: {current / 10**6:.2f}MB; Peak: {peak / 10**6:.2f}MB")
+                    # tracemalloc.stop()
                                    
                 else:
                     pass
@@ -771,9 +794,11 @@ class MainWindow(QMainWindow):
         shipment_db_checking_flag = False
         db_checker_cursor = self.db.dbconnect.cursor()
         while not self.stop_thread:
-            
+            time.sleep(0.001)
             # Removing the finished shipment after sending its all order to the Monitait db
             if time.time() - db_st > self.order_db_remove_interval:
+                # tracemalloc.start()
+                #print_cpu_usage("Before db checker")
                 db_st = time.time()
                 if True:
                     # Find the completed orders from watcher local db
@@ -814,7 +839,10 @@ class MainWindow(QMainWindow):
                                 self.shipment_number = b''
                             else:
                                 pass
-                    
+                #print_cpu_usage("after db checker")
+                # current, peak = tracemalloc.get_traced_memory()
+                # print(f"Function db checker - Current memory usage: {current / 10**6:.2f}MB; Peak: {peak / 10**6:.2f}MB")
+                # tracemalloc.stop()
                 # except Exception as ex1:
                 #     print(f"db_orders_checker > removing database {ex1}")
                 
@@ -822,7 +850,8 @@ class MainWindow(QMainWindow):
             if (time.time() - st > self.db_order_checking_interval) and (self.shipment_number != b'') and (not self.db_checking_flag):
                 st = time.time() 
                 if True:
-                    
+                    #print_cpu_usage("Before extra info")
+                    # tracemalloc.start()
                     extra_info = {"shipment_number": self.shipment_number,  "added_counted": self.added_counted,
                                   "added_not_detected":self.added_not_detected, "added_mismatch": self.added_mismatch,
                                   "completed": self.completed, "counted": self.counted, 
@@ -895,8 +924,13 @@ class MainWindow(QMainWindow):
                                         print("****Send batch status code", send_shipment_response.status_code)
                                 else:
                                     pass
+                    #print_cpu_usage("After extra info")
+                    # current, peak = tracemalloc.get_traced_memory()
+                    # print(f"Function extra info - Current memory usage: {current / 10**6:.2f}MB; Peak: {peak / 10**6:.2f}MB")
+                    # tracemalloc.stop()
                 # except Exception as ex2:
                 #     print(f"db_orders_checker > checking the database {ex2}")
+
     def update_table(self):
         previus_shipment_number = ""
         table_st = time.time()
@@ -908,6 +942,8 @@ class MainWindow(QMainWindow):
             if True:
                 # Checking order db every {table_update_interval} second
                 if (time.time() - table_st > table_update_interval) and (self.order_db != []) and self.start_counting_flag:
+                    # tracemalloc.start()
+                    #print_cpu_usage("Before tabel update")
                     table_st = time.time()
                     json_data1 = json.loads(self.order_db[4])
                     json_data2 = json.loads(self.order_db[5])
@@ -1101,7 +1137,11 @@ class MainWindow(QMainWindow):
                             
                             print(self.updaing_table_from_url_flag, "self.updaing_table_from_url_flag")
                 
-                            
+                    #print_cpu_usage("After table update")
+                    # current, peak = tracemalloc.get_traced_memory()
+                    # print(f"Function update table - Current memory usage: {current / 10**6:.2f}MB; Peak: {peak / 10**6:.2f}MB")
+                    # tracemalloc.stop()
+                time.sleep(0.001)
             # except Exception as ex:
             #     print(f"table_update > exception {ex}")
 
