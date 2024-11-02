@@ -14,7 +14,6 @@ import cv2
 from threading import Thread
 import evdev
 import redis
-from datetime import datetime, timezone
 
 register_id = str(socket.gethostname())
 
@@ -25,7 +24,7 @@ def handler(signal, frame):
 
 signal.signal(signal.SIGINT, handler)
 
-def watcher_update(register_id, quantity, defect_quantity, send_img, image_path="scene_image.jpg", product_id=0, lot_info=0, extra_info=None, timestamp=datetime.now(timezone.utc), *args, **kwargs):
+def watcher_update(register_id, quantity, defect_quantity, send_img, image_path="scene_image.jpg", product_id=0, lot_info=0, extra_info=None, timestamp=datetime.datetime.utcnow(), *args, **kwargs):
     quantity = quantity
     defect_quantity = defect_quantity
     product_id = product_id
@@ -91,21 +90,22 @@ class DB:
             self.dbconnect = sqlite3.connect("/home/pi/monitait_watcher_jet/monitait.db", check_same_thread=False)
             cursor1 = self.dbconnect.cursor()
             cursor2 = self.dbconnect.cursor()
+            cursor3 = self.dbconnect.cursor()
             cursor1.execute('''CREATE TABLE IF NOT EXISTS monitait_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, register_id TEXT, temp_a INTEGER NULL, temp_b INTEGER NULL, image_name TEXT NULL, extra_info JSON, ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)''')
-            cursor2.execute('''CREATE TABLE IF NOT EXISTS shipment_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, shipment_number TEXT NULL,
-                            destination TEXT NULL, shipment_type TEXT NULL, orders TEXT NULL, unchanged_orders TEXT NULL, is_done INTEGER NULL, 
-                            completed INTEGER NULL, counted INTEGER NULL, mismatch INTEGER NULL, not_detected INTEGER NULL, orders_quantity_specification TEXT NULL)''')
+            cursor2.execute('''CREATE TABLE IF NOT EXISTS watcher_order_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, shipment_number TEXT NULL, destination TEXT NULL, shipment_type TEXT NULL, orders TEXT NULL, unchanged_orders TEXT NULL, is_done INTEGER NULL)''')
+            cursor3.execute('''CREATE TABLE IF NOT EXISTS shipments_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, shipment_number TEXT NULL, completed INTEGER NULL, counted INTEGER NULL, mismatch INTEGER NULL, not_detected INTEGER NULL, orders_quantity_specification TEXT NULL)''')
             
             # for column in columns:
             #     print(column)
             self.dbconnect.commit()
             cursor1.close()
             cursor2.close()
+            cursor3.close()
         # except Exception as e:
         #     print(f"DB > init {e}")
         #     pass
 
-    def write(self, register_id=register_id, a=0, b=0, extra_info={}, image_name="", timestamp=datetime.now(timezone.utc)):
+    def write(self, register_id=register_id, a=0, b=0, extra_info={}, image_name="", timestamp=datetime.datetime.utcnow()):
         try:
             cursor1 = self.dbconnect.cursor()
             cursor1.execute('''insert into monitait_table (register_id, temp_a, temp_b, image_name, extra_info, ts) values (?,?,?,?,?,?)''', (register_id, a, b, image_name, json.dumps(extra_info), timestamp))
@@ -117,15 +117,12 @@ class DB:
             cursor1.close()
             return False
     
-    def shipment_write(self, shipment_number, destination, shipment_type, orders, unchanged_orders, is_done, completed, counted, mismatch, not_detected, orders_quantity_specification={}):
+    def order_write(self, shipment_number, destination, shipment_type, orders={}, unchanged_orders = {}, is_done=0):
         if True:
             cursor2 = self.dbconnect.cursor()
-            cursor2.execute('SELECT * FROM shipment_table WHERE shipment_number = ?', (shipment_number,))
+            cursor2.execute('SELECT * FROM watcher_order_table WHERE shipment_number = ?', (shipment_number,))
             if cursor2.fetchone() is None:
-                cursor2.execute('''insert into shipment_table (shipment_number, destination, shipment_type, orders, unchanged_orders, is_done, 
-                                completed, counted, mismatch, not_detected, orders_quantity_specification) values (?,?,?,?,?,?,?,?,?,?,?)''',
-                                (shipment_number, destination, shipment_type, orders, unchanged_orders, is_done, completed, counted, mismatch,
-                                not_detected, orders_quantity_specification))
+                cursor2.execute('''insert into watcher_order_table (shipment_number, destination, shipment_type, orders, unchanged_orders, is_done) values (?,?,?,?,?,?)''', (shipment_number, destination, shipment_type, orders, unchanged_orders, is_done))
                 self.dbconnect.commit()
                 cursor2.close()
                 return True
@@ -134,6 +131,22 @@ class DB:
                 return False
         # except Exception as  e_ow:
         #     print(f"DB > order write {e_ow}")
+        #     return False
+    # shipment_number TEXT NULL, completed INTEGER NULL, counted, mismatch INTEGER NULL, not_detected INTEGER NULL, orders_quantity_specification
+    def shipments_table_write(self, shipment_number, completed, counted, mismatch, not_detected, orders_quantity_specification={}):
+        if True:
+            cursor3 = self.dbconnect.cursor()
+            cursor3.execute('SELECT * FROM shipments_table WHERE shipment_number = ?', (shipment_number,))
+            if cursor3.fetchone() is None:
+                cursor3.execute('''insert into shipments_table (shipment_number, completed, counted, mismatch, not_detected, orders_quantity_specification) values (?,?,?,?,?,?)''', (shipment_number, completed, counted, mismatch, not_detected, orders_quantity_specification))
+                self.dbconnect.commit()
+                cursor3.close()
+                return True
+            else:
+                cursor3.close()
+                return False
+        # except Exception as  e_ow:
+        #     print(f"DB > shipment write {e_ow}")
         #     return False
 
     def read(self):
@@ -151,25 +164,16 @@ class DB:
             print(f"DB > read {e}")
             return []
     
-    def shipment_read(self, shipment_number=None, is_done=None, status="onetable"):
+    def order_read(self, shipment_number=None, is_done=None, status="onetable"):
         if True:
             cursor2 = self.dbconnect.cursor()
             if status == "total": 
-                cursor2.execute('SELECT * FROM shipment_table')
-                rows = cursor2.fetchall()
-                print("len", len(rows))
-                if len(rows) == 0:
-                    cursor2.close()
-                    return []
-                else:
-                    cursor2.close()
-                    return rows
-                
+                cursor2.execute('SELECT * FROM watcher_order_table')
                 cursor2.close()
             elif status == "onetable":
                 cursor2 = self.dbconnect.cursor()
                 if shipment_number is not None:
-                    cursor2.execute('SELECT * FROM shipment_table WHERE shipment_number = ?', (shipment_number,))
+                    cursor2.execute('SELECT * FROM watcher_order_table WHERE shipment_number = ?', (shipment_number,))
                     rows = cursor2.fetchall()
                     if len(rows) == 0:
                         cursor2.close()
@@ -179,7 +183,7 @@ class DB:
                         return rows[0]
                                     
                 if is_done is not None:
-                    cursor2.execute('SELECT * FROM shipment_table WHERE is_done = ?', (is_done,))
+                    cursor2.execute('SELECT * FROM watcher_order_table WHERE is_done = ?', (is_done,))
                     rows = cursor2.fetchall()
                     if len(rows) == 0:
                         cursor2.close()
@@ -191,6 +195,20 @@ class DB:
         #     print(f"DB > read order {e_or}")
         #     return []
         
+    def shipment_read(self, shipment_number):
+        if True:
+            cursor3 = self.dbconnect.cursor()
+            cursor3.execute('SELECT * FROM shipments_table WHERE shipment_number = ?', (shipment_number,))
+            rows = cursor3.fetchall()
+            if len(rows) == 0:
+                cursor3.close()
+                return []
+            else:
+                cursor3.close()
+                return rows[0]
+        # except Exception as e:
+        #     print(f"DB > shipment read {e}")
+        #     return []
     
     def delete(self, id):
         try:
@@ -203,13 +221,13 @@ class DB:
             print(f"DB > delete {e}")
             return False
     
-    def shipment_delete(self, shipment_number=None, status="onetable"):
+    def order_delete(self, shipment_number=None, status="onetable"):
         if True:
             cursor2 = self.dbconnect.cursor()
             if status == "onetable":
-                cursor2.execute("""DELETE from shipment_table where shipment_number = {}""".format(shipment_number))
+                cursor2.execute("""DELETE from watcher_order_table where shipment_number = {}""".format(shipment_number))
             elif status == "total":
-                cursor2.execute("""DELETE from shipment_table""")
+                cursor2.execute("""DELETE from watcher_order_table""")
             self.dbconnect.commit()
             cursor2.close()
             return True
@@ -217,28 +235,54 @@ class DB:
         #     print(f"DB > delete order {e_od}")
         #     return False
         
+    def shipment_delete(self, shipment_number):
+        if True:
+            cursor3 = self.dbconnect.cursor()
+            cursor3.execute("""DELETE from shipments_table where shipment_number = {}""".format(shipment_number))
+            self.dbconnect.commit()
+            cursor3.close()
+            return True
+        # except Exception as e_od:
+        #     print(f"DB > shipment delete {e_od}")
+        #     return False
     
-    def shipment_upsert(self, shipment_number, destination, shipment_type, orders, unchanged_orders, is_done, completed, counted, mismatch, not_detected, orders_quantity_specification):
+    def shipment_upsert(self, shipment_number, completed, counted, mismatch, not_detected, orders_quantity_specification):
         try:
             cursor3 = self.dbconnect.cursor()
-            cursor3.execute('''INSERT INTO shipment_table (shipment_number, destination, shipment_type, orders, unchanged_orders, is_done, completed, counted, mismatch, not_detected, 
-                            orders_quantity_specification) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET
-                            shipment_number = excluded.shipment_number, destination = excluded.destination,
-                            shipment_type = excluded.shipment_type, orders = excluded.orders, unchanged_orders = excluded.unchanged_orders,
-                            is_done = excluded.is_done, completed = excluded.completed, counted = excluded.counted,
-                            mismatch = excluded.mismatch, not_detected = excluded.not_detected, 
-                            orders_quantity_specification = excluded.orders_quantity_specification
-                            ''', (shipment_number, destination, shipment_type, orders, unchanged_orders, is_done, completed, counted, mismatch, not_detected, orders_quantity_specification))
+            cursor3.execute('''INSERT INTO shipments_table (shipment_number, completed, counted, mismatch, not_detected, orders_quantity_specification) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET
+                                shipment_number = excluded.shipment_number,
+                                completed = excluded.completed,
+                                counted = excluded.counted,
+                                mismatch = excluded.mismatch,
+                                not_detected = excluded.not_detected, 
+                                orders_quantity_specification = excluded.orders_quantity_specification
+                            ''', (shipment_number, completed, counted, mismatch, not_detected, orders_quantity_specification))
             self.dbconnect.commit()
         except Exception as e1:
             # Rollback in case of error
             print(f"An error occurred in shipment upsert: {e1}")
             cursor3.close()
     
-    def shipment_update(self, shipment_number, destination=None, shipment_type=None, orders=None, unchanged_orders=None, is_done=None, 
-                    completed=None, counted=None, mismatch=None, not_detected=None, orders_quantity_specification=None):
+    def order_upsert(self, shipment_number, destination, shipment_type, orders, unchanged_orders, is_done):
+        try:
+            cursor2 = self.dbconnect.cursor()
+            cursor2.execute('''INSERT INTO watcher_order_table (shipment_number, destination, shipment_type, orders, unchanged_orders, is_done) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET
+                                shipment_number = excluded.shipment_number,
+                                destination = excluded.destination,
+                                shipment_type = excluded.shipment_type,
+                                orders = excluded.orders,
+                                unchanged_orders = excluded.unchanged_orders,
+                                is_done = excluded.is_done
+                            ''', (shipment_number, destination, shipment_type, orders, unchanged_orders, is_done))
+            self.dbconnect.commit()
+        except Exception as e2:
+            # Rollback in case of error
+            print(f"An error occurred in order upsert: {e2}")
+            cursor2.close()
+        
+    def order_update(self, shipment_number, destination=None, shipment_type=None, orders=None, unchanged_orders=None, is_done=None):
         if True:
-            query = "UPDATE shipment_table SET "
+            query = "UPDATE watcher_order_table SET "
             params = []
             # Check which column to updated
             if unchanged_orders is not None:
@@ -256,6 +300,27 @@ class DB:
             if is_done is not None:
                 query += "is_done = ?, "
                 params.append(is_done)
+            # Remove the trailing comma and space
+            query = query.rstrip(', ')
+            
+            # Add the WHERE clause
+            query += " WHERE shipment_number = ?"
+            params.append(shipment_number)
+
+            # Execute the UPDATE statement
+            self.dbconnect.execute("BEGIN")
+            self.dbconnect.execute(query, params)
+            self.dbconnect.commit()
+            return True
+        # except Exception as e_ou:
+        #     print(f"DB > update order {e_ou}")
+        #     return False
+        
+    def shipment_update(self, shipment_number, completed=None, counted=None, mismatch=None, not_detected=None, orders_quantity_specification=None):
+        if True:
+            query = "UPDATE shipments_table SET "
+            params = []
+            # Check which column to updated
             if completed is not None:
                 query += "completed = ?, "
                 params.append(completed)
@@ -271,6 +336,7 @@ class DB:
             if orders_quantity_specification is not None:
                 query += "orders_quantity_specification = ?, "
                 params.append(orders_quantity_specification)
+
             # Remove the trailing comma and space
             query = query.rstrip(', ')
             
@@ -279,13 +345,23 @@ class DB:
             params.append(shipment_number)
 
             # Execute the UPDATE statement
+            self.dbconnect.execute("BEGIN")
             self.dbconnect.execute(query, params)
             self.dbconnect.commit()
             return True
         # except Exception as e_ou:
-        #     print(f"DB > update order {e_ou}")
+        #     print(f"DB > shipment update {e_ou}")
         #     return False
         
+    # def db_checker(self):
+    #     try:
+    #         data = self.db.read()
+    #         if len(data) != 0:
+    #             if watcher_update(register_id=data[1], quantity=data[2], defect_quantity=data[3], send_img=len(data[4]) > 0, image_path=data[4], extra_info=json.loads(data[5]), timestamp=datetime.datetime.strptime(data[6], '%Y-%m-%d %H:%M:%S.%f')):
+    #                 self.db.delete(data[0])
+    #         time.sleep(1)
+    #     except Exception as e:
+    #         print(f"DB > db_checker {e}")
         
 
 class Ardiuno:
@@ -556,7 +632,7 @@ class Camera:
 
         if self.success:
             im = self.read()
-            date = datetime.now(timezone.utc)
+            date = datetime.datetime.utcnow()
             saving_date = f"{date.year}-{date.month}-{date.day}-{date.hour}-{date.minute}-{date.second}-{date.microsecond}"
             os.makedirs("images", exist_ok=True)
             image_name = f"images/{saving_date}.jpg"
@@ -679,7 +755,8 @@ class Scanner:
                 self.upcnumber = self.barcode_reader_evdev()
                 if self.upcnumber:  # If a barcode is read, return it
                     return self.upcnumber
-            except KeyboardInterrupt:
+            except KeyboardInterrupt:;
+            
                 print('Keyboard interrupt')
                 return None
             except Exception as err:
@@ -772,164 +849,3 @@ class RedisConnection:
                 return []
         
         # self.redis_connection.set('dms', dms)
-
-
-class DbChecking:
-    def __init__(self, register_id, db):
-        self.register_id = register_id
-        self.headers = {'Register-ID': f'{self.register_id}', 
-                        'Content-Type': 'application/json'}
-        self.db = db
-        
-        
-    def db_checking(self, init_shipments_number, db_api, shipments_list, scanned_shipment_number, stationID):
-        db_api_response = requests.get(db_api, headers=self.headers) 
-        if db_api_response.status_code == 200:
-            # Added all batches to a list
-            count_json = db_api_response.json()  
-            # Checking how much page should be checks?
-            shipments_number = count_json['count']
-        else:
-            shipments_number = 0
-            print("DbChecking > could not connected to dp_api")
-                
-        if init_shipments_number != shipments_number and shipments_number != 0:
-            
-            # Finiding pagination number using shipment number
-            if shipments_number > 10:
-                if shipments_number % 10 == 0 :
-                    pagination_number = shipments_number // 10
-                else:
-                    pagination_number = shipments_number // 10 + 1
-            else:
-                pagination_number = 1   
-            
-            if init_shipments_number < shipments_number:
-                # Some shipments are added, so the new shipment should be added to the db 
-                for index in range(pagination_number):
-                    # Construct pagination url
-                    page = index + 1
-                    print(page, "pagination")
-                    page_shipment_url = f'{db_api}&page={page}'
-                    page_api_response = requests.get(page_shipment_url, headers=self.headers) 
-                    
-                    if page_api_response.status_code == 200:
-                        # Added all shipment to a list
-                        page_api_response_json = page_api_response.json()  
-                        page_api_results = page_api_response_json['results']
-                        
-                        order_updating_flag = False
-                        
-                        # Added the order batches to the order DB
-                        for entry in page_api_results:
-                            # Added shipment number to the shipment list
-                            if entry['shipment_number'] in shipments_list:
-                                pass
-                            else:
-                                shipments_list.append(entry['shipment_number'])
-
-                            if entry["shipment_number"] != scanned_shipment_number:
-                                # Checking is the shipment on the local db or not
-                                shipment_db_read = self.db.shipment_read(entry["shipment_number"]) 
-                                if shipment_db_read == []:
-                                    # Upsert the order db 
-                                    unchanged_entry_order = entry['orders']
-                                    
-                                    # Upsert the shipment db 
-                                    db_orders_quantity_dict = {}
-                                    # Get additional value from extra infor url
-                                    extra_info_urls = f"https://app.monitait.com/api/elastic-search/watcher/?extra_info.shipment_number={entry['shipment_number']}"
-                                    extra_info_value = requests.get(extra_info_urls, headers=self.headers)
-                                    if extra_info_value.status_code == 200:
-                                        extra_info_json = extra_info_value.json()
-                                        if extra_info_json["result"]:
-                                            extra_info_dict = extra_info_json["result"][-1]['_source']['watcher']['extra_info']
-                                            if 'completed' in extra_info_dict.keys():
-                                                extra_info_completed = extra_info_dict['completed']
-                                            else:
-                                                extra_info_completed = 0
-                                            
-                                            if 'counted' in extra_info_dict.keys():
-                                                extra_info_counted = extra_info_dict['counted']
-                                            else:
-                                                extra_info_counted = 0
-                                                
-                                            if 'mismatch' in extra_info_dict.keys():
-                                                extra_info_mismatch = extra_info_dict['mismatch']
-                                            else:
-                                                extra_info_mismatch = 0
-                                            
-                                            if 'not_detected' in extra_info_dict.keys():
-                                                extra_info_not_detected = extra_info_dict['not_detected']
-                                            else:
-                                                extra_info_not_detected = 0
-                                        else:
-                                            extra_info_completed = 0
-                                            extra_info_counted = 0
-                                            extra_info_mismatch = 0
-                                            extra_info_not_detected = 0
-                                    else:
-                                        extra_info_completed = 0
-                                        extra_info_counted = 0
-                                        extra_info_mismatch = 0
-                                        extra_info_not_detected = 0
-                                    
-                                    
-                                    for ord in entry['orders']:
-                                        order_id = ord['id'] 
-                                        calculation_url = f"https://app.monitait.com/api/elastic-search/batch-report-calculations/?station_id={stationID}&order_id={order_id}"
-                                        order_remaind_value = requests.get(calculation_url, headers=self.headers)
-                                        if order_remaind_value.status_code == 200:
-                                            order_updating_flag = True
-                                            order_remaind_value = order_remaind_value.json() 
-                                            
-                                            station_reports = order_remaind_value[0]['station_reports'][0]
-                                            batch_quantity = int(station_reports['batch_quantity'])
-                                            
-                                            station_results = station_reports['result'][0] 
-                                            total_completed_quantity = station_results['total_completed_quantity']
-                                            total_remained_quantity = station_results['total_remained_quantity']
-                                            # Update the order
-                                            ord['batches'][0]['quantity'] = batch_quantity - total_completed_quantity
-                                            ord['quantity'] = batch_quantity - total_completed_quantity
-                                            for item2 in unchanged_entry_order:
-                                                if item2['id'] == order_id:
-                                                    total_qt = item2['quantity']
-                                        else:
-                                            # Updating remain column value from the unchanged order dictionary
-                                            for item2 in unchanged_entry_order:
-                                                if item2['id'] == order_id:
-                                                    total_completed_quantity = 0
-                                                    total_remained_quantity = item2['quantity']
-                                                    total_qt = item2['quantity']
-                                        utc_time = datetime.now(timezone.utc)
-                                        
-                                        formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-                                        product_name = ord['product_name'] 
-                                        unit = ord['delivery_unit']
-                                        # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy, name, unit
-                                        db_orders_quantity_dict[ord['product_number']] = [total_qt, total_completed_quantity, total_remained_quantity, 0, product_name, unit, formatted_utc_time]
-                                    
-                                    self.db.shipment_upsert(shipment_number=entry["shipment_number"], 
-                                                        destination=entry["destination"], 
-                                                        shipment_type=entry["type"],
-                                                        orders=json.dumps(entry['orders']),
-                                                        unchanged_orders=json.dumps(unchanged_entry_order),
-                                                        is_done = 0, completed = extra_info_completed,
-                                                        counted = extra_info_counted, mismatch = extra_info_mismatch,
-                                                        not_detected = extra_info_not_detected, orders_quantity_specification = json.dumps(db_orders_quantity_dict))    
-                            else:
-                                # Shipment is equal to the scanned shipment
-                                pass
-                    else:
-                        print("DbChecking > could not connected to page_dp_api")
-            else:
-                # Some shipments are removed, so the removed shipment should be added to the db
-                print("Some shipments have been removed")
-                # Reading all shipments and finding which one has been removed
-                read_shipment_db = self.db.shipment_read(self.shipment_number)
-                
-            
-                
-            
-        return shipments_number, shipments_list
