@@ -232,7 +232,7 @@ class MainWindow(QMainWindow):
         # # Restart the timer
         # self.timer = threading.Timer(1.0, self.update_table_flag)
         # self.timer.start()
-        
+        counting_cursor = self.db.dbconnect.cursor()
         self.last_server_signal = time.time()
         self.last_image = time.time()
         self.old_barcode = ''
@@ -275,8 +275,8 @@ class MainWindow(QMainWindow):
                     
                     # Getting the scanned order list from order DB
                     
-                    self.order_db = self.db.order_read(self.shipment_number)
-                    shipment_db_ = self.db.shipment_read(self.shipment_number)
+                    self.order_db = self.db.order_read(self.shipment_number, cursor = counting_cursor)
+                    shipment_db_ = self.db.shipment_read(self.shipment_number, cursor = counting_cursor)
                     
                     if self.order_db != []:
                         print("Shipment detected: ", self.shipment_number)
@@ -325,7 +325,7 @@ class MainWindow(QMainWindow):
                         
                         # Read wrong and not detected values from db
                          
-                        read_shipment_db = self.db.shipment_read(self.shipment_number) 
+                        read_shipment_db = self.db.shipment_read(self.shipment_number, cursor = counting_cursor) 
                         
                         if read_shipment_db != []:
                             self.completed = read_shipment_db[2]
@@ -493,7 +493,7 @@ class MainWindow(QMainWindow):
                                         # Update the order list
                                         self.is_done = 1
                                         
-                                        self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders),is_done = self.is_done)
+                                        self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders),is_done = self.is_done, cursor = counting_cursor)
                                         
                                     if self.scanned_box_barcode in self.shipment_numbers_list:
                                         # The exit barcode scanned
@@ -530,13 +530,13 @@ class MainWindow(QMainWindow):
                                                         # Update order table
                                                         self.is_done = 0
                                                          
-                                                        self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders), is_done = self.is_done)
+                                                        self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders), is_done = self.is_done, cursor = counting_cursor)
                                                         
                                                         # Update the orders quantity specification dictionary and shipment table
                                                         utc_time = datetime.now(timezone.utc)
                                                         formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S")
                                                         self.orders_quantity_specification[item['product_number']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['product_number']], item['product_name'], item['delivery_unit'], formatted_utc_time]
-                                                        self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
+                                                        self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification), cursor = counting_cursor)
                                                         
 
                                                     elif item['quantity'] == 0:
@@ -555,14 +555,14 @@ class MainWindow(QMainWindow):
                                                         # Update local order db
                                                         self.is_done = 0 
                                                         
-                                                        self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders), is_done = self.is_done)
+                                                        self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders), is_done = self.is_done, cursor = counting_cursor)
                                                         
                                                         # Update the orders quantity specification dictionary and the shipment table
                                                         utc_time = datetime.now(timezone.utc)
                                                         formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S")
                                                         
                                                         self.orders_quantity_specification[item['product_number']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['product_number']], item['product_name'], item['delivery_unit'], formatted_utc_time]
-                                                        self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
+                                                        self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification), cursor = counting_cursor)
                                                         
                                                         # The detected barcode is not on the order list
                                                         self.arduino.gpio32_0.off()
@@ -577,7 +577,7 @@ class MainWindow(QMainWindow):
                                             self.arduino.gpio32_0.off()
                                             # Update shipment table
                                             
-                                            self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification))
+                                            self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification), cursor = counting_cursor)
                                             
                                 else:
                                     # print("Status:the scanner could not catch the barcode.")
@@ -588,7 +588,7 @@ class MainWindow(QMainWindow):
                                     self.arduino.gpio32_0.off()
                                     # Update shipment table
                                      
-                                    self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected)
+                                    self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, cursor = counting_cursor)
                                     
                                 
                                 # Update the old scanned value
@@ -605,7 +605,7 @@ class MainWindow(QMainWindow):
                             self.arduino.gpio32_0.off()
                             # Update shipment table
                              
-                            self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected) 
+                            self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, cursor = counting_cursor) 
                             
                         self.table_widget.setRowCount(0)  # Clear the table
 
@@ -620,7 +620,7 @@ class MainWindow(QMainWindow):
 
     def db_orders_updating(self):
         st_1 = time.time()
-        
+        updating_cursor = self.db.dbconnect.cursor()
         order_request_time_interval = 2 # Every "order_request_time_interval" secends, the order update
         old_shipments_number = 0
         while not self.stop_thread:
@@ -747,7 +747,7 @@ class MainWindow(QMainWindow):
                                         
                                         self.db.shipment_upsert(shipment_number = entry["shipment_number"], completed = extra_info_completed,
                                                                 counted = extra_info_counted, mismatch = extra_info_mismatch,
-                                                                not_detected = extra_info_not_detected, orders_quantity_specification = json.dumps(db_orders_quantity_dict))
+                                                                not_detected = extra_info_not_detected, orders_quantity_specification = json.dumps(db_orders_quantity_dict), cursor = updating_cursor)
                                         
                                         # Upsert the order db
                                         self.db.order_write(shipment_number=entry["shipment_number"], 
@@ -755,9 +755,8 @@ class MainWindow(QMainWindow):
                                                             shipment_type=entry["type"],
                                                             orders=json.dumps(entry['orders']),
                                                             unchanged_orders=json.dumps(unchanged_entry_order),
-                                                            is_done = 0)
-                                        
-                                    
+                                                            is_done = 0, cursor = updating_cursor)
+                                   
                 else:
                     pass
             # except Exception as ex1:
@@ -770,6 +769,7 @@ class MainWindow(QMainWindow):
         st = time.time() 
         db_st = time.time()
         shipment_db_checking_flag = False
+        db_checker_cursor = self.db.dbconnect.cursor()
         while not self.stop_thread:
             
             # Removing the finished shipment after sending its all order to the Monitait db
@@ -778,7 +778,7 @@ class MainWindow(QMainWindow):
                 if True:
                     # Find the completed orders from watcher local db
                      
-                    completed_orders_list = self.db.order_read(is_done=1)
+                    completed_orders_list = self.db.order_read(is_done=1, cursor = db_checker_cursor)
                     
                     if completed_orders_list == []:
                         pass
@@ -808,7 +808,7 @@ class MainWindow(QMainWindow):
                             if status_code_number==orders_number:
                                 print(f"status code number {status_code_number}, order numbers {orders_number}")
                                  
-                                self.db.order_delete(shipment_number=self.shipment_number, status="onetable")
+                                self.db.order_delete(shipment_number=self.shipment_number, status="onetable", cursor = db_checker_cursor)
                                 
                                 # Change the shopment number to prevent updating the local db
                                 self.shipment_number = b''
@@ -845,7 +845,7 @@ class MainWindow(QMainWindow):
                     
                     # Checking order list on the order DB to catch the quantity value
                      
-                    main_shipment_number_data = self.db.order_read(self.shipment_number)
+                    main_shipment_number_data = self.db.order_read(self.shipment_number, cursor = db_checker_cursor)
                     
                     if main_shipment_number_data and (self.shipment_number != previus_shipment_number):
                         print("updated the main dict")
@@ -866,7 +866,7 @@ class MainWindow(QMainWindow):
                                 else:
                                     pass
                      
-                    updated_shipment_number_data_ = self.db.order_read(self.shipment_number)
+                    updated_shipment_number_data_ = self.db.order_read(self.shipment_number, cursor = db_checker_cursor)
                     
                     if shipment_db_checking_flag and updated_shipment_number_data_:
                         # Getting the scanned order list from order DB
@@ -903,6 +903,7 @@ class MainWindow(QMainWindow):
         table_update_interval = 1
         table_updating_flag = True
         self.updaing_table_from_url_flag = True
+        table_update_cursor = self.db.dbconnect.cursor()
         while not self.stop_thread:
             if True:
                 # Checking order db every {table_update_interval} second
@@ -955,11 +956,11 @@ class MainWindow(QMainWindow):
                             self.table_widget.setItem(row_position, 6, QTableWidgetItem(str(eject_value)))
                     
                     
-                    read_shipment_db = self.db.shipment_read(self.shipment_number)
+                    read_shipment_db = self.db.shipment_read(self.shipment_number, cursor = table_update_cursor)
                     
                     if read_shipment_db != [] and self.start_counting_flag:
                          
-                        table_order_db = self.db.order_read(self.shipment_number)
+                        table_order_db = self.db.order_read(self.shipment_number, cursor = table_update_cursor)
                         
                         # self.table_widget.setRowCount(0)  # Clear the table
                         # # Reading the box entrance signal
@@ -1095,7 +1096,8 @@ class MainWindow(QMainWindow):
                              
                             self.db.shipment_upsert(shipment_number =  self.shipment_number, completed = sel_completed,
                                                     counted = sel_counted, mismatch = sel_mismatch,
-                                                    not_detected = sel_not_detected, orders_quantity_specification = json.dumps(sel_orders_quantity_specification))
+                                                    not_detected = sel_not_detected, orders_quantity_specification = json.dumps(sel_orders_quantity_specification),
+                                                    cursor = table_update_cursor)
                             
                             print(self.updaing_table_from_url_flag, "self.updaing_table_from_url_flag")
                 
