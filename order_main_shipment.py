@@ -664,7 +664,7 @@ class MainWindow(QMainWindow):
                                     self.shipment_numbers_list.append(entry['shipment_number'])
                                 if entry["shipment_number"] != self.shipment_number:
                                     
-                                    shipment_db_read = self.db.order_read(entry["shipment_number"])
+                                    shipment_db_read = self.db.order_read(entry["shipment_number"], cursor = updating_cursor)
                                     
                                     if shipment_db_read == []:
                                         # Update the quantity by another calculation URL
