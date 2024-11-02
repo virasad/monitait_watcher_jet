@@ -755,7 +755,7 @@ class Scanner:
                 self.upcnumber = self.barcode_reader_evdev()
                 if self.upcnumber:  # If a barcode is read, return it
                     return self.upcnumber
-            except KeyboardInterrupt:;
+            except KeyboardInterrupt:
             
                 print('Keyboard interrupt')
                 return None
