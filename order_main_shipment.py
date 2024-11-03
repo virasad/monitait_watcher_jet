@@ -183,6 +183,7 @@ class MainWindow(QMainWindow):
         self.usb_serial_flag = usb_serial_flag
         self.headers = {'Register-ID': f'{self.register_id}', 
                         'Content-Type': 'application/json'}
+        self.dbUpdating = dbUpdating(self.headers, self.db)
         self.scanned_value = b''
         self.scanned_value_old = b''
         self.shipment_number = b''
@@ -241,6 +242,7 @@ class MainWindow(QMainWindow):
         a ,b ,c, d ,dps = self.arduino.read_GPIO()
         a_initial = a
         b_initial = b
+        a1 = a
         
         # Getting the stationID from API 
         try:
@@ -258,6 +260,7 @@ class MainWindow(QMainWindow):
             exit_flag = False
             # Getting order from batch API
             while not order_counting_start_flag:
+                time.sleep(0.001)
                 ##
                 # Reading the scanner to detect OR and start the counting process
                 if True:
@@ -342,78 +345,6 @@ class MainWindow(QMainWindow):
                             self.not_detected = 0
                             self.orders_quantity_specification = {}
                         
-                        # # Update the quantity by another calculation URL
-                        # extra_info_urls = f"https://app.monitait.com/api/elastic-search/watcher/?extra_info.shipment_number={self.shipment_number}"
-                        # extra_info_value = requests.get(extra_info_urls, headers=self.headers)
-                        # if extra_info_value.status_code == 200:
-                        #     extra_info_json = extra_info_value.json()
-                        #     if extra_info_json["result"]:
-                        #         print(extra_info_json["result"][-1]['_source']['watcher']['extra_info'], "200 rseponse")
-                        #         extra_info_dict = extra_info_json["result"][-1]['_source']['watcher']['extra_info']
-                        #         if 'completed' in extra_info_dict.keys():
-                        #             self.completed = extra_info_dict['completed']
-                        #         else:
-                        #             self.completed = 0
-                                
-                        #         if 'counted' in extra_info_dict.keys():
-                        #             self.counted = extra_info_dict['counted']
-                        #         else:
-                        #             self.counted = 0
-                                    
-                        #         if 'mismatch' in extra_info_dict.keys():
-                        #             self.mismatch = extra_info_dict['mismatch']
-                        #         else:
-                        #             self.mismatch = 0
-                                
-                        #         if 'not_detected' in extra_info_dict.keys():
-                        #             self.not_detected = extra_info_dict['not_detected']
-                        #         else:
-                        #             self.not_detected = 0
-                        #     else:
-                        #         pass
-                        # else:
-                        #     pass
-                        
-                        # for ord in json_data1:
-                        #     order_id = ord['id'] 
-                        #     calculation_url = f"https://app.monitait.com/api/elastic-search/batch-report-calculations/?station_id={self.stationID}&order_id={order_id}"
-                        #     order_remaind_value = requests.get(calculation_url, headers=self.headers)
-                        #     if order_remaind_value.status_code == 200:
-                        #         order_remaind_value = order_remaind_value.json() 
-                        #         station_reports = order_remaind_value[0]['station_reports'][0]
-                        #         batch_quantity = int(station_reports['batch_quantity'])
-                        #         station_results = station_reports['result'][0] 
-                        #         total_completed_quantity = station_results['total_completed_quantity']
-                        #         total_remained_quantity = station_results['total_remained_quantity']
-                        #         # Update the order
-                        #         ord['batches'][0]['quantity'] = batch_quantity - total_completed_quantity
-                        #         ord['quantity'] = batch_quantity - total_completed_quantity
-                                
-                        #         self.previous_quantities[order_id] = total_remained_quantity
-                        #         # Updating remain column value from the unchanged order dictionary
-                        #         for item2 in json_data2:
-                        #             if item2['id'] == order_id:
-                        #                 total_qt = item2['quantity']
-                        #     else:
-                        #         # Updating remain column value from the unchanged order dictionary
-                        #         for item2 in json_data2:
-                        #             if item2['id'] == order_id:
-                        #                 total_completed_quantity = 0
-                        #                 total_remained_quantity = item2['quantity']
-                        #                 total_qt = item2['quantity']
-                        #                 self.previous_quantities[order_id] = 0
-
-                        #     utc_time = datetime.now(timezone.utc)
-                        #     formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-                        #     product_name = ord['product_name'] 
-                        #     unit = ord['delivery_unit']
-                        #     # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy, name, unit
-                        #     self.orders_quantity_specification[ord['product_number']] = [total_qt, total_completed_quantity, total_remained_quantity, 0, product_name, unit, formatted_utc_time]
-                        
-                        # # Upsert the shipment db
-                        # self.db.shipment_upsert(shipment_number =  self.shipment_number, completed = self.completed,
-                        #                         counted = self.counted, mismatch = self.mismatch,
-                        #                         not_detected = self.not_detected, orders_quantity_specification = json.dumps(self.orders_quantity_specification))
                         
                         self.start_counting_flag = True
                         #print_cpu_usage("After shipment detection")
@@ -430,6 +361,7 @@ class MainWindow(QMainWindow):
             # Start counting process
             eject_ts = time.time()
             while order_counting_start_flag:
+                time.sleep(0.001)
                 if True:
                     if time.time() - eject_ts < 1:
                         self.arduino.gpio32_0.on()  # Turned off the ejector
@@ -443,7 +375,7 @@ class MainWindow(QMainWindow):
                         self.barcode_flag = False
                     
                     ts = time.time()
-                    time.sleep(1.2)
+                    time.sleep(0.3)
                     a = a + 1
                     # a ,b ,c, d ,dps = self.arduino.read_GPIO()
                     # If the OK signal triggered
@@ -464,7 +396,10 @@ class MainWindow(QMainWindow):
                         # Waiting to read the box barcode 
                         s_time = time.time()
                         while not catching_signal:
-                            a1 ,b1 ,c1, d1 ,dps1 = self.arduino.read_GPIO()
+                            time.sleep(0.001)
+                            time.sleep(0.3)
+                            a1 = a1 + 1
+                            # a1 ,b1 ,c1, d1 ,dps1 = self.arduino.read_GPIO()
                             
                             if abs(a1 - a_initial_1) >= 1 or catching_signal or (time.time() - s_time > 5):
                                 # print("Catched the second OK signal or barcode read, or time-out")
@@ -634,11 +569,16 @@ class MainWindow(QMainWindow):
                 self.barcode_flag = True
                 print("\n Scanned value is: ", self.scanned_value_old)
 
-    def db_orders_updating(self):
+    def db_checker(self):
         st_1 = time.time()
-        updating_cursor = self.db.dbconnect.cursor()
+        db_checker_cursor = self.db.dbconnect.cursor()
         order_request_time_interval = 2 # Every "order_request_time_interval" secends, the order update
         old_shipments_number = 0
+        previus_shipment_number = ""
+        extra_info = {}
+        st = time.time() 
+        db_st = time.time()
+        shipment_db_checking_flag = False
         while not self.stop_thread:
             time.sleep(0.001)
             # The watcher updates his order DB until OR is scanned
@@ -648,6 +588,15 @@ class MainWindow(QMainWindow):
                     #print_cpu_usage("Before order updating")
                     self.db_checking_flag = False
                     st_1 = time.time()
+                    
+                    # Add the not start shipment to the db
+                    old_shipments_number, self.shipment_numbers_list = 
+                                                    self.dbUpdating.db_not_finished(not_finished_api = "https://app.monitait.com/api/factory/shipment-orders/?status=not_started",
+                                                    old_shipments_number = old_shipments_number, shipment_number = self.shipment_number,
+                                                    shipment_numbers_list = self.shipment_numbers_list,
+                                                    station_id = self.stationID, cursor = db_checker_cursor)
+                    
+                    
                     main_dict = requests.get(self.shipment_url, headers=self.headers) 
                     # Added all batches to a list
                     main_json = main_dict.json()  
@@ -683,7 +632,7 @@ class MainWindow(QMainWindow):
                                     self.shipment_numbers_list.append(entry['shipment_number'])
                                 if entry["shipment_number"] != self.shipment_number:
                                     
-                                    shipment_db_read = self.db.order_read(entry["shipment_number"], cursor = updating_cursor)
+                                    shipment_db_read = self.db.order_read(entry["shipment_number"], cursor = db_checker_cursor)
                                     
                                     if shipment_db_read == []:
                                         # Update the quantity by another calculation URL
@@ -766,7 +715,7 @@ class MainWindow(QMainWindow):
                                         
                                         self.db.shipment_upsert(shipment_number = entry["shipment_number"], completed = extra_info_completed,
                                                                 counted = extra_info_counted, mismatch = extra_info_mismatch,
-                                                                not_detected = extra_info_not_detected, orders_quantity_specification = json.dumps(db_orders_quantity_dict), cursor = updating_cursor)
+                                                                not_detected = extra_info_not_detected, orders_quantity_specification = json.dumps(db_orders_quantity_dict), cursor = db_checker_cursor)
                                         
                                         # Upsert the order db
                                         self.db.order_write(shipment_number=entry["shipment_number"], 
@@ -774,162 +723,149 @@ class MainWindow(QMainWindow):
                                                             shipment_type=entry["type"],
                                                             orders=json.dumps(entry['orders']),
                                                             unchanged_orders=json.dumps(unchanged_entry_order),
-                                                            is_done = 0, cursor = updating_cursor)
+                                                            is_done = 0, cursor = db_checker_cursor)
                     #print_cpu_usage("after order updating")
                     # current, peak = tracemalloc.get_traced_memory()
                     # print(f"Function order update - Current memory usage: {current / 10**6:.2f}MB; Peak: {peak / 10**6:.2f}MB")
+                    # tracemalloc.stop()              
+
+                # Removing the finished shipment after sending its all order to the Monitait db
+                if time.time() - db_st > self.order_db_remove_interval:
+                    # tracemalloc.start()
+                    #print_cpu_usage("Before db checker")
+                    db_st = time.time()
+                    if True:
+                        # Find the completed orders from watcher local db
+                        
+                        completed_orders_list = self.db.order_read(is_done=1, cursor = db_checker_cursor)
+                        
+                        if completed_orders_list == []:
+                            pass
+                        else:
+                            print("Found a completed order list")
+                            for item in completed_orders_list:
+                                orders = json.loads(item[4])
+                                orders_number = len(orders)
+                                status_code_number = 0
+                                for ord in orders:
+                                    ord_id = ord["id"]
+                                    current_quantity = int(ord['quantity'])
+                                    batch_uuid = ord['batches'][0]['batch_uuid']
+                                    assigned_id = ord['batches'][0]['assigned_id']
+                                    
+                                    batch_report_body = {"batch_uuid":batch_uuid, "assigned_id":assigned_id,
+                                                                    "type": "new", "station": int(self.stationID),
+                                                                    "order_id": int(ord_id),
+                                                                    "defected_qty": 0, "added_quantity": current_quantity, 
+                                                                    "defect_image":[], "action_type": "stop"}  
+
+                                    send_shipment_response = requests.post(self.sendshipment_url, json=batch_report_body, headers=self.headers)
+                                    if send_shipment_response.status_code == 200:
+                                        status_code_number += 1
+                                    else:
+                                        pass
+                                if status_code_number==orders_number:
+                                    print(f"status code number {status_code_number}, order numbers {orders_number}")
+                                    
+                                    self.db.order_delete(shipment_number=self.shipment_number, status="onetable", cursor = db_checker_cursor)
+                                    
+                                    # Change the shopment number to prevent updating the local db
+                                    self.shipment_number = b''
+                                else:
+                                    pass
+                    #print_cpu_usage("after db checker")
+                    # current, peak = tracemalloc.get_traced_memory()
+                    # print(f"Function db checker - Current memory usage: {current / 10**6:.2f}MB; Peak: {peak / 10**6:.2f}MB")
                     # tracemalloc.stop()
-                                   
-                else:
-                    pass
+                    # except Exception as ex1:
+                    #     print(f"db_orders_checker > removing database {ex1}")
+                    
+                # Checking order db every {self.db_order_checking_interval} second
+                if (time.time() - st > self.db_order_checking_interval) and (self.shipment_number != b'') and (not self.db_checking_flag):
+                    st = time.time() 
+                    try:
+                        #print_cpu_usage("Before extra info")
+                        # tracemalloc.start()
+                        extra_info = {"shipment_number": self.shipment_number,  "added_counted": self.added_counted,
+                                    "added_not_detected":self.added_not_detected, "added_mismatch": self.added_mismatch,
+                                    "completed": self.completed, "counted": self.counted, 
+                                    "not_detected": self.not_detected, "mismatch": self.mismatch}
+                        r_c = watcher_update(
+                                register_id=register_id,
+                                quantity=self.added_completed,
+                                defect_quantity=0,
+                                send_img=False,
+                                image_path=None,
+                                product_id=0,
+                                lot_info=0,
+                                extra_info= extra_info)
+                        
+                        # Reset the added quantity parameters
+                        self.added_completed = 0
+                        self.added_counted = 0
+                        self.added_not_detected = 0
+                        self.added_mismatch = 0
+                        # Checking order list on the order DB to catch the quantity value
+                        
+                        main_shipment_number_data = self.db.order_read(self.shipment_number, cursor = db_checker_cursor)
+                        
+                        if main_shipment_number_data and (self.shipment_number != previus_shipment_number):
+                            print("updated the main dict")
+                            main_shipment_orders_dict = {}
+                            # The shaipment changed, so all data 
+                            previus_shipment_number = self.shipment_number
+                            shipment_db_checking_flag = True
+                            main_shipment_orders = json.loads(main_shipment_number_data[4])
+                            for item in main_shipment_orders:
+                                order_id = item['id']
+                                for batch in item['batches']:
+                                    if batch['quantity'] != 0:
+                                        # Put all batches of a shipment orders to dictionary
+                                        main_shipment_orders_dict[batch['batch_uuid']]={
+                                                                        'quantity': int(batch['quantity']),
+                                                                        'assigned_id': batch['assigned_id'],
+                                                                        'order_id': order_id}
+                                    else:
+                                        pass
+                        
+                        updated_shipment_number_data_ = self.db.order_read(self.shipment_number, cursor = db_checker_cursor)
+                        
+                        if shipment_db_checking_flag and updated_shipment_number_data_:
+                            # Getting the scanned order list from order DB
+                            # Getting to detect in which batch changes is happend
+                            updated_shipment_number_data = json.loads(updated_shipment_number_data_[4])
+                            for item in updated_shipment_number_data:
+                                for batch in item['batches']:
+                                    # Check if the order finished or not
+                                    is_done_value = updated_shipment_number_data_[6]
+                                    current_quantity = int(batch['quantity'])
+                                    if (is_done_value == 0) and (current_quantity != 0):
+                                        main_quantity = main_shipment_orders_dict[batch['batch_uuid']]['quantity']
+                                        # If main quantity is not equal to current value update the table
+                                        if main_quantity != current_quantity:
+                                            # Update the quantity of the scanned box 
+                                            main_shipment_orders_dict[batch['batch_uuid']]['quantity'] = current_quantity
+                                            order_id_ = main_shipment_orders_dict[batch['batch_uuid']]['order_id']
+                                            # Post requests
+                                            # Sending batch to batch URL
+                                            batch_report_body = {"batch_uuid":batch['batch_uuid'], "assigned_id":batch['assigned_id'],
+                                                                    "type": "new", "station": int(self.stationID),
+                                                                    "order_id": int(order_id_),
+                                                                    "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
+                                                                    "defect_image":[], "action_type": "stop"}  
+                                            send_shipment_response = requests.post(self.sendshipment_url, json=batch_report_body, headers=self.headers)
+                                            print("****Send batch status code", send_shipment_response.status_code)
+                                    else:
+                                        pass
+                        #print_cpu_usage("After extra info")
+                        # current, peak = tracemalloc.get_traced_memory()
+                        # print(f"Function extra info - Current memory usage: {current / 10**6:.2f}MB; Peak: {peak / 10**6:.2f}MB")
+                        # tracemalloc.stop()
+                    except Exception as exb:
+                        print(f"shipment updating > raised and error {exb}")
             # except Exception as ex1:
             #     print(f"run > waiting to the OR barcode {ex1}")
 
-
-    def db_checker(self):
-        previus_shipment_number = ""
-        extra_info = {}
-        st = time.time() 
-        db_st = time.time()
-        shipment_db_checking_flag = False
-        db_checker_cursor = self.db.dbconnect.cursor()
-        while not self.stop_thread:
-            time.sleep(0.001)
-            # Removing the finished shipment after sending its all order to the Monitait db
-            if time.time() - db_st > self.order_db_remove_interval:
-                # tracemalloc.start()
-                #print_cpu_usage("Before db checker")
-                db_st = time.time()
-                if True:
-                    # Find the completed orders from watcher local db
-                     
-                    completed_orders_list = self.db.order_read(is_done=1, cursor = db_checker_cursor)
-                    
-                    if completed_orders_list == []:
-                        pass
-                    else:
-                        print("Found a completed order list")
-                        for item in completed_orders_list:
-                            orders = json.loads(item[4])
-                            orders_number = len(orders)
-                            status_code_number = 0
-                            for ord in orders:
-                                ord_id = ord["id"]
-                                current_quantity = int(ord['quantity'])
-                                batch_uuid = ord['batches'][0]['batch_uuid']
-                                assigned_id = ord['batches'][0]['assigned_id']
-                                
-                                batch_report_body = {"batch_uuid":batch_uuid, "assigned_id":assigned_id,
-                                                                "type": "new", "station": int(self.stationID),
-                                                                "order_id": int(ord_id),
-                                                                "defected_qty": 0, "added_quantity": current_quantity, 
-                                                                "defect_image":[], "action_type": "stop"}  
-
-                                send_shipment_response = requests.post(self.sendshipment_url, json=batch_report_body, headers=self.headers)
-                                if send_shipment_response.status_code == 200:
-                                    status_code_number += 1
-                                else:
-                                    pass
-                            if status_code_number==orders_number:
-                                print(f"status code number {status_code_number}, order numbers {orders_number}")
-                                 
-                                self.db.order_delete(shipment_number=self.shipment_number, status="onetable", cursor = db_checker_cursor)
-                                
-                                # Change the shopment number to prevent updating the local db
-                                self.shipment_number = b''
-                            else:
-                                pass
-                #print_cpu_usage("after db checker")
-                # current, peak = tracemalloc.get_traced_memory()
-                # print(f"Function db checker - Current memory usage: {current / 10**6:.2f}MB; Peak: {peak / 10**6:.2f}MB")
-                # tracemalloc.stop()
-                # except Exception as ex1:
-                #     print(f"db_orders_checker > removing database {ex1}")
-                
-            # Checking order db every {self.db_order_checking_interval} second
-            if (time.time() - st > self.db_order_checking_interval) and (self.shipment_number != b'') and (not self.db_checking_flag):
-                st = time.time() 
-                if True:
-                    #print_cpu_usage("Before extra info")
-                    # tracemalloc.start()
-                    extra_info = {"shipment_number": self.shipment_number,  "added_counted": self.added_counted,
-                                  "added_not_detected":self.added_not_detected, "added_mismatch": self.added_mismatch,
-                                  "completed": self.completed, "counted": self.counted, 
-                                  "not_detected": self.not_detected, "mismatch": self.mismatch}
-                    r_c = watcher_update(
-                            register_id=register_id,
-                            quantity=self.added_completed,
-                            defect_quantity=0,
-                            send_img=False,
-                            image_path=None,
-                            product_id=0,
-                            lot_info=0,
-                            extra_info= extra_info)
-                    
-                    # Reset the added quantity parameters
-                    self.added_completed = 0
-                    self.added_counted = 0
-                    self.added_not_detected = 0
-                    self.added_mismatch = 0
-                    
-                    # Checking order list on the order DB to catch the quantity value
-                     
-                    main_shipment_number_data = self.db.order_read(self.shipment_number, cursor = db_checker_cursor)
-                    
-                    if main_shipment_number_data and (self.shipment_number != previus_shipment_number):
-                        print("updated the main dict")
-                        main_shipment_orders_dict = {}
-                        # The shaipment changed, so all data 
-                        previus_shipment_number = self.shipment_number
-                        shipment_db_checking_flag = True
-                        main_shipment_orders = json.loads(main_shipment_number_data[4])
-                        for item in main_shipment_orders:
-                            order_id = item['id']
-                            for batch in item['batches']:
-                                if batch['quantity'] != 0:
-                                    # Put all batches of a shipment orders to dictionary
-                                    main_shipment_orders_dict[batch['batch_uuid']]={
-                                                                    'quantity': int(batch['quantity']),
-                                                                    'assigned_id': batch['assigned_id'],
-                                                                    'order_id': order_id}
-                                else:
-                                    pass
-                     
-                    updated_shipment_number_data_ = self.db.order_read(self.shipment_number, cursor = db_checker_cursor)
-                    
-                    if shipment_db_checking_flag and updated_shipment_number_data_:
-                        # Getting the scanned order list from order DB
-                        # Getting to detect in which batch changes is happend
-                        updated_shipment_number_data = json.loads(updated_shipment_number_data_[4])
-                        for item in updated_shipment_number_data:
-                            for batch in item['batches']:
-                                # Check if the order finished or not
-                                is_done_value = updated_shipment_number_data_[6]
-                                current_quantity = int(batch['quantity'])
-                                if (is_done_value == 0) and (current_quantity != 0):
-                                    main_quantity = main_shipment_orders_dict[batch['batch_uuid']]['quantity']
-                                    # If main quantity is not equal to current value update the table
-                                    if main_quantity != current_quantity:
-                                        # Update the quantity of the scanned box 
-                                        main_shipment_orders_dict[batch['batch_uuid']]['quantity'] = current_quantity
-                                        order_id_ = main_shipment_orders_dict[batch['batch_uuid']]['order_id']
-                                        # Post requests
-                                        # Sending batch to batch URL
-                                        batch_report_body = {"batch_uuid":batch['batch_uuid'], "assigned_id":batch['assigned_id'],
-                                                                "type": "new", "station": int(self.stationID),
-                                                                "order_id": int(order_id_),
-                                                                "defected_qty": 0, "added_quantity": abs(main_quantity - current_quantity), 
-                                                                "defect_image":[], "action_type": "stop"}  
-                                        send_shipment_response = requests.post(self.sendshipment_url, json=batch_report_body, headers=self.headers)
-                                        print("****Send batch status code", send_shipment_response.status_code)
-                                else:
-                                    pass
-                    #print_cpu_usage("After extra info")
-                    # current, peak = tracemalloc.get_traced_memory()
-                    # print(f"Function extra info - Current memory usage: {current / 10**6:.2f}MB; Peak: {peak / 10**6:.2f}MB")
-                    # tracemalloc.stop()
-                # except Exception as ex2:
-                #     print(f"db_orders_checker > checking the database {ex2}")
 
     def update_table(self):
         previus_shipment_number = ""
@@ -939,6 +875,7 @@ class MainWindow(QMainWindow):
         self.updaing_table_from_url_flag = True
         table_update_cursor = self.db.dbconnect.cursor()
         while not self.stop_thread:
+            time.sleep(0.001)
             if True:
                 # Checking order db every {table_update_interval} second
                 if (time.time() - table_st > table_update_interval) and (self.order_db != []) and self.start_counting_flag:
@@ -1141,7 +1078,6 @@ class MainWindow(QMainWindow):
                     # current, peak = tracemalloc.get_traced_memory()
                     # print(f"Function update table - Current memory usage: {current / 10**6:.2f}MB; Peak: {peak / 10**6:.2f}MB")
                     # tracemalloc.stop()
-                time.sleep(0.001)
             # except Exception as ex:
             #     print(f"table_update > exception {ex}")
 
@@ -1181,7 +1117,6 @@ if __name__ == "__main__":
                     usb_serial_flag=usb_serial_flag)
     
     Thread(target=counter.scanner_read).start()
-    Thread(target=counter.db_orders_updating).start()
     Thread(target=counter.db_checker).start()
     Thread(target=counter.update_table).start()
     Thread(target=counter.counting).start()
