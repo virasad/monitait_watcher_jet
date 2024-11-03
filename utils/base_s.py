@@ -848,9 +848,7 @@ class dbUpdating:
                     if entry['shipment_number'] in shipment_numbers_list:
                         pass
                     else:
-                        print(entry['shipment_number'])
                         shipment_numbers_list.append(entry['shipment_number'])
-                        print(shipment_numbers_list, len(shipment_numbers_list))
                     
                     if entry["shipment_number"] != shipment_number:
                         shipment_db_read = self.db.order_read(entry["shipment_number"], cursor = cursor)
@@ -955,7 +953,6 @@ class dbUpdating:
         
         if old_shipments_number != shipments_number:
             old_shipments_number = shipments_number
-            print("db finished function", shipments_number)
             if shipments_number % 10 == 0 :
                 pagination_number = shipments_number // 10
             else:
@@ -964,7 +961,6 @@ class dbUpdating:
             for page in range(pagination_number):
                 # Construct pagination url
                 page = page + 1
-                print(page, "pagination in db finished")
                 page_shipment_url = f'{finished_api}&page={page}'
                 
                 # Added all shipment to a list
