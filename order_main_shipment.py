@@ -597,137 +597,134 @@ class MainWindow(QMainWindow):
                                                     station_id = self.stationID, cursor = db_checker_cursor)
                     
                     
-                    main_dict = requests.get(self.shipment_url, headers=self.headers) 
-                    # Added all batches to a list
-                    main_json = main_dict.json()  
-                    # Checking how much page should be checks?
-                    shipments_number = main_json['count']
-                    if old_shipments_number != shipments_number:
-                        old_shipments_number = shipments_number
-                        print(shipments_number)
-                        if shipments_number % 10 == 0 :
-                            pagination_number = shipments_number // 10
-                        else:
-                            pagination_number = shipments_number // 10 + 1
+                    # main_dict = requests.get(self.shipment_url, headers=self.headers) 
+                    # # Added all batches to a list
+                    # main_json = main_dict.json()  
+                    # # Checking how much page should be checks?
+                    # shipments_number = main_json['count']
+                    # if old_shipments_number != shipments_number:
+                    #     old_shipments_number = shipments_number
+                    #     print(shipments_number)
+                    #     if shipments_number % 10 == 0 :
+                    #         pagination_number = shipments_number // 10
+                    #     else:
+                    #         pagination_number = shipments_number // 10 + 1
                         
-                        for index in range(pagination_number):
-                            # Construct pagination url
-                            page = index + 1
-                            print(page, "pagination")
-                            page_shipment_url = f'https://app.monitait.com/api/factory/shipment-orders/?status=not_started&page={page}'
-                            main_dict = requests.get(page_shipment_url, headers=self.headers) 
+                    #     for index in range(pagination_number):
+                    #         # Construct pagination url
+                    #         page = index + 1
+                    #         print(page, "pagination")
+                    #         page_shipment_url = f'https://app.monitait.com/api/factory/shipment-orders/?status=not_started&page={page}'
+                    #         main_dict = requests.get(page_shipment_url, headers=self.headers) 
                             
-                            # Added all batches to a list
-                            main_json = main_dict.json()  
-                            results = main_json['results']
+                    #         # Added all batches to a list
+                    #         main_json = main_dict.json()  
+                    #         results = main_json['results']
                             
-                            order_updating_flag = False
+                    #         order_updating_flag = False
                             
-                            # Added the order batches to the order DB
-                            for entry in results:
-                                # Added shipment number to the shipment list
-                                if entry['shipment_number'] in self.shipment_numbers_list:
-                                    pass
-                                else:
-                                    self.shipment_numbers_list.append(entry['shipment_number'])
-                                if entry["shipment_number"] != self.shipment_number:
+                    #         # Added the order batches to the order DB
+                    #         for entry in results:
+                    #             # Added shipment number to the shipment list
+                    #             if entry['shipment_number'] in self.shipment_numbers_list:
+                    #                 pass
+                    #             else:
+                    #                 self.shipment_numbers_list.append(entry['shipment_number'])
+                    #             if entry["shipment_number"] != self.shipment_number:
                                     
-                                    shipment_db_read = self.db.order_read(entry["shipment_number"], cursor = db_checker_cursor)
+                    #                 shipment_db_read = self.db.order_read(entry["shipment_number"], cursor = db_checker_cursor)
                                     
-                                    if shipment_db_read == []:
-                                        # Update the quantity by another calculation URL
-                                        unchanged_entry_order = entry['orders']
-                                        db_orders_quantity_dict = {}
+                    #                 if shipment_db_read == []:
+                    #                     # Update the quantity by another calculation URL
+                    #                     unchanged_entry_order = entry['orders']
+                    #                     db_orders_quantity_dict = {}
                                         
-                                        # Get additional value from extra infor url
-                                        extra_info_urls = f"https://app.monitait.com/api/elastic-search/watcher/?extra_info.shipment_number={entry['shipment_number']}"
-                                        extra_info_value = requests.get(extra_info_urls, headers=self.headers)
-                                        if extra_info_value.status_code == 200:
-                                            extra_info_json = extra_info_value.json()
-                                            if extra_info_json["result"]:
-                                                extra_info_dict = extra_info_json["result"][-1]['_source']['watcher']['extra_info']
-                                                if 'completed' in extra_info_dict.keys():
-                                                    extra_info_completed = extra_info_dict['completed']
-                                                else:
-                                                    extra_info_completed = 0
+                    #                     # Get additional value from extra infor url
+                    #                     extra_info_urls = f"https://app.monitait.com/api/elastic-search/watcher/?extra_info.shipment_number={entry['shipment_number']}"
+                    #                     extra_info_value = requests.get(extra_info_urls, headers=self.headers)
+                    #                     if extra_info_value.status_code == 200:
+                    #                         extra_info_json = extra_info_value.json()
+                    #                         if extra_info_json["result"]:
+                    #                             extra_info_dict = extra_info_json["result"][-1]['_source']['watcher']['extra_info']
+                    #                             if 'completed' in extra_info_dict.keys():
+                    #                                 extra_info_completed = extra_info_dict['completed']
+                    #                             else:
+                    #                                 extra_info_completed = 0
                                                 
-                                                if 'counted' in extra_info_dict.keys():
-                                                    extra_info_counted = extra_info_dict['counted']
-                                                else:
-                                                    extra_info_counted = 0
+                    #                             if 'counted' in extra_info_dict.keys():
+                    #                                 extra_info_counted = extra_info_dict['counted']
+                    #                             else:
+                    #                                 extra_info_counted = 0
                                                     
-                                                if 'mismatch' in extra_info_dict.keys():
-                                                    extra_info_mismatch = extra_info_dict['mismatch']
-                                                else:
-                                                    extra_info_mismatch = 0
+                    #                             if 'mismatch' in extra_info_dict.keys():
+                    #                                 extra_info_mismatch = extra_info_dict['mismatch']
+                    #                             else:
+                    #                                 extra_info_mismatch = 0
                                                 
-                                                if 'not_detected' in extra_info_dict.keys():
-                                                    extra_info_not_detected = extra_info_dict['not_detected']
-                                                else:
-                                                    extra_info_not_detected = 0
-                                            else:
-                                                extra_info_completed = 0
-                                                extra_info_counted = 0
-                                                extra_info_mismatch = 0
-                                                extra_info_not_detected = 0
-                                        else:
-                                            extra_info_completed = 0
-                                            extra_info_counted = 0
-                                            extra_info_mismatch = 0
-                                            extra_info_not_detected = 0
+                    #                             if 'not_detected' in extra_info_dict.keys():
+                    #                                 extra_info_not_detected = extra_info_dict['not_detected']
+                    #                             else:
+                    #                                 extra_info_not_detected = 0
+                    #                         else:
+                    #                             extra_info_completed = 0
+                    #                             extra_info_counted = 0
+                    #                             extra_info_mismatch = 0
+                    #                             extra_info_not_detected = 0
+                    #                     else:
+                    #                         extra_info_completed = 0
+                    #                         extra_info_counted = 0
+                    #                         extra_info_mismatch = 0
+                    #                         extra_info_not_detected = 0
                                         
-                                        extra_info_is_done = 0
+                    #                     extra_info_is_done = 0
                                         
-                                        for ord in entry['orders']:
-                                            order_id = ord['id'] 
-                                            calculation_url = f"https://app.monitait.com/api/elastic-search/batch-report-calculations/?station_id={self.stationID}&order_id={order_id}"
-                                            order_remaind_value = requests.get(calculation_url, headers=self.headers)
-                                            if order_remaind_value.status_code == 200:
-                                                order_updating_flag = True
-                                                order_remaind_value = order_remaind_value.json() 
-                                                station_reports = order_remaind_value[0]['station_reports'][0]
-                                                batch_quantity = int(station_reports['batch_quantity'])
-                                                station_results = station_reports['result'][0] 
-                                                total_completed_quantity = station_results['total_completed_quantity']
-                                                total_remained_quantity = station_results['total_remained_quantity']
-                                                # Update the order
-                                                ord['batches'][0]['quantity'] = batch_quantity - total_completed_quantity
-                                                ord['quantity'] = batch_quantity - total_completed_quantity
-                                                for item2 in unchanged_entry_order:
-                                                    if item2['id'] == order_id:
-                                                        total_qt = item2['quantity']
-                                            else:
-                                                # Updating remain column value from the unchanged order dictionary
-                                                for item2 in unchanged_entry_order:
-                                                    if item2['id'] == order_id:
-                                                        total_completed_quantity = 0
-                                                        total_remained_quantity = item2['quantity']
-                                                        total_qt = item2['quantity']
-                                            utc_time = datetime.now(timezone.utc)
+                    #                     for ord in entry['orders']:
+                    #                         order_id = ord['id'] 
+                    #                         calculation_url = f"https://app.monitait.com/api/elastic-search/batch-report-calculations/?station_id={self.stationID}&order_id={order_id}"
+                    #                         order_remaind_value = requests.get(calculation_url, headers=self.headers)
+                    #                         if order_remaind_value.status_code == 200:
+                    #                             order_updating_flag = True
+                    #                             order_remaind_value = order_remaind_value.json() 
+                    #                             station_reports = order_remaind_value[0]['station_reports'][0]
+                    #                             batch_quantity = int(station_reports['batch_quantity'])
+                    #                             station_results = station_reports['result'][0] 
+                    #                             total_completed_quantity = station_results['total_completed_quantity']
+                    #                             total_remained_quantity = station_results['total_remained_quantity']
+                    #                             # Update the order
+                    #                             ord['batches'][0]['quantity'] = batch_quantity - total_completed_quantity
+                    #                             ord['quantity'] = batch_quantity - total_completed_quantity
+                    #                             for item2 in unchanged_entry_order:
+                    #                                 if item2['id'] == order_id:
+                    #                                     total_qt = item2['quantity']
+                    #                         else:
+                    #                             # Updating remain column value from the unchanged order dictionary
+                    #                             for item2 in unchanged_entry_order:
+                    #                                 if item2['id'] == order_id:
+                    #                                     total_completed_quantity = 0
+                    #                                     total_remained_quantity = item2['quantity']
+                    #                                     total_qt = item2['quantity']
+                    #                         utc_time = datetime.now(timezone.utc)
                                             
-                                            formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-                                            product_name = ord['product_name'] 
-                                            unit = ord['delivery_unit']
-                                            # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy, name, unit
-                                            db_orders_quantity_dict[ord['product_number']] = [total_qt, total_completed_quantity, total_remained_quantity, 0, product_name, unit, formatted_utc_time]
+                    #                         formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+                    #                         product_name = ord['product_name'] 
+                    #                         unit = ord['delivery_unit']
+                    #                         # total quantitiy, completed quantitiy, remainded quantitiy, eject quantitiy, name, unit
+                    #                         db_orders_quantity_dict[ord['product_number']] = [total_qt, total_completed_quantity, total_remained_quantity, 0, product_name, unit, formatted_utc_time]
                                             
-                                        # Upsert the shipment db
+                    #                     # Upsert the shipment db
                                         
-                                        self.db.shipment_upsert(shipment_number = entry["shipment_number"], completed = extra_info_completed,
-                                                                counted = extra_info_counted, mismatch = extra_info_mismatch,
-                                                                not_detected = extra_info_not_detected, orders_quantity_specification = json.dumps(db_orders_quantity_dict), cursor = db_checker_cursor)
+                    #                     self.db.shipment_upsert(shipment_number = entry["shipment_number"], completed = extra_info_completed,
+                    #                                             counted = extra_info_counted, mismatch = extra_info_mismatch,
+                    #                                             not_detected = extra_info_not_detected, orders_quantity_specification = json.dumps(db_orders_quantity_dict), cursor = db_checker_cursor)
                                         
-                                        # Upsert the order db
-                                        self.db.order_write(shipment_number=entry["shipment_number"], 
-                                                            destination=entry["destination"], 
-                                                            shipment_type=entry["type"],
-                                                            orders=json.dumps(entry['orders']),
-                                                            unchanged_orders=json.dumps(unchanged_entry_order),
-                                                            is_done = 0, cursor = db_checker_cursor)
-                    #print_cpu_usage("after order updating")
-                    # current, peak = tracemalloc.get_traced_memory()
-                    # print(f"Function order update - Current memory usage: {current / 10**6:.2f}MB; Peak: {peak / 10**6:.2f}MB")
-                    # tracemalloc.stop()              
+                    #                     # Upsert the order db
+                    #                     self.db.order_write(shipment_number=entry["shipment_number"], 
+                    #                                         destination=entry["destination"], 
+                    #                                         shipment_type=entry["type"],
+                    #                                         orders=json.dumps(entry['orders']),
+                    #                                         unchanged_orders=json.dumps(unchanged_entry_order),
+                    #                                         is_done = 0, cursor = db_checker_cursor)
+       
 
                 # Removing the finished shipment after sending its all order to the Monitait db
                 if time.time() - db_st > self.order_db_remove_interval:
