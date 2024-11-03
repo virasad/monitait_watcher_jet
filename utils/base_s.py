@@ -971,6 +971,7 @@ class dbUpdating:
                 for entry in results:
                     # Remove shipment number from the shipment list
                     if entry['shipment_number'] != shipment_number:
+                        order_counting_start_flag = False
                         if shipment_numbers_list != []:
                             if entry['shipment_number'] in shipment_numbers_list:
                                 print(entry['shipment_number'], "finished")
@@ -989,7 +990,5 @@ class dbUpdating:
                             print(f"The {entry['shipment_number']} is in the local db, so going to removed it")
                             self.db.order_delete(shipment_number=entry["shipment_number"], status="onetable", cursor = cursor)
                     else:
-                        # Stop counting process
-                        # Going to wait scan a shipment
-                        pass
-        return old_shipments_number, shipment_numbers_list
+                        order_counting_start_flag = True
+        return old_shipments_number, shipment_numbers_list, order_counting_start_flag

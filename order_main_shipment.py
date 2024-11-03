@@ -238,10 +238,10 @@ class MainWindow(QMainWindow):
         ##
         ## Main WHILE loop
         while not self.stop_thread:
-            order_counting_start_flag = False # To start counting process, this flag set as True when OR detected
+            self.order_counting_start_flag = False # To start counting process, this flag set as True when OR detected
             exit_flag = False
             # Getting order from batch API
-            while not order_counting_start_flag:
+            while not self.order_counting_start_flag:
                 time.sleep(0.001)
                 ##
                 # Reading the scanner to detect OR and start the counting process
@@ -292,7 +292,7 @@ class MainWindow(QMainWindow):
                         
                         self.arduino.gpio32_0.on()  # Turned off the ejector
                         
-                        order_counting_start_flag = True
+                        self.order_counting_start_flag = True
                         self.update_table_flag = True
                         # Getting batches, product, and factory from scanned order
                         self.shipment_orders = json.loads(self.order_db[4])
@@ -336,14 +336,14 @@ class MainWindow(QMainWindow):
                         time.sleep(0.01)
                     else:
                         self.start_counting_flag = False
-                        order_counting_start_flag = False
+                        self.order_counting_start_flag = False
                         # print(f"There is no such shipment number, {self.shipment_number}, {type(self.shipment_number)}")
                 # except Exception as ex2:
                 #     print(f"run > reading scanner to detect OR {ex2}")
             ##
             # Start counting process
             eject_ts = time.time()
-            while order_counting_start_flag:
+            while self.order_counting_start_flag:
                 time.sleep(0.001)
                 if True:
                     if time.time() - eject_ts < 1:
@@ -352,7 +352,7 @@ class MainWindow(QMainWindow):
                     if self.scanned_value_old in self.shipment_numbers_list:
                         # The exit barcode scanned
                         print("The exit barcode scanned")
-                        order_counting_start_flag = False
+                        self.order_counting_start_flag = False
                         exit_flag = True
                         catching_signal = True
                         self.barcode_flag = False
@@ -419,7 +419,7 @@ class MainWindow(QMainWindow):
                                             pass
                                         # Update the order list
                                         self.is_done = 1
-                                        order_counting_start_flag = False
+                                        self.order_counting_start_flag = False
                                         
                                         self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders),is_done = self.is_done, cursor = self.counting_cursor)
                                     else:
@@ -581,14 +581,14 @@ class MainWindow(QMainWindow):
                 if time.time() - self.st_db_ca > ca_time_interval:
                     self.st_db_ca = time.time()
                     # Remove the cancel shipment from the db
-                    old_cancel_shipments_number, self.shipment_numbers_list = self.dbUpdating.db_finished(finished_api = "https://app.monitait.com/api/factory/shipment-orders/?status=cancel",
+                    old_cancel_shipments_number, self.shipment_numbers_list, self.order_counting_start_flag = self.dbUpdating.db_finished(finished_api = "https://app.monitait.com/api/factory/shipment-orders/?status=cancel",
                                                     old_shipments_number = old_cancel_shipments_number, shipment_number = self.shipment_number,
                                                     shipment_numbers_list = self.shipment_numbers_list, cursor = self.db_checker_cursor)
                 
                 if time.time() - self.st_db_cam > cam_time_interval:
                     self.st_db_cam = time.time()
                     # Add the complet shipment to the db
-                    old_completed_shipments_number, self.shipment_numbers_list = self.dbUpdating.db_finished(finished_api = "https://app.monitait.com/api/factory/shipment-orders/?status=completed",
+                    old_completed_shipments_number, self.shipment_numbers_list, self.order_counting_start_flag = self.dbUpdating.db_finished(finished_api = "https://app.monitait.com/api/factory/shipment-orders/?status=completed",
                                                     old_shipments_number = old_completed_shipments_number, shipment_number = self.shipment_number,
                                                     shipment_numbers_list = self.shipment_numbers_list, cursor = self.db_checker_cursor)
                     
