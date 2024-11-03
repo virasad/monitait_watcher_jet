@@ -438,85 +438,85 @@ class MainWindow(QMainWindow):
                                             pass
                                         # Update the order list
                                         self.is_done = 1
+                                        order_counting_start_flag = False
                                         
                                         self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders),is_done = self.is_done, cursor = counting_cursor)
-                                        
-                                    # Checking is the scanned box barcode is in the order batches or not
-                                    for item in self.shipment_orders:
-                                        # Updating total and remainded value                                    
-                                        total_quantity = int(self.total_quantities[item["id"]])
-                                        remainded_quantity = int(item['quantity'])
-                                        # Checking is scanned value in the batches
-                                        for batch in item['batches']:
-                                            if batch['assigned_id']==str(self.scanned_box_barcode):
-                                                
-                                                # The box barcode is in the order
-                                                barcode_in_orders = True
-                                                # Decrease quantity by 1 if it's greater than 0, else eject it
-                                                if item['quantity'] > 0:
-                                                    # print(f"Status:{self.scanned_box_barcode} is grabbed.")
-                                                    # Decreasing the quantity in the shipments order and the batches list
-                                                    item['quantity'] -= 1 
-                                                    batch['quantity'] = str(int(batch['quantity']) - 1) 
-                                                    remainded_quantity = item['quantity']
-                                                    # Update the counted value
-                                                    self.added_completed += 1
-                                                    self.completed += 1
+                                    else:
+                                        # Checking is the scanned box barcode is in the order batches or not
+                                        for item in self.shipment_orders:
+                                            # Updating total and remainded value                                    
+                                            total_quantity = int(self.total_quantities[item["id"]])
+                                            remainded_quantity = int(item['quantity'])
+                                            # Checking is scanned value in the batches
+                                            for batch in item['batches']:
+                                                if batch['assigned_id']==str(self.scanned_box_barcode):
                                                     
-                                                    # Calculate the counted value
-                                                    counted_quantity = abs(total_quantity-item['quantity'])
-                                                    # Update order table
-                                                    self.is_done = 0
+                                                    # The box barcode is in the order
+                                                    barcode_in_orders = True
+                                                    # Decrease quantity by 1 if it's greater than 0, else eject it
+                                                    if item['quantity'] > 0:
+                                                        # print(f"Status:{self.scanned_box_barcode} is grabbed.")
+                                                        # Decreasing the quantity in the shipments order and the batches list
+                                                        item['quantity'] -= 1 
+                                                        batch['quantity'] = str(int(batch['quantity']) - 1) 
+                                                        remainded_quantity = item['quantity']
+                                                        # Update the counted value
+                                                        self.added_completed += 1
+                                                        self.completed += 1
                                                         
-                                                    self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders), is_done = self.is_done, cursor = counting_cursor)
-                                                    
-                                                    # Update the orders quantity specification dictionary and shipment table
-                                                    utc_time = datetime.now(timezone.utc)
-                                                    formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S")
-                                                    self.orders_quantity_specification[item['product_number']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['product_number']], item['product_name'], item['delivery_unit'], formatted_utc_time]
-                                                    self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification), cursor = counting_cursor)
-                                                    
+                                                        # Calculate the counted value
+                                                        counted_quantity = abs(total_quantity-item['quantity'])
+                                                        # Update order table
+                                                        self.is_done = 0
+                                                            
+                                                        self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders), is_done = self.is_done, cursor = counting_cursor)
+                                                        
+                                                        # Update the orders quantity specification dictionary and shipment table
+                                                        utc_time = datetime.now(timezone.utc)
+                                                        formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S")
+                                                        self.orders_quantity_specification[item['product_number']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['product_number']], item['product_name'], item['delivery_unit'], formatted_utc_time]
+                                                        self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification), cursor = counting_cursor)
+                                                        
 
-                                                elif item['quantity'] == 0:
-                                                    # print(f"Status:{self.scanned_box_barcode} is finished.")
-                                                    # Updatinging the quantity in the shipments order and the batches list
-                                                    item['quantity'] = 0 
-                                                    batch['quantity'] = 0 
-                                                    
-                                                    # Updating the quantity value
-                                                    counted_quantity = total_quantity
-                                                    remainded_quantity = 0
-                                                    self.eject_box[item["product_number"]] += 1
-                                                    # print(self.eject_box, "self.eject_box", item['product_number'])
-                                                    
-                                                    eject_ts = time.time()
-                                                    # Update local order db
-                                                    self.is_done = 0 
-                                                    
-                                                    self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders), is_done = self.is_done, cursor = counting_cursor)
-                                                    
-                                                    # Update the orders quantity specification dictionary and the shipment table
-                                                    utc_time = datetime.now(timezone.utc)
-                                                    formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S")
-                                                    
-                                                    self.orders_quantity_specification[item['product_number']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['product_number']], item['product_name'], item['delivery_unit'], formatted_utc_time]
-                                                    self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification), cursor = counting_cursor)
-                                                    
-                                                    # The detected barcode is not on the order list
-                                                    # self.arduino.gpio32_0.off()
-                        
-                                    # If the scanned barcode is not in the batches, eject it 
-                                    if not barcode_in_orders:
-                                        # print(f"Status:{self.scanned_box_barcode} is not in the shipment.")
-                                        self.added_mismatch += 1
-                                        self.mismatch += 1
-                                        eject_ts = time.time()
-                                        # The detected barcode is not on the order list
-                                        # self.arduino.gpio32_0.off()
-                                        # Update shipment table
-                                        
-                                        self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification), cursor = counting_cursor)
+                                                    elif item['quantity'] == 0:
+                                                        # print(f"Status:{self.scanned_box_barcode} is finished.")
+                                                        # Updatinging the quantity in the shipments order and the batches list
+                                                        item['quantity'] = 0 
+                                                        batch['quantity'] = 0 
+                                                        
+                                                        # Updating the quantity value
+                                                        counted_quantity = total_quantity
+                                                        remainded_quantity = 0
+                                                        self.eject_box[item["product_number"]] += 1
+                                                        # print(self.eject_box, "self.eject_box", item['product_number'])
+                                                        
+                                                        eject_ts = time.time()
+                                                        # Update local order db
+                                                        self.is_done = 0 
+                                                        
+                                                        self.db.order_update(shipment_number=self.shipment_number, orders= json.dumps(self.shipment_orders), is_done = self.is_done, cursor = counting_cursor)
+                                                        
+                                                        # Update the orders quantity specification dictionary and the shipment table
+                                                        utc_time = datetime.now(timezone.utc)
+                                                        formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S")
+                                                        
+                                                        self.orders_quantity_specification[item['product_number']] = [total_quantity, counted_quantity, remainded_quantity, self.eject_box[item['product_number']], item['product_name'], item['delivery_unit'], formatted_utc_time]
+                                                        self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification), cursor = counting_cursor)
+                                                        
+                                                        # The detected barcode is not on the order list
+                                                        # self.arduino.gpio32_0.off()
+                            
+                                        # If the scanned barcode is not in the batches, eject it 
+                                        if not barcode_in_orders:
+                                            # print(f"Status:{self.scanned_box_barcode} is not in the shipment.")
+                                            self.added_mismatch += 1
+                                            self.mismatch += 1
+                                            eject_ts = time.time()
+                                            # The detected barcode is not on the order list
+                                            # self.arduino.gpio32_0.off()
+                                            # Update shipment table
                                             
+                                            self.db.shipment_update(self.shipment_number, self.completed, self.counted, self.mismatch, self.not_detected, json.dumps(self.orders_quantity_specification), cursor = counting_cursor)         
                                 else:
                                     # print("Status:the scanner could not catch the barcode.")
                                     self.added_not_detected += 1
