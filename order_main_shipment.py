@@ -573,7 +573,10 @@ class MainWindow(QMainWindow):
         st_1 = time.time()
         db_checker_cursor = self.db.dbconnect.cursor()
         order_request_time_interval = 2 # Every "order_request_time_interval" secends, the order update
-        old_shipments_number = 0
+        old_not_started_shipments_number = 0
+        old_in_progress_shipments_number = 0
+        old_cancel_shipments_number = 0
+        old_completed_shipments_number = 0
         previus_shipment_number = ""
         extra_info = {}
         st = time.time() 
@@ -584,19 +587,35 @@ class MainWindow(QMainWindow):
             # The watcher updates his order DB until OR is scanned
             if True:
                 if time.time() - st_1 > order_request_time_interval or self.db_checking_flag:
-                    # tracemalloc.start()
-                    #print_cpu_usage("Before order updating")
-                    self.db_checking_flag = False
                     st_1 = time.time()
                     
                     # Add the not start shipment to the db
-                    old_shipments_number, self.shipment_numbers_list = 
-                                                    self.dbUpdating.db_not_finished(not_finished_api = "https://app.monitait.com/api/factory/shipment-orders/?status=not_started",
-                                                    old_shipments_number = old_shipments_number, shipment_number = self.shipment_number,
+                    old_not_started_shipments_number, self.shipment_numbers_list = self.dbUpdating.db_not_finished(not_finished_api = "https://app.monitait.com/api/factory/shipment-orders/?status=not_started",
+                                                    old_shipments_number = old_not_started_shipments_number, shipment_number = self.shipment_number,
                                                     shipment_numbers_list = self.shipment_numbers_list,
                                                     station_id = self.stationID, cursor = db_checker_cursor)
                     
+                    # Add the in progress shipment to the db
+                    old_in_progress_shipments_number, self.shipment_numbers_list = self.dbUpdating.db_not_finished(not_finished_api = "https://app.monitait.com/api/factory/shipment-orders/?status=in_progress",
+                                                    old_shipments_number = old_in_progress_shipments_number, shipment_number = self.shipment_number,
+                                                    shipment_numbers_list = self.shipment_numbers_list,
+                                                    station_id = self.stationID, cursor = db_checker_cursor)
+                        
+                    # Remove the cancel shipment from the db
+                    old_cancel_shipments_number, self.shipment_numbers_list = self.dbUpdating.db_finished(finished_api = "https://app.monitait.com/api/factory/shipment-orders/?status=cancel",
+                                                    old_shipments_number = old_cancel_shipments_number, shipment_number = self.shipment_number,
+                                                    shipment_numbers_list = self.shipment_numbers_list, cursor = db_checker_cursor)
                     
+                    # Add the complet shipment to the db
+                    old_completed_shipments_number, self.shipment_numbers_list = self.dbUpdating.db_finished(finished_api = "https://app.monitait.com/api/factory/shipment-orders/?status=completed",
+                                                    old_shipments_number = old_completed_shipments_number, shipment_number = self.shipment_number,
+                                                    shipment_numbers_list = self.shipment_numbers_list, cursor = db_checker_cursor)
+                    
+                    
+                    if self.db_checking_flag:
+                        print("list", self.shipment_numbers_list)
+                    
+                    self.db_checking_flag = False
                     # main_dict = requests.get(self.shipment_url, headers=self.headers) 
                     # # Added all batches to a list
                     # main_json = main_dict.json()  

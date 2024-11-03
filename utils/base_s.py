@@ -815,7 +815,7 @@ class dbUpdating:
         self.headers = headers
         self.db = db
     
-    def db_not_finished(self, not_finished_api = None, old_shipments_number = 0, shipment_number = None
+    def db_not_finished(self, not_finished_api = None, old_shipments_number = 0, shipment_number = None,
                         shipment_numbers_list = [], station_id = 0, cursor = None):
         not_finished_dict = requests.get(not_finished_api, headers=self.headers) 
         # Added all batches to a list
@@ -848,11 +848,11 @@ class dbUpdating:
                     if entry['shipment_number'] in shipment_numbers_list:
                         pass
                     else:
+                        print(entry['shipment_number'])
                         shipment_numbers_list.append(entry['shipment_number'])
+                        print(shipment_numbers_list, len(shipment_numbers_list))
                     
                     if entry["shipment_number"] != shipment_number:
-                        shipment_numbers_list.append(entry['shipment_number'])
-                        
                         shipment_db_read = self.db.order_read(entry["shipment_number"], cursor = cursor)
                         
                         if shipment_db_read == []:
@@ -923,7 +923,7 @@ class dbUpdating:
                                             total_completed_quantity = 0
                                             total_remained_quantity = item2['quantity']
                                             total_qt = item2['quantity']
-                                utc_time = datetime.now(timezone.utc)
+                                utc_time = datetime.datetime.utcnow()
                                 
                                 formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                                 product_name = ord['product_name'] 
@@ -946,7 +946,7 @@ class dbUpdating:
         return old_shipments_number, shipment_numbers_list
     
     
-    def db_finished(self, finished_api = None, shipment_number = None, cursor = None, shipment_numbers_list = []):
+    def db_finished(self, finished_api = None, old_shipments_number = 0, shipment_number = None, shipment_numbers_list = [], cursor = None):
         finished_dict = requests.get(finished_api, headers=self.headers) 
         # Added all batches to a list
         finished_json = finished_dict.json()  
@@ -965,7 +965,7 @@ class dbUpdating:
                 # Construct pagination url
                 page = page + 1
                 print(page, "pagination in db finished")
-                page_shipment_url = f'{not_finished_api}&page={page}'
+                page_shipment_url = f'{finished_api}&page={page}'
                 
                 # Added all shipment to a list
                 page_shipment_dict = requests.get(page_shipment_url, headers=self.headers) 
@@ -977,7 +977,9 @@ class dbUpdating:
                     if entry['shipment_number'] != shipment_number:
                         if shipment_numbers_list != []:
                             if entry['shipment_number'] in shipment_numbers_list:
+                                print(entry['shipment_number'], "finished")
                                 shipment_numbers_list.remove(entry['shipment_number'])
+                                print(shipment_numbers_list, len(shipment_numbers_list))
                             else:
                                 pass
                         else:
@@ -988,7 +990,7 @@ class dbUpdating:
                         if shipment_db_read == []:
                             pass
                         else:
-                            print(f"The {entry["shipment_number"]} is in the local db, so going to removed it")
+                            print(f"The {entry['shipment_number']} is in the local db, so going to removed it")
                             self.db.order_delete(shipment_number=entry["shipment_number"], status="onetable", cursor = cursor)
                     else:
                         # Stop counting process
