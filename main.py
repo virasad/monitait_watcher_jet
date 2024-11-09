@@ -691,7 +691,7 @@ elif arduino.gpio18_0.value:
 else: 
     counter = Counter(arduino=arduino, db=db)
 
-if /dev/ttyUSB0:
+if  os.path.exists('/dev/ttyUSB0'):
     scanner1= Scanner('/dev/ttyUSB0')
 
 Thread(target=counter.run).start()
