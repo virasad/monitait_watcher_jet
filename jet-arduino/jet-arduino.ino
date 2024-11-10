@@ -47,7 +47,7 @@ void(* resetFunc) (void) = 0;
 
 void setup() {
   wdt_enable( WDTO_8S);
-  Serial.begin(57600); 
+  Serial.begin(9600); 
   for(int i = 0; i < 4; i++){
     pinMode(input_pins[i], INPUT_PULLUP);
     pinMode(output_pins[i],OUTPUT);
@@ -143,12 +143,13 @@ if (Serial.available() > 0)
   //   Serial.println(String(encoder_counter) + "," + "-24" + "," + String(counter_a) + "," + String(counter_b) + "," + String(c) + "," + String(battery/10 - 2) + "," + String(elapsed_speed) + "," + String(restart_counter));
   //   i = 0;
   // }
- Serial.print("Encoder:"); Serial.print(encoder_counter); Serial.print(",");
- Serial.print("Red:0,");
- Serial.print("Green:0,");
- Serial.print("Blue:0,");
- Serial.print("Color:0,");
- Serial.print("\n");
+ Serial.println(String(encoder_counter) + "," + String(counter_a) + "," + String(counter_b) + "," + String(get_byte));
+ // Serial.print("Encoder:"); Serial.print(encoder_counter); Serial.print(",");
+ // Serial.print("Red:0,");
+ // Serial.print("Green:0,");
+ // Serial.print("Blue:0,");
+ // Serial.print("Color:0,");
+ // Serial.print("\n");
   
   // check if RPI is signaling the ARDUINO
   if (digitalRead(piPin)==LOW){
@@ -156,7 +157,7 @@ if (Serial.available() > 0)
     counter_a_b = 0;
     digitalWrite(DataCapture, !digitalRead(DataCapture));
     get_byte = 0;
-    for(int i = 0; i < 3; i++){
+    for(int i = 0; i < 1; i++){
       if(digitalRead(input_pins[i]) == 1)
         bitSet(get_byte, i);
       else
