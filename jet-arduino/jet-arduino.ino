@@ -47,7 +47,7 @@ void(* resetFunc) (void) = 0;
 
 void setup() {
   wdt_enable( WDTO_8S);
-  Serial.begin(9600); 
+  Serial.begin(57600); 
   for(int i = 0; i < 4; i++){
     pinMode(input_pins[i], INPUT_PULLUP);
     pinMode(output_pins[i],OUTPUT);
@@ -157,7 +157,7 @@ if (Serial.available() > 0)
     counter_a_b = 0;
     digitalWrite(DataCapture, !digitalRead(DataCapture));
     get_byte = 0;
-    for(int i = 0; i < 1; i++){
+    for(int i = 0; i < 3; i++){
       if(digitalRead(input_pins[i]) == 1)
         bitSet(get_byte, i);
       else
