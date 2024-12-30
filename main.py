@@ -12,6 +12,24 @@ import os
 import cv2
 from threading import Thread
 import evdev
+import logging
+
+
+date = datetime.datetime.now()
+date_hour, date_minute, date_second = time.strftime("%H"), time.strftime("%M"), time.strftime("%S")
+watcher_date_log = f"{date.year}_{date.month}_{date.day}_{date_hour}_{date_minute}_{date_second}"
+
+for handler in logging.root.handlers[:]:
+  logging.root.removeHandler(handler)
+
+logging.basicConfig(
+  filename=f"/home/pi/monitait_watcher_jet/watcher_{watcher_date_log}.log",
+  format="%(asctime)s:%(levelname)s:%(message)s",
+  filemode='a',
+  datefmt='%H:%M:%S',
+  level=logging.INFO
+)
+
 
 hostname = str(socket.gethostname())
 
@@ -72,6 +90,7 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
         else:
             try:
                 response = requests.post(URL, data=json.dumps(DATA), headers={"content-type": "application/json"})
+                logging.info(f"\n post data, response status code {response.status_code}")
                 # print(response.text, "code:", response.status_code)
                 if (response.status_code == requests.codes.ok):
                     return True
@@ -79,8 +98,10 @@ def watcher_update(register_id, quantity, defect_quantity, send_img, image_path=
                     return False
             except Exception as e:
                 # print(f"watcher update no image {e}")
+                logging.info(f"\n watcher update no image {e}")
                 return False
     except Exception as e:
+        logging.info(f"\n session going to close {e}")
         session.close()
         return False
 
@@ -93,6 +114,7 @@ class DB:
             self.cursor.execute('''create table monitait_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, register_id TEXT, temp_a INTEGER NULL, temp_b INTEGER NULL, image_name TEXT NULL, extra_info JSON, ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)''')
             self.dbconnect.commit()
         except Exception as e:
+            logging.info(f"\n DB init {e}")
             pass
             # print(f"DB > init {e}")
 
@@ -103,6 +125,7 @@ class DB:
             self.dbconnect.commit()
             return True
         except Exception as e:
+            logging.info(f"\n DB write {e}")
             # print(f"DB > write {e}")
             return False
 
@@ -112,6 +135,7 @@ class DB:
             rows = self.cursor.fetchall()
             return rows[0]
         except Exception as e:
+            logging.info(f"\n DB read {e}")
             # print(f"DB > read {e}")
             return []
 
@@ -121,6 +145,7 @@ class DB:
             self.dbconnect.commit()
             return True
         except Exception as e:
+            logging.info(f"\n DB delete {e}") 
             # print(f"DB > delete {e}")
             return False
 
@@ -185,6 +210,7 @@ class Ardiuno:
             self.serial_data = {}
             return True
         except Exception as e:
+            logging.info(f"\n serial 0 exception {e}")
             try:
                 self.ser = serial.Serial(
                     port='/dev/serial1', baudrate = 9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=1)
@@ -195,6 +221,7 @@ class Ardiuno:
                 self.extra_info = {}
                 return True
             except Exception as ee:
+                logging.info(f"\n serial 1 exception {ee}")
                 # print(e)
                 return False
 
@@ -205,6 +232,7 @@ class Ardiuno:
                 self.ser.close()
             return True
         except Exception as e:
+            logging.info(f"\n close serial exception {e}")
             # print(e)
             return False
 
@@ -238,6 +266,7 @@ class Ardiuno:
                     time.sleep(0.01)
 
                 except Exception as e:
+                    logging.info(f"\n arduino Serial reader {e}")
                     if "Input/output" in str(e):
                         try:
                             self.close_serial()
@@ -312,6 +341,7 @@ class Ardiuno:
                 # print(self.last_a,self.last_b,self.c,self.d)
                 time.sleep(0.01)
             except Exception as e:
+                logging.info(f"\n arduino GPIO reader {e}")
                 pass
                 # print(f"arduino GPIO reader {e}")
 
@@ -380,6 +410,7 @@ class Camera:
                         health_count = 0
                 time.sleep(0.1)
             except:
+                logging.info(f"\n stop thread exception {e}")
                 time.sleep(0.1)
                 pass
 
@@ -486,6 +517,7 @@ class Scanner:
             self.dev.ungrab()
             time.sleep(3)
             self.dev.grab()
+            logging.info(f"\n couldn't grab scanner")
             # print("couldn't grab scanner")
             pass
 
@@ -572,6 +604,7 @@ class Counter:
         s.connect(("8.8.8.8", 80))  # Google's public DNS server
         ip_address = s.getsockname()[0]  # Get the IP address
       except Exception as e:
+        logging.info(f"\n ip address exception {e}")
         if not("-IP-address-" in self.err_msg):
             self.err_msg = self.err_msg + "-IP-address-" + str(e)
       finally:
@@ -587,6 +620,7 @@ class Counter:
                         self.db.delete(data[0])
                 time.sleep(1)
             except Exception as e:
+                logging.info(f"\n db checker exception {e}")
                 if not("db_checker" in self.err_msg):
                     self.err_msg = self.err_msg + "db_checker" + str(e)
 
@@ -610,6 +644,7 @@ class Counter:
                     barcode = self.scanner.read_barcode()
                 # print(a, b, c, d , dps)
                 if a + b > dps or ts - self.last_server_signal > self.watcher_live_signal:
+                    logging.info(f"\n Captured the data")
                     self.last_server_signal = ts
                     if self.camera:
                         if ts - self.last_image > self.take_picture_interval:
@@ -658,6 +693,7 @@ class Counter:
                             if self.db.write(register_id=hostname, a=a, b=b, extra_info=extra_info, timestamp=timestamp, image_name=image_name):
                                 data_saved = True
                         except Exception as e:
+                            logging.info(f"\n db_write {e}")
                             if not("db_write" in self.err_msg):
                                 self.err_msg = self.err_msg + "db_write" + str(e)
                     if data_saved:
@@ -666,6 +702,7 @@ class Counter:
                 time.sleep(1)
             except Exception as e:
                 time.sleep(1)
+                logging.info(f"\n counter run {e}")
                 print(e)
                 if not("counter_run" in self.err_msg):
                     self.err_msg = self.err_msg + "counter_run" + str(e)
