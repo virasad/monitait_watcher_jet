@@ -133,7 +133,10 @@ class DB:
         try:
             self.cursor.execute('SELECT * FROM monitait_table LIMIT 1')
             rows = self.cursor.fetchall()
-            return rows[0]
+            if len(rows) != 0:
+              return rows[0]
+            else:
+              return []
         except Exception as e:
             logging.info(f"\n DB read {e}")
             # print(f"DB > read {e}")
