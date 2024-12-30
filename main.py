@@ -564,9 +564,11 @@ class Scanner:
             self.upcnumber = self.barcode_reader_evdev()
             # print(self.upcnumber)
         except KeyboardInterrupt:
+            logging.info(f"\n keyboard interrupt")
             # print('Keyboard interrupt')
             pass
         except Exception as err:
+            logging.info(f"\n error {err}")
             # print(err)
             pass
 #        self.dev.ungrab()
