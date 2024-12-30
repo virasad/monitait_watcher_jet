@@ -650,7 +650,7 @@ class Counter:
                 if self.scanner:
                     barcode = self.scanner.read_barcode()
                 # print(a, b, c, d , dps)
-                if self.counting_index % 5 == 0:
+                if self.counting_index % 100 == 0:
                   logging.info(f"\n a: {a}, b: {b}, c: {c}, d: {d} , dps: {dps}, {ts - self.last_server_signal}, {self.watcher_live_signal}")
                 # reset counting index
                 if self.counting_index > 500:
