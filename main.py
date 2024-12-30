@@ -631,6 +631,7 @@ class Counter:
 
     def run(self):
         self.last_server_signal = time.time()
+        self.counting_index = 0
         if self.camera:
             self.last_image = time.time()
         if self.scanner:
@@ -639,6 +640,7 @@ class Counter:
         
         while not self.stop_thread:
             try:
+                self.counting_index += 1
                 data_saved = False
                 send_image = False
                 image_name = ""
@@ -648,6 +650,8 @@ class Counter:
                 if self.scanner:
                     barcode = self.scanner.read_barcode()
                 # print(a, b, c, d , dps)
+                if self.counting_index % 5 == 0:
+                  logging.info(f"\n a: {a}, b: {b}, c: {c}, d: {} , dps: {dps}, {ts - self.last_server_signal}, {self.watcher_live_signal}")
                 if a + b > dps or ts - self.last_server_signal > self.watcher_live_signal:
                     logging.info(f"\n Captured the data")
                     self.last_server_signal = ts
