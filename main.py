@@ -23,11 +23,11 @@ for handler in logging.root.handlers[:]:
   logging.root.removeHandler(handler)
 
 logging.basicConfig(
-  filename=f"/home/pi/monitait_watcher_jet/watcher_{watcher_date_log}.log",
-  format="%(asctime)s:%(levelname)s:%(message)s",
-  filemode='a',
-  datefmt='%H:%M:%S',
-  level=logging.INFO
+    filename=f"/home/pi/monitait_watcher_jet/watcher_{watcher_date_log}.log",
+    format="%(asctime)s:%(levelname)s:%(message)s",
+    filemode='a',
+    datefmt='%Y-%m-%d %H:%M:%S',  # Include year, month, day, hour, minute, second
+    level=logging.INFO
 )
 
 
@@ -699,7 +699,7 @@ class Counter:
                             extra_info.update({"batch_uuid" : str(self.old_barcode)})
 
                     timestamp = datetime.datetime.utcnow()
-
+                    logging.info(f"\n Updated the extra info dict, time stamp {timestamp}")
                     if watcher_update(hostname, quantity=a, defect_quantity=b, send_img=send_image, image_path=image_name, extra_info=extra_info, timestamp=timestamp):
                         data_saved = True
                     else:
@@ -713,6 +713,7 @@ class Counter:
                     if data_saved:
                         self.arduino.minus(a=a, b=b)
 
+                    logging.info(f"\n Finishied data uploading, error msg {self.err_msg}")
                 time.sleep(1)
             except Exception as e:
                 time.sleep(1)
