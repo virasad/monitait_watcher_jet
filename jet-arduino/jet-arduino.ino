@@ -148,7 +148,7 @@ if (Serial.available() > 0)
   Serial.print("Red:0,");
   Serial.print("Green:0,");
   Serial.print("Blue:0,");
-  Serial.print("Color:0, ");
+  Serial.print("Color:0,");
   Serial.print("\n");
   
   // check if RPI is signaling the ARDUINO
