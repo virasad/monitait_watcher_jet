@@ -275,9 +275,9 @@ void count_up_a(){
     a_capture_time = millis();
     counter_a++;
     if (digitalRead(input_b) == HIGH)
-      encoder_counter++;
+      encoder_counter--;
     else
-      encoder_counter--;  
+      encoder_counter++;  
   }  
   return;
 }
@@ -294,9 +294,9 @@ void count_up_b(){
     b_capture_time = millis();
     counter_b++;
     if (digitalRead(input_a) == HIGH)
-      encoder_counter--;
-    else
       encoder_counter++;
+    else
+      encoder_counter--;
   }  
   return;
 }
