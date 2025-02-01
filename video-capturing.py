@@ -97,22 +97,36 @@ except Exception as e:
 
 # Capturing image from the IP camera
 # Create the VideoCapture object with the authenticated URL
+# Output video file settings
+output_file = "/home/pi/monitait_watcher_jet/output_video.mp4"
+fps = 30  # Adjust based on your stream's frame rate
+frame_width = int(cv2.VideoCapture(snapshot_url).get(cv2.CAP_PROP_FRAME_WIDTH))
+frame_height = int(cv2.VideoCapture(snapshot_url).get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+# Define the codec and create a VideoWriter object
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for .mp4 files
+out = cv2.VideoWriter(output_file, fourcc, fps, (frame_width, frame_height))
+
 try:
       video_cap = cv2.VideoCapture(snapshot_url)
-      print("start image capturing")
+      print("Starting video capture...")
+
       if video_cap.isOpened():
-            ret, src = video_cap.read()
+            start_time = time.time()  # Record the start time
+            while (time.time() - start_time) < 20:  # Capture for 20 seconds
+                  ret, frame = video_cap.read()
+                  if ret:
+                        out.write(frame)  # Write the frame to the video file
+                  else:
+                        print("Failed to capture frame")
+                        break
+
             video_cap.release()
-            
-            date = datetime.datetime.now()
-            date_hour, date_minute, date_second = time.strftime("%H"), time.strftime("%M"), time.strftime("%S")
-            image_number = f"{date.year}_{date.month}_{date.day}_{date_hour}_{date_minute}_{date_second}_t"
-            image_path = "/home/pi/monitait_watcher_jet/" + str(image_number)
-            cv2.imwrite(f"{image_path}.jpg", src)
-except Exception as e2:
-      print("raising error in video capturing", e2)
-      pass
-      
+            out.release()
+            print("Video capture completed and saved to:", output_file)
+
+except Exception as e:
+    print("Error in video capturing:", e)
 
 # def watcher_update(register_id, quantity, defect_quantity, send_img, image_path="scene_image.jpg", product_id=0, lot_info=0, extra_info=None, *args, **kwargs):
 #   quantity = quantity
