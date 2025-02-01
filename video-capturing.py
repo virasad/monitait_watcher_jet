@@ -96,35 +96,46 @@ except Exception as e:
 
 
 # Capturing image from the IP camera
-# Create the VideoCapture object with the authenticated URL
 # Output video file settings
 output_file = "/home/pi/monitait_watcher_jet/output_video.mp4"
-fps = 30  # Adjust based on your stream's frame rate
-frame_width = int(cv2.VideoCapture(snapshot_url).get(cv2.CAP_PROP_FRAME_WIDTH))
-frame_height = int(cv2.VideoCapture(snapshot_url).get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-# Define the codec and create a VideoWriter object
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for .mp4 files
-out = cv2.VideoWriter(output_file, fourcc, fps, (frame_width, frame_height))
+desired_duration = 20  # Desired video length in seconds
 
 try:
       video_cap = cv2.VideoCapture(snapshot_url)
       print("Starting video capture...")
 
       if video_cap.isOpened():
+            # Get the actual frame rate of the stream
+            fps = video_cap.get(cv2.CAP_PROP_FPS)
+            if fps <= 0:
+                  fps = 30  # Default to 30 fps if the frame rate is not available
+
+            frame_width = int(video_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            frame_height = int(video_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+            # Define the codec and create a VideoWriter object
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for .mp4 files
+            out = cv2.VideoWriter(output_file, fourcc, fps, (frame_width, frame_height))
+
             start_time = time.time()  # Record the start time
-            while (time.time() - start_time) < 20:  # Capture for 20 seconds
+            frame_count = 0
+
+            while (time.time() - start_time) < desired_duration:
                   ret, frame = video_cap.read()
                   if ret:
                         out.write(frame)  # Write the frame to the video file
+                        frame_count += 1
                   else:
                         print("Failed to capture frame")
                         break
 
             video_cap.release()
             out.release()
-            print("Video capture completed and saved to:", output_file)
+
+            # Calculate actual video length
+            actual_duration = frame_count / fps
+            print(f"Video capture completed. Actual video length: {actual_duration:.2f} seconds")
+            print("Video saved to:", output_file)
 
 except Exception as e:
     print("Error in video capturing:", e)
-
