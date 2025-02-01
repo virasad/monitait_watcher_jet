@@ -81,18 +81,16 @@ psi_thresholds = 50
 #   serial_connection = False
 #   pass
 
-
+print("initialed the parameters")
 try:
       video_cap = cv2.VideoCapture(snapshot_url)
-      video_cap_1 = cv2.VideoCapture(snapshot_url)
             
-      if video_cap.isOpened() or video_cap_1.isOpened():
+      if video_cap.isOpened():
             video_cap.release()
-            video_cap_1.release()   
             print("The camera is ready")
             camera_connection = True
 except Exception as e:
-      err_msg = err_msg + "-cam_init" + str(e)
+      print("error in camera initaling", e)
       camera_connection = False
       pass
 
@@ -101,7 +99,7 @@ except Exception as e:
 # Create the VideoCapture object with the authenticated URL
 try:
       video_cap = cv2.VideoCapture(snapshot_url)
-      
+      print("start image capturing")
       if video_cap.isOpened():
             ret, src = video_cap.read()
             video_cap.release()
@@ -110,8 +108,11 @@ try:
             date_hour, date_minute, date_second = time.strftime("%H"), time.strftime("%M"), time.strftime("%S")
             image_number = f"{date.year}_{date.month}_{date.day}_{date_hour}_{date_minute}_{date_second}_t"
             image_path = "/home/pi/monitait_watcher_jet/" + str(image_number)
+            cv2.imwrite(f"{image_path}.jpg", src)
 except Exception as e2:
-      print("raising error in video capturing", E)
+      print("raising error in video capturing", e2)
+      pass
+      
 
 # def watcher_update(register_id, quantity, defect_quantity, send_img, image_path="scene_image.jpg", product_id=0, lot_info=0, extra_info=None, *args, **kwargs):
 #   quantity = quantity
