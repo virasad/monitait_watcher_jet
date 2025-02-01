@@ -110,6 +110,8 @@ try:
             date_hour, date_minute, date_second = time.strftime("%H"), time.strftime("%M"), time.strftime("%S")
             image_number = f"{date.year}_{date.month}_{date.day}_{date_hour}_{date_minute}_{date_second}_t"
             image_path = "/home/pi/monitait_watcher_jet/" + str(image_number)
+except Exception as e2:
+      print("raising error in video capturing", E)
 
 # def watcher_update(register_id, quantity, defect_quantity, send_img, image_path="scene_image.jpg", product_id=0, lot_info=0, extra_info=None, *args, **kwargs):
 #   quantity = quantity
