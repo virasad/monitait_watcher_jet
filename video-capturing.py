@@ -102,10 +102,10 @@ print("initialed the parameters")
 
 # List of camera IPs
 camera_ips = [
-    "http://192.168.1.132/video",
-    "http://192.168.1.134/video",
-    "http://192.168.1.136/video",
-    "http://192.168.1.138/video"
+    "192.168.1.132",
+    "192.168.1.134",
+    "192.168.1.136",
+    "192.168.1.138"
 ]
 
 # The IP camera's addresses
