@@ -45,6 +45,16 @@ int pwmdown = 255;
 byte get_byte;
 byte out_pins_number;
 
+volatile long last_encoder_count = 0;
+long pulse_sec_speed = 0;
+unsigned long last_speed_calc_time = 0;
+
+volatile long last_encoder_count_minute = 0;
+long pulse_min_speed = 0;
+unsigned long last_speed_calc_time_minute = 0;
+
+volatile long downtime_seconds = 0;
+
 void(* resetFunc) (void) = 0;
 
 void setup() {
@@ -139,7 +149,7 @@ if (Serial.available() > 0)
     }
 
 
-  printInfo(encoder_counter, counter_ok, counter_ng, elapsed_speed, analog);
+  printInfo();
   // check if RPI is signaling the ARDUINO
   if (digitalRead(piPin)==LOW){
     last_pi_ping_time = millis();
@@ -163,7 +173,7 @@ if (Serial.available() > 0)
       digitalWrite(ok_identifier, LOW);
       digitalWrite(ng_identifier, LOW);
       delay(1);
-      printInfo(encoder_counter, counter_ok, counter_ng, elapsed_speed, analog);
+      printInfo();
     }
   }
   else {
@@ -211,6 +221,21 @@ if (Serial.available() > 0)
   if (now_millis - last_pi_ping_time > timeout_threshold*restart_counter){
     //restart rpi
   } 
+
+  if (now_millis - last_speed_calc_time >= 125000) { // as we changed the frequncy of system, now each millisecond pules is 1/125 of actual millis
+      pulse_sec_speed = (encoder_counter - last_encoder_count); // Pulses per second (PPS)
+      last_encoder_count = encoder_counter; 
+      last_speed_calc_time = now_millis;
+  }
+  
+  if (now_millis - last_speed_calc_time_minute >= 1250000) { 
+      pulse_min_speed = (encoder_counter - last_encoder_count_minute) * 6; // Pulses per minute (1 min)
+      last_encoder_count_minute = encoder_counter; 
+      last_speed_calc_time_minute = now_millis;
+      if (pulse_sec_speed == 0){
+        downtime_seconds+=10;
+      };
+  }
   elapsed_speed =  long(50/(now_millis - a_capture_time) + 50/(now_millis - b_capture_time) + elapsed_speed*999/1000) ;
   counter_rpi_reboot = (elapsed_speed+1000)*restart_counter;
   counter_sum_ok_ng = (999*counter_sum_ok_ng + abs(counter_ok + counter_ng))/1000;
@@ -286,12 +311,15 @@ void count_up_b(){
   return;
 }
 
-void printInfo(int encoder_counter, int counter_ok, int counter_ng, int elapsed_speed, int analog) {
-  Serial.print("Encoder:"); Serial.print(encoder_counter); Serial.print(",");
-  Serial.print("Red:"); Serial.print(counter_ok); Serial.print(",");
-  Serial.print("Green:"); Serial.print(counter_ng); Serial.print(",");
-  Serial.print("Blue:"); Serial.print(elapsed_speed); Serial.print(",");
-  Serial.print("Color:"); Serial.print(analog); Serial.print(",");
+void printInfo() {
+  Serial.print("ENC:"); Serial.print(encoder_counter); Serial.print(",");
+  Serial.print("OKC:"); Serial.print(counter_ok); Serial.print(",");
+  Serial.print("NGC:"); Serial.print(counter_ng); Serial.print(",");
+  Serial.print("PPS:"); Serial.print(pulse_sec_speed); Serial.print(",");
+  Serial.print("PPM:"); Serial.print(pulse_min_speed); Serial.print(",");
+  Serial.print("DWS:"); Serial.print(downtime_seconds); Serial.print(",");
+  Serial.print("ANG:"); Serial.print(analog); Serial.print(",");
+  Serial.print("PWR:"); Serial.print(battery); Serial.print(",");
   Serial.print("\n");
   wdt_reset();
 }
