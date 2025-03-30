@@ -8,7 +8,7 @@ const int UP_PIN = 6;
 const int DOWN_PIN = 5;
 const byte piPin = 11; // RPI Signal to Arduino
 const byte ok_or_ng = 18; // RPI Address to Arduino
-const byte warning = 10; // warning LED Panel
+const byte warning_pin = 10; // warning LED Panel
 const byte heart_beat = 13; // Heart Icon on LED Panel
 const byte rpi_off = 12; // To force restart RPI by Arduino
 const byte ok_identifier = 8; // RPI Address to Arduino
@@ -41,6 +41,7 @@ unsigned long timeout_threshold = 100000;
 int pwmup = 255;
 int pwmdown = 255;
 
+byte output_status = 0; // Store real-time output state
 
 byte get_byte;
 byte out_pins_number;
@@ -74,8 +75,8 @@ void setup() {
   pinMode(ng_identifier, OUTPUT);
   pinMode(rpi_off, OUTPUT);
   pinMode(heart_beat, OUTPUT);
-  pinMode(warning, OUTPUT);
-  digitalWrite(warning, HIGH);
+  pinMode(warning_pin, OUTPUT);
+  digitalWrite(warning_pin, HIGH);
   
   attachInterrupt(digitalPinToInterrupt(input_ok), count_up_a, RISING);
   attachInterrupt(digitalPinToInterrupt(input_ng), count_up_b, RISING);
@@ -84,72 +85,7 @@ void setup() {
 }
 
 void loop() {
-  // get analog data
-  battery = analogRead(A6);  
-  analog= analogRead(A7);
-  i++;
-
-if (Serial.available() > 0)
-  {
-//    // read the incoming byte:
-    String inString = Serial.readStringUntil('\n');
-    char inChar=inString[0];
-//    // say what you got:
-    switch (inChar){
-      case '1':
-        {analogWrite(UP_PIN, 255-pwmup);
-        analogWrite(DOWN_PIN, 255);}
-        break;
-
-      case '2':
-        {analogWrite(UP_PIN, 255);
-        analogWrite(DOWN_PIN, 255-pwmdown);}
-        break;
-
-      case '8':
-        {analogWrite(UP_PIN, 255);
-        analogWrite(DOWN_PIN, 255);}
-        break;
-
-      case '3':
-        {encoder_counter=0;}
-        break;
-
-      case 'a':
-        {int commandIndex = inString.indexOf(',');
-        if (commandIndex != -1){counter_ok = counter_ok - inString.substring(commandIndex +1).toInt();}}
-        break;
-
-      case 'b':
-        {int commandIndex = inString.indexOf(',');
-        if (commandIndex != -1){counter_ng = counter_ng - inString.substring(commandIndex +1).toInt();}}
-        break;
-
-      case '4':
-        {int commandIndex = inString.indexOf(',');
-        if (commandIndex != -1){pwmup = inString.substring(commandIndex +1).toInt();}}
-        break;
-
-      case '5':
-        {int commandIndex = inString.indexOf(',');
-        if (commandIndex != -1){pwmdown = inString.substring(commandIndex +1).toInt();}}
-        break;
-
-      case '7':
-        {digitalWrite(warning, HIGH);}
-        break;
-
-      case '6':
-        {digitalWrite(warning, LOW);}
-        break;
-    
-      default: 
-        break;
-      }
-    }
-
-
-  printInfo();
+  handleSerialAndAnalogData();
   // check if RPI is signaling the ARDUINO
   if (digitalRead(piPin)==LOW){
     last_pi_ping_time = millis();
@@ -173,7 +109,7 @@ if (Serial.available() > 0)
       digitalWrite(ok_identifier, LOW);
       digitalWrite(ng_identifier, LOW);
       delay(1);
-      printInfo();
+      handleSerialAndAnalogData();
     }
   }
   else {
@@ -216,52 +152,7 @@ if (Serial.available() > 0)
     }
 
   }
-  
-  now_millis = millis();
-  if (now_millis - last_pi_ping_time > timeout_threshold*restart_counter){
-    //restart rpi
-  } 
-
-  if (now_millis - last_speed_calc_time >= 125000) { // as we changed the frequncy of system, now each millisecond pules is 1/125 of actual millis
-      pulse_sec_speed = (encoder_counter - last_encoder_count); // Pulses per second (PPS)
-      last_encoder_count = encoder_counter; 
-      last_speed_calc_time = now_millis;
-  }
-  
-  if (now_millis - last_speed_calc_time_minute >= 1250000) { 
-      pulse_min_speed = (encoder_counter - last_encoder_count_minute) * 6; // Pulses per minute (1 min)
-      last_encoder_count_minute = encoder_counter; 
-      last_speed_calc_time_minute = now_millis;
-      if (pulse_sec_speed == 0){
-        downtime_seconds+=10;
-      };
-  }
-  elapsed_speed =  long(50/(now_millis - a_capture_time) + 50/(now_millis - b_capture_time) + elapsed_speed*999/1000) ;
-  counter_rpi_reboot = (elapsed_speed+1000)*restart_counter;
-  counter_sum_ok_ng = (999*counter_sum_ok_ng + abs(counter_ok + counter_ng))/1000;
-  if ((battery > 100 and battery < 800) or counter_sum_ok_ng > counter_rpi_reboot/2)
-    digitalWrite(heart_beat, HIGH);
-  else
-    digitalWrite(heart_beat, LOW);
       
-  // if (counter_sum_ok_ng > counter_rpi_reboot){
-  //   digitalWrite(rpi_off, HIGH);
-  //   delay(1000);
-  //   digitalWrite(rpi_off, LOW);
-  //   if (restart_counter < 500){
-  //       restart_counter = restart_counter * 2;
-  //       counter_rpi_reboot = (elapsed_speed+1000)*restart_counter;
-  //     }
-  //   else{
-  //       restart_counter = 499;
-  //       resetFunc();
-  //       }
-  //   delay(1000);
-  // }
-  
-  // if ((counter_sum_ok_ng < counter_rpi_reboot/100) and (restart_counter > 2)){
-  //   restart_counter = restart_counter/2;
-  // }
   delay(1);
   
 }
@@ -311,6 +202,144 @@ void count_up_b(){
   return;
 }
 
+void handleSerialAndAnalogData() {
+  // Get analog data
+  battery = analogRead(A6);  
+  analog = analogRead(A7);
+  i++;
+
+  if (Serial.available() > 0) {
+    // Read the incoming byte
+    String inString = Serial.readStringUntil('\n');
+    char inChar = inString[0];
+
+    // Handle the command based on the received character
+    switch (inChar) {
+      case '1':
+        analogWrite(UP_PIN, 255 - pwmup);
+        analogWrite(DOWN_PIN, 255);
+        updateOutputStatus(1, 0, -1);
+        break;
+
+      case '2':
+        analogWrite(UP_PIN, 255);
+        analogWrite(DOWN_PIN, 255 - pwmdown);
+        updateOutputStatus(0, 1, -1);
+        break;
+
+      case '8':
+        analogWrite(UP_PIN, 255);
+        analogWrite(DOWN_PIN, 255);
+        updateOutputStatus(0, 0, -1);
+        break;
+
+      case '9':
+        analogWrite(UP_PIN, 255 - pwmup);
+        analogWrite(DOWN_PIN, 255 - pwmdown);
+        updateOutputStatus(1, 1, -1);
+        break;
+
+      case '3':
+        encoder_counter = 0;
+        break;
+
+      case 'a':
+        {
+          int commandIndex = inString.indexOf(',');
+          if (commandIndex != -1) {
+            counter_ok = counter_ok - inString.substring(commandIndex + 1).toInt();
+          }
+        }
+        break;
+
+      case 'b':
+        {
+          int commandIndex = inString.indexOf(',');
+          if (commandIndex != -1) {
+            counter_ng = counter_ng - inString.substring(commandIndex + 1).toInt();
+          }
+        }
+        break;
+
+      case '4':
+        {
+          int commandIndex = inString.indexOf(',');
+          if (commandIndex != -1) {
+            pwmup = inString.substring(commandIndex + 1).toInt();
+          }
+        }
+        break;
+
+      case '5':
+        {
+          int commandIndex = inString.indexOf(',');
+          if (commandIndex != -1) {
+            pwmdown = inString.substring(commandIndex + 1).toInt();
+          }
+        }
+        break;
+
+      case '7':
+        digitalWrite(warning_pin, HIGH);
+        updateOutputStatus(-1, -1, 1);
+        break;
+
+      case '6':
+        digitalWrite(warning_pin, LOW);
+        updateOutputStatus(-1, -1, 0);
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  printInfo();
+
+  unsigned long now_millis = millis();
+  
+  // Check if we need to restart the RPI
+  if (now_millis - last_pi_ping_time > timeout_threshold * restart_counter) {
+    // restart rpi
+  }
+
+  // Update pulse per second speed
+  if (now_millis - last_speed_calc_time >= 125000) { 
+    pulse_sec_speed = (encoder_counter - last_encoder_count); // Pulses per second (PPS)
+    last_encoder_count = encoder_counter;
+    last_speed_calc_time = now_millis;
+  }
+
+  // Update pulse per minute speed
+  if (now_millis - last_speed_calc_time_minute >= 1250000) { 
+    pulse_min_speed = (encoder_counter - last_encoder_count_minute) * 6; // Pulses per minute (1 min)
+    last_encoder_count_minute = encoder_counter;
+    last_speed_calc_time_minute = now_millis;
+    if (pulse_sec_speed == 0) {
+      downtime_seconds += 10;
+    }
+  }
+
+  // Handle heart beat logic based on battery and counter sum
+  if ((battery > 100 && battery < 800) || counter_sum_ok_ng > counter_rpi_reboot / 2) {
+    digitalWrite(heart_beat, HIGH);
+  } else {
+    digitalWrite(heart_beat, LOW);
+  }
+}
+
+
+void updateOutputStatus(int up, int down, int warn) {
+  if (up == 1) bitSet(output_status, 0); // UP ON
+  if (up == 0) bitClear(output_status, 0); // UP OFF
+  
+  if (down == 1) bitSet(output_status, 1); // DOWN ON
+  if (down == 0) bitClear(output_status, 1); // DOWN OFF
+  
+  if (warn == 1) bitSet(output_status, 4); // WARNING ON
+  if (warn == 0) bitClear(output_status, 4); // WARNING OFF
+}
+
 void printInfo() {
   Serial.print("ENC:"); Serial.print(encoder_counter); Serial.print(",");
   Serial.print("OKC:"); Serial.print(counter_ok); Serial.print(",");
@@ -320,6 +349,7 @@ void printInfo() {
   Serial.print("DWS:"); Serial.print(downtime_seconds); Serial.print(",");
   Serial.print("ANG:"); Serial.print(analog); Serial.print(",");
   Serial.print("PWR:"); Serial.print(battery); Serial.print(",");
+  Serial.print("STS:"); Serial.print(output_status); Serial.print(",");  // Added output status
   Serial.print("\n");
   wdt_reset();
 }
