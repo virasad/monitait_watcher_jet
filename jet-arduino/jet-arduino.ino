@@ -2,6 +2,8 @@
 
 // read documenation of indicators and the watcher in https://monitait.com/docs
 
+const unsigned long ONE_SEC_PULSES = 125000; // Number of pulses in one second
+
 const byte input_ok = 2; // OK
 const byte input_ng = 3; // NG
 const int UP_PIN = 6;
@@ -55,13 +57,14 @@ long pulse_min_speed = 0;
 unsigned long last_speed_calc_time_minute = 0;
 
 volatile long downtime_seconds = 0;
-
+int downtime_threshold = 10;
 void(* resetFunc) (void) = 0;
 
 void setup() {
-  wdt_enable( WDTO_8S);
-  Serial.begin(57600); 
-  for(int i = 0; i < 4; i++){
+  wdt_enable(WDTO_8S);  // 8 second timeout
+  Serial.begin(57600);
+  Serial.setTimeout(100); // Add timeout for serial operations
+  for(int i = 0; i < 3; i++){
     pinMode(input_pins[i], INPUT_PULLUP);
     pinMode(output_pins[i],OUTPUT);
   }
@@ -85,10 +88,15 @@ void setup() {
 }
 
 void loop() {
+  // Reset watchdog at the start of each loop
+  wdt_reset();
+  
   handleSerialAndAnalogData();
-  // check if RPI is signaling the ARDUINO
+  
+  // Add timeout protection for RPI communication
   if (digitalRead(piPin)==LOW){
     last_pi_ping_time = millis();
+    restart_counter = 1;
     counter_sum_ok_ng = 0;
     digitalWrite(heart_beat, !digitalRead(heart_beat));
     get_byte = 0;
@@ -209,8 +217,10 @@ void handleSerialAndAnalogData() {
   i++;
 
   if (Serial.available() > 0) {
-    // Read the incoming byte
+    // Read the incoming byte with timeout
     String inString = Serial.readStringUntil('\n');
+    if (inString.length() == 0) return; // Skip if no data received
+    
     char inChar = inString[0];
 
     // Handle the command based on the received character
@@ -261,11 +271,22 @@ void handleSerialAndAnalogData() {
         }
         break;
 
+      case 'd':
+        {
+          int commandIndex = inString.indexOf(',');
+          if (commandIndex != -1) {
+            int temp_threshold = inString.substring(commandIndex + 1).toInt();
+            downtime_threshold = (temp_threshold > 0) ? temp_threshold : 10; // Default to 10 if invalid
+          }
+        }
+        break;
+
       case '4':
         {
           int commandIndex = inString.indexOf(',');
           if (commandIndex != -1) {
-            pwmup = inString.substring(commandIndex + 1).toInt();
+            int temp_pwm = inString.substring(commandIndex + 1).toInt();
+            pwmup = (temp_pwm >= 0 && temp_pwm <= 255) ? temp_pwm : 255;
           }
         }
         break;
@@ -274,7 +295,8 @@ void handleSerialAndAnalogData() {
         {
           int commandIndex = inString.indexOf(',');
           if (commandIndex != -1) {
-            pwmdown = inString.substring(commandIndex + 1).toInt();
+            int temp_pwm = inString.substring(commandIndex + 1).toInt();
+            pwmdown = (temp_pwm >= 0 && temp_pwm <= 255) ? temp_pwm : 255;
           }
         }
         break;
@@ -299,24 +321,34 @@ void handleSerialAndAnalogData() {
   unsigned long now_millis = millis();
   
   // Check if we need to restart the RPI
-  if (now_millis - last_pi_ping_time > timeout_threshold * restart_counter) {
-    // restart rpi
+  if (now_millis - last_pi_ping_time > downtime_threshold * ONE_SEC_PULSES * restart_counter) {
+    // Only restart if we have data to send (counter_ok or counter_ng > 0)
+    if (counter_ok > 0 || counter_ng > 0) {
+      digitalWrite(rpi_off, HIGH); // Disconnect RPI power
+      delay(1000); // Wait 1 second before reconnecting power
+      digitalWrite(rpi_off, LOW); // Reconnect RPI power
+      
+      restart_counter++; // Increase restart counter
+      if (restart_counter > 10) { // Limit maximum restarts
+        restart_counter = -1;
+      }
+    }
   }
 
   // Update pulse per second speed
-  if (now_millis - last_speed_calc_time >= 125000) { 
+  if (now_millis - last_speed_calc_time >= ONE_SEC_PULSES) { 
     pulse_sec_speed = (encoder_counter - last_encoder_count); // Pulses per second (PPS)
     last_encoder_count = encoder_counter;
     last_speed_calc_time = now_millis;
   }
 
   // Update pulse per minute speed
-  if (now_millis - last_speed_calc_time_minute >= 1250000) { 
-    pulse_min_speed = (encoder_counter - last_encoder_count_minute) * 6; // Pulses per minute (1 min)
+  if (now_millis - last_speed_calc_time_minute >= ONE_SEC_PULSES*downtime_threshold) { 
+    pulse_min_speed = (encoder_counter - last_encoder_count_minute) * (downtime_threshold > 0 ? (60 / downtime_threshold) : 1); // Pulses per minute (1 min)
     last_encoder_count_minute = encoder_counter;
     last_speed_calc_time_minute = now_millis;
     if (pulse_sec_speed == 0) {
-      downtime_seconds += 10;
+      downtime_seconds += downtime_threshold;
     }
   }
 
@@ -336,8 +368,8 @@ void updateOutputStatus(int up, int down, int warn) {
   if (down == 1) bitSet(output_status, 1); // DOWN ON
   if (down == 0) bitClear(output_status, 1); // DOWN OFF
   
-  if (warn == 1) bitSet(output_status, 4); // WARNING ON
-  if (warn == 0) bitClear(output_status, 4); // WARNING OFF
+  if (warn == 1) bitSet(output_status, 2); // WARNING ON
+  if (warn == 0) bitClear(output_status, 2); // WARNING OFF
 }
 
 void printInfo() {
@@ -353,3 +385,4 @@ void printInfo() {
   Serial.print("\n");
   wdt_reset();
 }
+
