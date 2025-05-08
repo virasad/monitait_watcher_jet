@@ -4,12 +4,28 @@
 // read documenation of indicators and the watcher in https://monitait.com/docs
 
 // Timing constants
+const unsigned long TWO_MS_PULSES = 125;  // 125 pulses per 2 milliseconds
 const unsigned long TEN_MS_PULSES = 625;  // 625 pulses per 10 milliseconds
 const unsigned long ONE_SEC_PULSES = TEN_MS_PULSES * 100; // Number of pulses in one second
 const unsigned long ONE_MIN_PULSES = ONE_SEC_PULSES * 60;   // 3,750,000 pulses per minute
 
 // Restart interval (1 minute = 60 * 62500 = 3,750,000 pulses)
 const unsigned long MIN_RESTART_INTERVAL = ONE_MIN_PULSES;
+
+// Global timing variables
+unsigned long current_time = 0;  // Current time in milliseconds
+unsigned long ok_last_check_time = 0;  // Last check time for OK signal
+unsigned long ng_last_check_time = 0;  // Last check time for NG signal
+unsigned long last_speed_calc_time = 0;  // Last time speed was calculated
+unsigned long last_speed_calc_minute_time = 0;  // Last time minute speed was calculated
+unsigned long last_heartbeat_time = 0;  // Last time heartbeat LED was updated
+
+// Debounce counters
+unsigned int ok_high_count = 0;  // Counter for OK signal high state
+unsigned int ng_high_count = 0;  // Counter for NG signal high state
+
+// Serial communication
+String inString = "";  // Buffer for serial input
 
 // Input pins
 const byte PIN_OK_INPUT = 2;      // OK signal input
@@ -53,50 +69,48 @@ byte out_pins_number;
 
 volatile long last_encoder_count = 0;
 long pulse_sec_speed = 0;
-unsigned long last_speed_calc_time = 0;
 
 volatile long last_encoder_count_minute = 0;
 long pulse_min_speed = 0;
-unsigned long last_speed_calc_time_minute = 0;
 
 volatile long downtime_seconds = 0;
 int downtime_threshold = 10;
 void(* resetFunc) (void) = 0;
-
-#define EEPROM_OK_OFFSET_DELAY 0
-#define EEPROM_OK_DEBOUNCE_DELAY 1
-#define EEPROM_OK_DEBOUNCE_PERCENT 2
-#define EEPROM_NG_OFFSET_DELAY 3
-#define EEPROM_NG_DEBOUNCE_DELAY 4
-#define EEPROM_NG_DEBOUNCE_PERCENT 5
-#define EEPROM_PRINT_MODE 6
-#define EEPROM_EXT_RESET_ENABLED 7
-#define EEPROM_DOWNTIME_THRESHOLD 8
-#define EEPROM_BAUD_RATE 9
-#define EEPROM_VERBOSE_MODE 10
+#define EEPROM_PRINT_MODE 0        // 0-3: Print mode (0 for new, 1 for legacy)
+#define EEPROM_VERBOSE_MODE 4      // 4-7: Verbose mode (0 for off, 1 for on)
+#define EEPROM_EXT_RESET_ENABLED 8 // 8-11: External reset enabled (0 for off, 1 for on)
+#define EEPROM_OK_OFFSET_DELAY 12  // 12-15: OK offset delay in pulses
+#define EEPROM_OK_DEBOUNCE_DELAY 16 // 16-19: OK debounce delay in pulses
+#define EEPROM_OK_DEBOUNCE_PERCENT 20 // 20-23: OK debounce percent
+#define EEPROM_NG_OFFSET_DELAY 24  // 24-27: NG offset delay in pulses
+#define EEPROM_NG_DEBOUNCE_DELAY 28 // 28-31: NG debounce delay in pulses
+#define EEPROM_NG_DEBOUNCE_PERCENT 32 // 32-35: NG debounce percent
+#define EEPROM_DOWNTIME_THRESHOLD 36 // 36-39: Downtime threshold
+#define EEPROM_BAUD_RATE 40        // 40-43: Baud rate
 
 // Default baud rate if EEPROM is empty
 #define DEFAULT_BAUD_RATE 57600
 
 // Convert milliseconds to pulses
-#define MS_TO_PULSES(ms) ((ms) * TEN_MS_PULSES / 10)
+#define MS_TO_PULSES(ms) (((ms) * TWO_MS_PULSES) / 2)
 // Convert pulses to milliseconds
-#define PULSES_TO_MS(pulses) ((pulses) * 10 / TEN_MS_PULSES)
+#define PULSES_TO_MS(pulses) ((pulses) * 2 / TWO_MS_PULSES)
 
 // Default delay values in milliseconds
 #define DEFAULT_OFFSET_DELAY_MS 0
 #define DEFAULT_DEBOUNCE_DELAY_MS 10
 #define DEFAULT_DEBOUNCE_PERCENT 60
 
-int ok_offset_delay = MS_TO_PULSES(DEFAULT_OFFSET_DELAY_MS);
-int ok_debounce_delay = MS_TO_PULSES(DEFAULT_DEBOUNCE_DELAY_MS);
-int ok_debounce_percent = DEFAULT_DEBOUNCE_PERCENT;
-int ng_offset_delay = MS_TO_PULSES(DEFAULT_OFFSET_DELAY_MS);
-int ng_debounce_delay = MS_TO_PULSES(DEFAULT_DEBOUNCE_DELAY_MS);
-int ng_debounce_percent = DEFAULT_DEBOUNCE_PERCENT;
-char print_mode = 'n'; // 'l' for legacy, 'n' for new
+unsigned long ok_offset_delay = MS_TO_PULSES(DEFAULT_OFFSET_DELAY_MS);
+unsigned long ok_debounce_delay = MS_TO_PULSES(DEFAULT_DEBOUNCE_DELAY_MS);
+unsigned long ok_debounce_percent = DEFAULT_DEBOUNCE_PERCENT;
+unsigned long ng_offset_delay = MS_TO_PULSES(DEFAULT_OFFSET_DELAY_MS);
+unsigned long ng_debounce_delay = MS_TO_PULSES(DEFAULT_DEBOUNCE_DELAY_MS);
+unsigned long ng_debounce_percent = DEFAULT_DEBOUNCE_PERCENT;
+bool legacy_print_mode = false;  // false for new format, true for legacy format
 bool ext_reset_enabled = false;
 bool verbose_mode = false;
+unsigned long baud_rate = DEFAULT_BAUD_RATE;  // Global baud rate variable
 
 // Add these with other global variables
 unsigned long counter_a_b = 0;
@@ -106,8 +120,8 @@ const unsigned long BASE_REBOOT_THRESHOLD = 1000;
 unsigned long last_restart_time = 0;      // Track last restart time
 volatile bool ok_interrupt_flag = false;
 volatile bool ng_interrupt_flag = false;
-volatile unsigned long ok_interrupt_pulses = 0;
-volatile unsigned long ng_interrupt_pulses = 0;
+volatile unsigned long ok_interrupt_time = 0;  // Changed from ok_interrupt_pulses
+volatile unsigned long ng_interrupt_time = 0;  // Changed from ng_interrupt_pulses
 int ok_debounce_threshold = 0;  // Pre-calculated threshold
 int ng_debounce_threshold = 0;  // Pre-calculated threshold
 volatile bool ok_pending_count = false;
@@ -117,7 +131,18 @@ volatile int ng_pending_encoder = 0;
 volatile unsigned long last_speed_calc_pulses = 0;
 volatile unsigned long last_speed_calc_minute_pulses = 0;
 volatile unsigned long last_restart_pulses = 0;
-volatile unsigned long last_pi_ping_pulses = 0;
+unsigned long last_heartbeat_pulses = 0;
+unsigned long heartbeat_interval_pulses = TEN_MS_PULSES * 100;  // Default to slow blink (1s)
+bool heartbeat_state = false;
+
+// Add these constants for heartbeat patterns (in pulses)
+const unsigned long HEARTBEAT_SLOW = TEN_MS_PULSES * 100;    // 1 second for normal operation
+const unsigned long HEARTBEAT_FAST = TEN_MS_PULSES * 20;     // 200ms for warning state
+const unsigned long HEARTBEAT_DOUBLE = TEN_MS_PULSES * 10;   // 100ms for double blink
+const unsigned long HEARTBEAT_SOLID = 0;      // 0 for solid on
+
+// Add these with other global variables
+unsigned long last_heartbeat_millis = 0;  // For millis-based timing
 
 // Add this function to calculate thresholds
 void updateDebounceThresholds() {
@@ -125,16 +150,91 @@ void updateDebounceThresholds() {
   ng_debounce_threshold = (ng_debounce_delay * ng_debounce_percent) / 100;
 }
 
+// Add these helper functions after the EEPROM definitions
+
+// Write a 4-byte (32-bit) value to EEPROM
+void EEPROMWriteULong(int address, unsigned long value) {
+  byte byte1 = value & 0xFF;
+  byte byte2 = (value >> 8) & 0xFF;
+  byte byte3 = (value >> 16) & 0xFF;
+  byte byte4 = (value >> 24) & 0xFF;
+  EEPROM.write(address, byte1);
+  EEPROM.write(address + 1, byte2);
+  EEPROM.write(address + 2, byte3);
+  EEPROM.write(address + 3, byte4);
+}
+
+// Read a 4-byte (32-bit) value from EEPROM
+unsigned long EEPROMReadULong(int address) {
+  byte byte1 = EEPROM.read(address);
+  byte byte2 = EEPROM.read(address + 1);
+  byte byte3 = EEPROM.read(address + 2);
+  byte byte4 = EEPROM.read(address + 3);
+  return ((unsigned long)byte4 << 24) | ((unsigned long)byte3 << 16) | ((unsigned long)byte2 << 8) | byte1;
+}
+
+// Initialize EEPROM with default values if empty
+void initializeEEPROMIfEmpty() {
+  // Check if EEPROM is empty (all bytes are 0xFF)
+  bool is_empty = true;
+  for (int i = 0; i < 44; i++) {  // Check first 44 bytes (all our settings)
+    if (EEPROM.read(i) != 0xFF) {
+      is_empty = false;
+      break;
+    }
+  }
+  
+  if (is_empty) {
+    // Write default values
+    EEPROMWriteULong(EEPROM_PRINT_MODE, 0);
+    EEPROMWriteULong(EEPROM_VERBOSE_MODE, 0);
+    EEPROMWriteULong(EEPROM_EXT_RESET_ENABLED, 0);  // Ensure external reset is disabled by default
+    EEPROMWriteULong(EEPROM_OK_OFFSET_DELAY, DEFAULT_OFFSET_DELAY_MS);
+    EEPROMWriteULong(EEPROM_OK_DEBOUNCE_DELAY, DEFAULT_DEBOUNCE_DELAY_MS);
+    EEPROMWriteULong(EEPROM_OK_DEBOUNCE_PERCENT, DEFAULT_DEBOUNCE_PERCENT);
+    EEPROMWriteULong(EEPROM_NG_OFFSET_DELAY, DEFAULT_OFFSET_DELAY_MS);
+    EEPROMWriteULong(EEPROM_NG_DEBOUNCE_DELAY, DEFAULT_DEBOUNCE_DELAY_MS);
+    EEPROMWriteULong(EEPROM_NG_DEBOUNCE_PERCENT, DEFAULT_DEBOUNCE_PERCENT);
+    EEPROMWriteULong(EEPROM_DOWNTIME_THRESHOLD, 10);
+    EEPROMWriteULong(EEPROM_BAUD_RATE, DEFAULT_BAUD_RATE);
+  }
+}
+
 void setup() {
   wdt_enable(WDTO_8S);  // 8 second timeout
   
+  // Initialize EEPROM with default values if empty
+  initializeEEPROMIfEmpty();
+  
   // Read baud rate from EEPROM
-  unsigned long baud_rate = EEPROM.read(EEPROM_BAUD_RATE);
-  if (baud_rate == 0) {  // If EEPROM is empty (0), set default value
+  baud_rate = EEPROMReadULong(EEPROM_BAUD_RATE);
+  if (baud_rate == 0 || baud_rate == 0xFFFFFFFF) {  // If EEPROM is empty or invalid
     baud_rate = DEFAULT_BAUD_RATE;
-    EEPROM.write(EEPROM_BAUD_RATE, baud_rate);
+    EEPROMWriteULong(EEPROM_BAUD_RATE, baud_rate);
   }
-  Serial.begin(baud_rate);
+  
+  // Initialize serial with the correct baud rate
+  switch(baud_rate) {
+    case 9600:
+      Serial.begin(9600);
+      break;
+    case 19200:
+      Serial.begin(19200);
+      break;
+    case 38400:
+      Serial.begin(38400);
+      break;
+    case 57600:
+      Serial.begin(57600);
+      break;
+    case 115200:
+      Serial.begin(115200);
+      break;
+    default:
+      Serial.begin(DEFAULT_BAUD_RATE);  // Fallback to default
+      break;
+  }
+  
   Serial.setTimeout(100); // Add timeout for serial operations
   for(int i = 0; i < 3; i++){
     pinMode(PIN_RPI_DATA_IN[i], INPUT_PULLUP);
@@ -159,19 +259,52 @@ void setup() {
   TCCR0B = TCCR0B & B11111000 | B00000001; // for PWM frequency of 62500.00 Hz/ B and U outputs
 
   // Read settings from EEPROM and convert to pulses
-  ok_offset_delay = MS_TO_PULSES(EEPROM.read(EEPROM_OK_OFFSET_DELAY));
-  ok_debounce_delay = MS_TO_PULSES(EEPROM.read(EEPROM_OK_DEBOUNCE_DELAY));
-  ok_debounce_percent = EEPROM.read(EEPROM_OK_DEBOUNCE_PERCENT);
-  ng_offset_delay = MS_TO_PULSES(EEPROM.read(EEPROM_NG_OFFSET_DELAY));
-  ng_debounce_delay = MS_TO_PULSES(EEPROM.read(EEPROM_NG_DEBOUNCE_DELAY));
-  ng_debounce_percent = EEPROM.read(EEPROM_NG_DEBOUNCE_PERCENT);
-  print_mode = EEPROM.read(EEPROM_PRINT_MODE);
-  ext_reset_enabled = EEPROM.read(EEPROM_EXT_RESET_ENABLED);
-  downtime_threshold = EEPROM.read(EEPROM_DOWNTIME_THRESHOLD);
-  verbose_mode = EEPROM.read(EEPROM_VERBOSE_MODE);
+  unsigned long ok_od = EEPROMReadULong(EEPROM_OK_OFFSET_DELAY);
+  unsigned long ok_dd = EEPROMReadULong(EEPROM_OK_DEBOUNCE_DELAY);
+  unsigned long ok_dp = EEPROMReadULong(EEPROM_OK_DEBOUNCE_PERCENT);
+  unsigned long ng_od = EEPROMReadULong(EEPROM_NG_OFFSET_DELAY);
+  unsigned long ng_dd = EEPROMReadULong(EEPROM_NG_DEBOUNCE_DELAY);
+  unsigned long ng_dp = EEPROMReadULong(EEPROM_NG_DEBOUNCE_PERCENT);
+  
+  // Validate and set default values if EEPROM values are invalid
+  ok_offset_delay = (ok_od == 0 || ok_od == 0xFFFFFFFF) ? MS_TO_PULSES(DEFAULT_OFFSET_DELAY_MS) : MS_TO_PULSES(ok_od);
+  ok_debounce_delay = (ok_dd == 0 || ok_dd == 0xFFFFFFFF) ? MS_TO_PULSES(DEFAULT_DEBOUNCE_DELAY_MS) : MS_TO_PULSES(ok_dd);
+  ok_debounce_percent = (ok_dp == 0 || ok_dp == 0xFFFFFFFF) ? DEFAULT_DEBOUNCE_PERCENT : ok_dp;
+  ng_offset_delay = (ng_od == 0 || ng_od == 0xFFFFFFFF) ? MS_TO_PULSES(DEFAULT_OFFSET_DELAY_MS) : MS_TO_PULSES(ng_od);
+  ng_debounce_delay = (ng_dd == 0 || ng_dd == 0xFFFFFFFF) ? MS_TO_PULSES(DEFAULT_DEBOUNCE_DELAY_MS) : MS_TO_PULSES(ng_dd);
+  ng_debounce_percent = (ng_dp == 0 || ng_dp == 0xFFFFFFFF) ? DEFAULT_DEBOUNCE_PERCENT : ng_dp;
+  
+  // Read mode settings from EEPROM
+  unsigned long stored_legacy = EEPROMReadULong(EEPROM_PRINT_MODE);
+  unsigned long stored_verbose = EEPROMReadULong(EEPROM_VERBOSE_MODE);
+  unsigned long stored_ext_reset = EEPROMReadULong(EEPROM_EXT_RESET_ENABLED);
+  
+  // Set defaults if EEPROM is empty
+  if (stored_legacy == 0 || stored_legacy == 0xFFFFFFFF) {
+    legacy_print_mode = false;  // Default to off (new format)
+    EEPROMWriteULong(EEPROM_PRINT_MODE, 0);
+  } else {
+    legacy_print_mode = (stored_legacy == 1);
+  }
+  
+  if (stored_verbose == 0 || stored_verbose == 0xFFFFFFFF) {
+    verbose_mode = false;  // Default to off
+    EEPROMWriteULong(EEPROM_VERBOSE_MODE, 0);
+  } else {
+    verbose_mode = (stored_verbose == 1);
+  }
+  
+  if (stored_ext_reset == 0 || stored_ext_reset == 0xFFFFFFFF) {
+    ext_reset_enabled = false;  // Default to disabled
+    EEPROMWriteULong(EEPROM_EXT_RESET_ENABLED, 0);
+  } else {
+    ext_reset_enabled = (stored_ext_reset == 1);
+  }
+  
+  downtime_threshold = EEPROMReadULong(EEPROM_DOWNTIME_THRESHOLD);
   if (downtime_threshold == 0) {  // If EEPROM is empty (0), set default value
     downtime_threshold = 10;
-    EEPROM.write(EEPROM_DOWNTIME_THRESHOLD, downtime_threshold);
+    EEPROMWriteULong(EEPROM_DOWNTIME_THRESHOLD, downtime_threshold);
   }
 
   // Calculate initial thresholds
@@ -182,14 +315,17 @@ void loop() {
   // Reset watchdog at the start of each loop
   wdt_reset();
   
+  // Get current time once for this loop iteration
+  current_time = millis();
+  
   handleSerialAndAnalogData();
   
   // Add timeout protection for RPI communication
   if (digitalRead(PIN_RPI_SIGNAL)==LOW){
-    last_pi_ping_time = millis();
+    last_pi_ping_time = current_time;
+    heartbeat_state = !heartbeat_state;
     restart_counter = 1;
     counter_sum_ok_ng = 0;
-    digitalWrite(PIN_HEARTBEAT_LED, !digitalRead(PIN_HEARTBEAT_LED));
     get_byte = 0;
     for(int i = 0; i < 3; i++){
       if(digitalRead(PIN_RPI_DATA_IN[i]) == 1)
@@ -251,6 +387,8 @@ void loop() {
 
   }  
   
+  // Update heartbeat LED with new pattern
+  updateHeartbeatLED();
 }
 
 void put_byte_on_pins(byte in_byte){
@@ -262,39 +400,32 @@ void put_byte_on_pins(byte in_byte){
 
 void count_up_ok() {
   ok_interrupt_flag = true;
-  ok_interrupt_pulses = encoder_counter;
+  ok_interrupt_time = millis();  
 }
 
 void count_up_ng() {
   ng_interrupt_flag = true;
-  ng_interrupt_pulses = encoder_counter;
+  ng_interrupt_time = millis(); 
 }
 
 void handleSerialAndAnalogData() {
-  // Get current pulses count
-  unsigned long current_pulses = encoder_counter;
-  
   // Get analog data
   battery = analogRead(A6);  
   analog = analogRead(A7);
 
   // Handle OK signal debouncing
   if (ok_interrupt_flag) {
-    static int ok_high_count = 0;
-    static unsigned long ok_last_check_pulses = 0;
-    
-    if (current_pulses - ok_last_check_pulses >= TEN_MS_PULSES / 10) {  // 1ms equivalent
-      ok_last_check_pulses = current_pulses;
+    if (current_time - ok_last_check_time >= TWO_MS_PULSES) {  // 2ms check
+      ok_last_check_time = current_time;
       
       if (digitalRead(PIN_OK_INPUT) == HIGH) {
-        ok_high_count++;
+        ok_high_count += 2;  // Increment by 2 since we check every 2ms
       }
       
       if (ok_high_count >= ok_debounce_delay) {
         if (ok_high_count > ok_debounce_threshold) {
           ok_pending_count = true;
           ok_pending_encoder = (digitalRead(PIN_NG_INPUT) == HIGH) ? -1 : 1;
-          ok_interrupt_pulses = current_pulses;
         }
         
         ok_high_count = 0;
@@ -305,21 +436,17 @@ void handleSerialAndAnalogData() {
 
   // Handle NG signal debouncing
   if (ng_interrupt_flag) {
-    static int ng_high_count = 0;
-    static unsigned long ng_last_check_pulses = 0;
-    
-    if (current_pulses - ng_last_check_pulses >= TEN_MS_PULSES / 10) {  // 1ms equivalent
-      ng_last_check_pulses = current_pulses;
+    if (current_time - ng_last_check_time >= TWO_MS_PULSES) {  // 2ms check
+      ng_last_check_time = current_time;
       
       if (digitalRead(PIN_NG_INPUT) == HIGH) {
-        ng_high_count++;
+        ng_high_count += 2;  // Increment by 2 since we check every 2ms
       }
       
       if (ng_high_count >= ng_debounce_delay) {
         if (ng_high_count > ng_debounce_threshold) {
           ng_pending_count = true;
           ng_pending_encoder = (digitalRead(PIN_OK_INPUT) == HIGH) ? 1 : -1;
-          ng_interrupt_pulses = current_pulses;
         }
         
         ng_high_count = 0;
@@ -330,14 +457,14 @@ void handleSerialAndAnalogData() {
 
   // Handle pending counts after offset delay
   // Check OK pending count
-  if (ok_pending_count && (current_pulses - ok_interrupt_pulses >= ok_offset_delay)) {
+  if (ok_pending_count && (current_time - ok_interrupt_time >= ok_offset_delay)) {
     counter_ok++;
     encoder_counter += ok_pending_encoder;
     ok_pending_count = false;
   }
 
   // Check NG pending count
-  if (ng_pending_count && (current_pulses - ng_interrupt_pulses >= ng_offset_delay)) {
+  if (ng_pending_count && (current_time - ng_interrupt_time >= ng_offset_delay)) {
     counter_ng++;
     encoder_counter += ng_pending_encoder;
     ng_pending_count = false;
@@ -345,7 +472,7 @@ void handleSerialAndAnalogData() {
 
   // Handle serial data
   while (Serial.available() > 0) {
-    String inString = Serial.readStringUntil('\n');
+    inString = Serial.readStringUntil('\n');
     if (inString.length() == 0) continue;
 
     char cmd = inString[0];
@@ -353,50 +480,52 @@ void handleSerialAndAnalogData() {
       case 'o':
       case 'n': {
         // Handle OK/NG configuration commands
-        int commandIndex = inString.indexOf(',');
-        if (commandIndex != -1) {
-          String subCmd = inString.substring(2, commandIndex);
-          int value = inString.substring(commandIndex + 1).toInt();
+        int firstComma = inString.indexOf(',');
+        int secondComma = inString.indexOf(',', firstComma + 1);
+        
+        if (firstComma != -1 && secondComma != -1) {
+          String subCmd = inString.substring(firstComma + 1, secondComma);
+          int value = inString.substring(secondComma + 1).toInt();
           
           if (cmd == 'o') {
             if (subCmd == "od") {
-              ok_offset_delay = MS_TO_PULSES(value);
-              EEPROM.write(EEPROM_OK_OFFSET_DELAY, value);
+              if (value >= 0) {  // Validate value
+                ok_offset_delay = MS_TO_PULSES(value);
+                EEPROMWriteULong(EEPROM_OK_OFFSET_DELAY, value);
+              }
             } else if (subCmd == "dd") {
-              ok_debounce_delay = MS_TO_PULSES(value);
-              EEPROM.write(EEPROM_OK_DEBOUNCE_DELAY, value);
-              updateDebounceThresholds();
+              if (value >= 0) {  // Validate value
+                ok_debounce_delay = MS_TO_PULSES(value);
+                EEPROMWriteULong(EEPROM_OK_DEBOUNCE_DELAY, value);
+                updateDebounceThresholds();
+              }
             } else if (subCmd == "dp") {
-              ok_debounce_percent = value;
-              EEPROM.write(EEPROM_OK_DEBOUNCE_PERCENT, ok_debounce_percent);
-              updateDebounceThresholds();
+              if (value >= 0 && value <= 100) {  // Validate percentage
+                ok_debounce_percent = value;
+                EEPROMWriteULong(EEPROM_OK_DEBOUNCE_PERCENT, ok_debounce_percent);
+                updateDebounceThresholds();
+              }
             }
           } else { // cmd == 'n'
             if (subCmd == "od") {
-              ng_offset_delay = MS_TO_PULSES(value);
-              EEPROM.write(EEPROM_NG_OFFSET_DELAY, value);
+              if (value >= 0) {  // Validate value
+                ng_offset_delay = MS_TO_PULSES(value);
+                EEPROMWriteULong(EEPROM_NG_OFFSET_DELAY, value);
+              }
             } else if (subCmd == "dd") {
-              ng_debounce_delay = MS_TO_PULSES(value);
-              EEPROM.write(EEPROM_NG_DEBOUNCE_DELAY, value);
-              updateDebounceThresholds();
+              if (value >= 0) {  // Validate value
+                ng_debounce_delay = MS_TO_PULSES(value);
+                EEPROMWriteULong(EEPROM_NG_DEBOUNCE_DELAY, value);
+                updateDebounceThresholds();
+              }
             } else if (subCmd == "dp") {
-              ng_debounce_percent = value;
-              EEPROM.write(EEPROM_NG_DEBOUNCE_PERCENT, ng_debounce_percent);
-              updateDebounceThresholds();
+              if (value >= 0 && value <= 100) {  // Validate percentage
+                ng_debounce_percent = value;
+                EEPROMWriteULong(EEPROM_NG_DEBOUNCE_PERCENT, ng_debounce_percent);
+                updateDebounceThresholds();
+              }
             }
           }
-        }
-        break;
-      }
-
-      case 's': {
-        // Handle print mode setting
-        if (inString == "s,l") {
-          print_mode = 'l';
-          EEPROM.write(EEPROM_PRINT_MODE, print_mode);
-        } else if (inString == "s,n") {
-          print_mode = 'n';
-          EEPROM.write(EEPROM_PRINT_MODE, print_mode);
         }
         break;
       }
@@ -480,25 +609,13 @@ void handleSerialAndAnalogData() {
           int temp_threshold = inString.substring(commandIndex + 1).toInt();
           if (temp_threshold > 0) {
             downtime_threshold = temp_threshold;
-            EEPROM.write(EEPROM_DOWNTIME_THRESHOLD, downtime_threshold);
+            EEPROMWriteULong(EEPROM_DOWNTIME_THRESHOLD, downtime_threshold);
           }
         }
         break;
       }
 
-      case 'e': {
-        // Handle external reset relay control
-        if (inString == "e,on") {
-          ext_reset_enabled = true;
-          EEPROM.write(EEPROM_EXT_RESET_ENABLED, 1);
-        } else if (inString == "e,off") {
-          ext_reset_enabled = false;
-          EEPROM.write(EEPROM_EXT_RESET_ENABLED, 0);
-        }
-        break;
-      }
-
-      case 'r': {
+      case 's': {
         // Handle baud rate setting
         int commandIndex = inString.indexOf(',');
         if (commandIndex != -1) {
@@ -506,10 +623,30 @@ void handleSerialAndAnalogData() {
           // Only allow standard baud rates
           if (new_baud == 9600 || new_baud == 19200 || new_baud == 38400 || 
               new_baud == 57600 || new_baud == 115200) {
-            EEPROM.write(EEPROM_BAUD_RATE, new_baud);
-            // Baud rate will take effect after reset
-            resetFunc();
+            // Save the new baud rate
+            EEPROMWriteULong(EEPROM_BAUD_RATE, new_baud);
+            
+            // Change baud rate immediately
+            Serial.end();
+            delay(100);
+            Serial.begin(new_baud);
+            
+            // Send confirmation
+            Serial.print("Baud rate changed to: ");
+            Serial.println(new_baud);
+            Serial.print("Please reset Arduino to apply changes permanently\n");
           }
+        }
+        break;
+      }
+
+      case 'e': {
+        // Handle external reset relay control
+        int commandIndex = inString.indexOf(',');
+        if (commandIndex != -1) {
+          int value = inString.substring(commandIndex + 1).toInt();
+          ext_reset_enabled = (value == 1);
+          EEPROMWriteULong(EEPROM_EXT_RESET_ENABLED, ext_reset_enabled ? 1 : 0);
         }
         break;
       }
@@ -520,7 +657,18 @@ void handleSerialAndAnalogData() {
         if (commandIndex != -1) {
           int value = inString.substring(commandIndex + 1).toInt();
           verbose_mode = (value == 1);
-          EEPROM.write(EEPROM_VERBOSE_MODE, verbose_mode);
+          EEPROMWriteULong(EEPROM_VERBOSE_MODE, verbose_mode ? 1 : 0);
+        }
+        break;
+      }
+
+      case 'l': {
+        // Handle legacy print mode setting
+        int commandIndex = inString.indexOf(',');
+        if (commandIndex != -1) {
+          int value = inString.substring(commandIndex + 1).toInt();
+          legacy_print_mode = (value == 1);
+          EEPROMWriteULong(EEPROM_PRINT_MODE, legacy_print_mode ? 1 : 0);
         }
         break;
       }
@@ -533,27 +681,20 @@ void handleSerialAndAnalogData() {
   printInfo();
   
   // Update pulse per second speed
-  if (current_pulses - last_speed_calc_pulses >= ONE_SEC_PULSES) { 
+  if (current_time - last_speed_calc_time >= ONE_SEC_PULSES) { 
     pulse_sec_speed = (encoder_counter - last_encoder_count); // Pulses per second (PPS)
     last_encoder_count = encoder_counter;
-    last_speed_calc_pulses = current_pulses;
+    last_speed_calc_time = current_time;
   }
 
   // Update pulse per minute speed
-  if (current_pulses - last_speed_calc_minute_pulses >= ONE_SEC_PULSES * downtime_threshold) { 
+  if (current_time - last_speed_calc_minute_time >= ONE_SEC_PULSES * downtime_threshold) { 
     pulse_min_speed = (encoder_counter - last_encoder_count_minute) * (downtime_threshold > 0 ? (60 / downtime_threshold) : 1); // Pulses per minute
     last_encoder_count_minute = encoder_counter;
-    last_speed_calc_minute_pulses = current_pulses;
+    last_speed_calc_minute_time = current_time;
     if (pulse_sec_speed == 0) {
       downtime_seconds += downtime_threshold;
     }
-  }
-
-  // Handle heart beat logic based on battery and counter sum
-  if ((battery > 100 && battery < 800) || counter_sum_ok_ng > counter_rpi_reboot / 2) {
-    digitalWrite(PIN_HEARTBEAT_LED, HIGH);
-  } else {
-    digitalWrite(PIN_HEARTBEAT_LED, LOW);
   }
 
   // Handle RPI reset functionality only if external reset is enabled
@@ -562,7 +703,7 @@ void handleSerialAndAnalogData() {
 
     if (counter_a_b > counter_rpi_reboot) {
       // Check if enough time has passed since last restart
-      if (current_pulses - last_restart_pulses >= MIN_RESTART_INTERVAL) {
+      if (current_time - last_restart_time >= MIN_RESTART_INTERVAL) {
         // Reset RPI
         digitalWrite(PIN_RPI_RESET, HIGH);
         delay(1000);
@@ -577,7 +718,7 @@ void handleSerialAndAnalogData() {
         }
         delay(1000);
         
-        last_restart_pulses = current_pulses;
+        last_restart_time = current_time;
       }
     }
 
@@ -587,7 +728,6 @@ void handleSerialAndAnalogData() {
     }
   }
 }
-
 
 void updateOutputStatus(int up, int down, int warn) {
   if (up == 1) bitSet(output_status, 0); // UP ON
@@ -601,7 +741,7 @@ void updateOutputStatus(int up, int down, int warn) {
 }
 
 void printInfo() {
-  if (print_mode == 'n') {
+  if (!legacy_print_mode) {
     // Essential data (always printed)
     Serial.print("ENC:"); Serial.print(encoder_counter); Serial.print(",");
     Serial.print("OKC:"); Serial.print(counter_ok); Serial.print(",");
@@ -623,7 +763,7 @@ void printInfo() {
       Serial.print("NDD:"); Serial.print(ng_debounce_delay * 10 / TEN_MS_PULSES); Serial.print(",");
       Serial.print("NDP:"); Serial.print(ng_debounce_percent); Serial.print(",");
       Serial.print("EXT:"); Serial.print(ext_reset_enabled ? "1" : "0"); Serial.print(",");
-      Serial.print("BAUD:"); Serial.print(EEPROM.read(EEPROM_BAUD_RATE));
+      Serial.print("BAUD:"); Serial.print(baud_rate);
     }
     Serial.print("\n");
   } else {
@@ -636,5 +776,43 @@ void printInfo() {
     Serial.print("\n");
   }
   wdt_reset();
+}
+
+// Add this function to handle heartbeat patterns
+void updateHeartbeatLED() {
+  // Check for error conditions first
+  if (battery < 780) {  // Low battery warning
+    if (current_time - last_heartbeat_time >= TWO_MS_PULSES*100) {  // 200ms fast blink
+      last_heartbeat_time = current_time;
+      heartbeat_state = !heartbeat_state;
+      digitalWrite(PIN_HEARTBEAT_LED, heartbeat_state);
+    }
+  } else if (counter_sum_ok_ng > counter_rpi_reboot / 2) {  // High error rate
+    if (current_time - last_heartbeat_time >= TWO_MS_PULSES*200) {  // 400ms fast blink
+      last_heartbeat_time = current_time;
+      heartbeat_state = !heartbeat_state;
+      digitalWrite(PIN_HEARTBEAT_LED, heartbeat_state);
+    }
+  } else if (digitalRead(PIN_RPI_SIGNAL) == HIGH && (current_time - last_pi_ping_time > ONE_MIN_PULSES * 5)) {  // RPI communication error
+    // Double blink pattern
+    if (current_time - last_heartbeat_time >= TWO_MS_PULSES*150) {  // 300ms cycle
+      last_heartbeat_time = current_time;
+      heartbeat_state = true;
+    } else if (current_time - last_heartbeat_time >= TWO_MS_PULSES*100) {  // 200ms
+      heartbeat_state = false;
+    } else if (current_time - last_heartbeat_time >= TWO_MS_PULSES*50) {  // 100ms
+      heartbeat_state = true;
+    } else {
+      heartbeat_state = false;
+    }
+    digitalWrite(PIN_HEARTBEAT_LED, heartbeat_state);
+  } else {
+    // Normal operation - 1 second blink
+    if (current_time - last_heartbeat_time >= ONE_SEC_PULSES) {  // 1 second
+      last_heartbeat_time = current_time;
+      heartbeat_state = !heartbeat_state;
+      digitalWrite(PIN_HEARTBEAT_LED, heartbeat_state);
+    }
+  }
 }
 
