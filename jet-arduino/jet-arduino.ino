@@ -82,11 +82,13 @@ void(* resetFunc) (void) = 0;
 #define EEPROM_OK_OFFSET_DELAY 12  // 12-15: OK offset delay in pulses
 #define EEPROM_OK_DEBOUNCE_DELAY 16 // 16-19: OK debounce delay in pulses
 #define EEPROM_OK_DEBOUNCE_PERCENT 20 // 20-23: OK debounce percent
-#define EEPROM_NG_OFFSET_DELAY 24  // 24-27: NG offset delay in pulses
-#define EEPROM_NG_DEBOUNCE_DELAY 28 // 28-31: NG debounce delay in pulses
-#define EEPROM_NG_DEBOUNCE_PERCENT 32 // 32-35: NG debounce percent
-#define EEPROM_DOWNTIME_THRESHOLD 36 // 36-39: Downtime threshold
-#define EEPROM_BAUD_RATE 40        // 40-43: Baud rate
+#define EEPROM_OK_ENCODER_FACTOR 24 // 24-27: OK encoder factor
+#define EEPROM_NG_OFFSET_DELAY 28  // 28-31: NG offset delay in pulses
+#define EEPROM_NG_DEBOUNCE_DELAY 32 // 32-35: NG debounce delay in pulses
+#define EEPROM_NG_DEBOUNCE_PERCENT 36 // 36-39: NG debounce percent
+#define EEPROM_NG_ENCODER_FACTOR 40 // 40-43: NG encoder factor
+#define EEPROM_DOWNTIME_THRESHOLD 44 // 44-47: Downtime threshold
+#define EEPROM_BAUD_RATE 48        // 48-51: Baud rate
 
 // Default baud rate if EEPROM is empty
 #define DEFAULT_BAUD_RATE 57600
@@ -144,6 +146,21 @@ const unsigned long HEARTBEAT_SOLID = 0;      // 0 for solid on
 // Add these with other global variables
 unsigned long last_heartbeat_millis = 0;  // For millis-based timing
 
+// Add these with other global variables
+#define MAX_ENCODER_EVENTS 32
+struct EncoderEvent {
+  unsigned long scheduled_time;
+  int increment;
+};
+EncoderEvent encoder_events[MAX_ENCODER_EVENTS];
+int encoder_head = 0;
+int encoder_tail = 0;
+int inc = 0;  // Global increment variable
+
+// Add these with other global variables
+int ok_encoder_factor = 1;  // Default OK encoder factor
+int ng_encoder_factor = 1;  // Default NG encoder factor
+
 // Add this function to calculate thresholds
 void updateDebounceThresholds() {
   ok_debounce_threshold = (ok_debounce_delay * ok_debounce_percent) / 100;
@@ -177,7 +194,7 @@ unsigned long EEPROMReadULong(int address) {
 void initializeEEPROMIfEmpty() {
   // Check if EEPROM is empty (all bytes are 0xFF)
   bool is_empty = true;
-  for (int i = 0; i < 44; i++) {  // Check first 44 bytes (all our settings)
+  for (int i = 0; i < 52; i++) {  // Check first 52 bytes (all our settings)
     if (EEPROM.read(i) != 0xFF) {
       is_empty = false;
       break;
@@ -188,7 +205,7 @@ void initializeEEPROMIfEmpty() {
     // Write default values
     EEPROMWriteULong(EEPROM_PRINT_MODE, 0);
     EEPROMWriteULong(EEPROM_VERBOSE_MODE, 0);
-    EEPROMWriteULong(EEPROM_EXT_RESET_ENABLED, 0);  // Ensure external reset is disabled by default
+    EEPROMWriteULong(EEPROM_EXT_RESET_ENABLED, 0);
     EEPROMWriteULong(EEPROM_OK_OFFSET_DELAY, DEFAULT_OFFSET_DELAY_MS);
     EEPROMWriteULong(EEPROM_OK_DEBOUNCE_DELAY, DEFAULT_DEBOUNCE_DELAY_MS);
     EEPROMWriteULong(EEPROM_OK_DEBOUNCE_PERCENT, DEFAULT_DEBOUNCE_PERCENT);
@@ -197,6 +214,8 @@ void initializeEEPROMIfEmpty() {
     EEPROMWriteULong(EEPROM_NG_DEBOUNCE_PERCENT, DEFAULT_DEBOUNCE_PERCENT);
     EEPROMWriteULong(EEPROM_DOWNTIME_THRESHOLD, 10);
     EEPROMWriteULong(EEPROM_BAUD_RATE, DEFAULT_BAUD_RATE);
+    EEPROMWriteULong(EEPROM_OK_ENCODER_FACTOR, 1);  // Default OK encoder factor
+    EEPROMWriteULong(EEPROM_NG_ENCODER_FACTOR, 1);  // Default NG encoder factor
   }
 }
 
@@ -307,6 +326,19 @@ void setup() {
     EEPROMWriteULong(EEPROM_DOWNTIME_THRESHOLD, downtime_threshold);
   }
 
+  // Read encoder factors from EEPROM
+  ok_encoder_factor = EEPROMReadULong(EEPROM_OK_ENCODER_FACTOR);
+  if (ok_encoder_factor == 0 || ok_encoder_factor == 0xFFFFFFFF) {
+    ok_encoder_factor = 1;
+    EEPROMWriteULong(EEPROM_OK_ENCODER_FACTOR, ok_encoder_factor);
+  }
+  
+  ng_encoder_factor = EEPROMReadULong(EEPROM_NG_ENCODER_FACTOR);
+  if (ng_encoder_factor == 0 || ng_encoder_factor == 0xFFFFFFFF) {
+    ng_encoder_factor = 1;
+    EEPROMWriteULong(EEPROM_NG_ENCODER_FACTOR, ng_encoder_factor);
+  }
+
   // Calculate initial thresholds
   updateDebounceThresholds();
 }
@@ -399,13 +431,42 @@ void put_byte_on_pins(byte in_byte){
 }
 
 void count_up_ok() {
-  ok_interrupt_flag = true;
-  ok_interrupt_time = millis();  
+  if (ok_debounce_delay == 0) {  // If no debounce delay
+    // Handle short debounce directly in interrupt
+    if (digitalRead(PIN_OK_INPUT) == HIGH) {
+      inc = (digitalRead(PIN_NG_INPUT) == HIGH) ? -1 : 1;
+      encoder_events[encoder_head] = {current_time + ok_offset_delay, inc * ok_encoder_factor};
+      encoder_head = (encoder_head + 1) % MAX_ENCODER_EVENTS;
+      counter_ok++;
+    }
+  } else {
+    // For longer debounces, set flag for main loop
+    ok_interrupt_flag = true;
+    ok_interrupt_time = millis();
+  }
 }
 
 void count_up_ng() {
-  ng_interrupt_flag = true;
-  ng_interrupt_time = millis(); 
+  if (ng_debounce_delay == 0) {  // If no debounce delay
+    // Handle short debounce directly in interrupt
+    if (digitalRead(PIN_NG_INPUT) == HIGH) {
+      inc = (digitalRead(PIN_OK_INPUT) == HIGH) ? 1 : -1;
+      encoder_events[encoder_head] = {current_time + ng_offset_delay, inc * ng_encoder_factor};
+      encoder_head = (encoder_head + 1) % MAX_ENCODER_EVENTS;
+      counter_ng++;
+    }
+  } else {
+    // For longer debounces, set flag for main loop
+    ng_interrupt_flag = true;
+    ng_interrupt_time = millis();
+  }
+}
+
+void process_encoder_events() {
+  while (encoder_tail != encoder_head && encoder_events[encoder_tail].scheduled_time <= current_time) {
+    encoder_counter += encoder_events[encoder_tail].increment;
+    encoder_tail = (encoder_tail + 1) % MAX_ENCODER_EVENTS;
+  }
 }
 
 void handleSerialAndAnalogData() {
@@ -424,8 +485,10 @@ void handleSerialAndAnalogData() {
       
       if (ok_high_count >= ok_debounce_delay) {
         if (ok_high_count > ok_debounce_threshold) {
-          ok_pending_count = true;
-          ok_pending_encoder = (digitalRead(PIN_NG_INPUT) == HIGH) ? -1 : 1;
+          inc = (digitalRead(PIN_NG_INPUT) == HIGH) ? -1 : 1;
+          encoder_events[encoder_head] = {current_time + ok_offset_delay, inc * ok_encoder_factor};
+          encoder_head = (encoder_head + 1) % MAX_ENCODER_EVENTS;
+          counter_ok++;
         }
         
         ok_high_count = 0;
@@ -445,8 +508,10 @@ void handleSerialAndAnalogData() {
       
       if (ng_high_count >= ng_debounce_delay) {
         if (ng_high_count > ng_debounce_threshold) {
-          ng_pending_count = true;
-          ng_pending_encoder = (digitalRead(PIN_OK_INPUT) == HIGH) ? 1 : -1;
+          inc = (digitalRead(PIN_OK_INPUT) == HIGH) ? 1 : -1;
+          encoder_events[encoder_head] = {current_time + ng_offset_delay, inc * ng_encoder_factor};
+          encoder_head = (encoder_head + 1) % MAX_ENCODER_EVENTS;
+          counter_ng++;
         }
         
         ng_high_count = 0;
@@ -455,20 +520,8 @@ void handleSerialAndAnalogData() {
     }
   }
 
-  // Handle pending counts after offset delay
-  // Check OK pending count
-  if (ok_pending_count && (current_time - ok_interrupt_time >= ok_offset_delay)) {
-    counter_ok++;
-    encoder_counter += ok_pending_encoder;
-    ok_pending_count = false;
-  }
-
-  // Check NG pending count
-  if (ng_pending_count && (current_time - ng_interrupt_time >= ng_offset_delay)) {
-    counter_ng++;
-    encoder_counter += ng_pending_encoder;
-    ng_pending_count = false;
-  }
+  // Process any pending encoder events
+  process_encoder_events();
 
   // Handle serial data
   while (Serial.available() > 0) {
@@ -489,40 +542,50 @@ void handleSerialAndAnalogData() {
           
           if (cmd == 'o') {
             if (subCmd == "od") {
-              if (value >= 0) {  // Validate value
+              if (value >= 0) {
                 ok_offset_delay = MS_TO_PULSES(value);
                 EEPROMWriteULong(EEPROM_OK_OFFSET_DELAY, value);
               }
             } else if (subCmd == "dd") {
-              if (value >= 0) {  // Validate value
+              if (value >= 0) {
                 ok_debounce_delay = MS_TO_PULSES(value);
                 EEPROMWriteULong(EEPROM_OK_DEBOUNCE_DELAY, value);
                 updateDebounceThresholds();
               }
             } else if (subCmd == "dp") {
-              if (value >= 0 && value <= 100) {  // Validate percentage
+              if (value >= 0 && value <= 100) {
                 ok_debounce_percent = value;
                 EEPROMWriteULong(EEPROM_OK_DEBOUNCE_PERCENT, ok_debounce_percent);
                 updateDebounceThresholds();
               }
+            } else if (subCmd == "ef") {
+              if (value != 0) {  // Don't allow zero factor
+                ok_encoder_factor = value;
+                EEPROMWriteULong(EEPROM_OK_ENCODER_FACTOR, ok_encoder_factor);
+              }
             }
           } else { // cmd == 'n'
             if (subCmd == "od") {
-              if (value >= 0) {  // Validate value
+              if (value >= 0) {
                 ng_offset_delay = MS_TO_PULSES(value);
                 EEPROMWriteULong(EEPROM_NG_OFFSET_DELAY, value);
               }
             } else if (subCmd == "dd") {
-              if (value >= 0) {  // Validate value
+              if (value >= 0) {
                 ng_debounce_delay = MS_TO_PULSES(value);
                 EEPROMWriteULong(EEPROM_NG_DEBOUNCE_DELAY, value);
                 updateDebounceThresholds();
               }
             } else if (subCmd == "dp") {
-              if (value >= 0 && value <= 100) {  // Validate percentage
+              if (value >= 0 && value <= 100) {
                 ng_debounce_percent = value;
                 EEPROMWriteULong(EEPROM_NG_DEBOUNCE_PERCENT, ng_debounce_percent);
                 updateDebounceThresholds();
+              }
+            } else if (subCmd == "ef") {
+              if (value != 0) {  // Don't allow zero factor
+                ng_encoder_factor = value;
+                EEPROMWriteULong(EEPROM_NG_ENCODER_FACTOR, ng_encoder_factor);
               }
             }
           }
@@ -657,7 +720,6 @@ void handleSerialAndAnalogData() {
         if (commandIndex != -1) {
           int value = inString.substring(commandIndex + 1).toInt();
           verbose_mode = (value == 1);
-          EEPROMWriteULong(EEPROM_VERBOSE_MODE, verbose_mode ? 1 : 0);
         }
         break;
       }
@@ -756,12 +818,14 @@ void printInfo() {
     // Verbose data (only printed if verbose_mode is true)
     if (verbose_mode) {
       Serial.print(",");
-      Serial.print("OFD:"); Serial.print(ok_offset_delay * 10 / TEN_MS_PULSES); Serial.print(",");
-      Serial.print("ODD:"); Serial.print(ok_debounce_delay * 10 / TEN_MS_PULSES); Serial.print(",");
+      Serial.print("OOD:"); Serial.print(PULSES_TO_MS(ok_offset_delay)); Serial.print(",");
+      Serial.print("ODD:"); Serial.print(PULSES_TO_MS(ok_debounce_delay)); Serial.print(",");
       Serial.print("ODP:"); Serial.print(ok_debounce_percent); Serial.print(",");
-      Serial.print("NFD:"); Serial.print(ng_offset_delay * 10 / TEN_MS_PULSES); Serial.print(",");
-      Serial.print("NDD:"); Serial.print(ng_debounce_delay * 10 / TEN_MS_PULSES); Serial.print(",");
+      Serial.print("OEF:"); Serial.print(ok_encoder_factor); Serial.print(",");  // Add OK encoder factor
+      Serial.print("NOD:"); Serial.print(PULSES_TO_MS(ng_offset_delay)); Serial.print(",");
+      Serial.print("NDD:"); Serial.print(PULSES_TO_MS(ng_debounce_delay)); Serial.print(",");
       Serial.print("NDP:"); Serial.print(ng_debounce_percent); Serial.print(",");
+      Serial.print("NEF:"); Serial.print(ng_encoder_factor); Serial.print(",");  // Add NG encoder factor
       Serial.print("EXT:"); Serial.print(ext_reset_enabled ? "1" : "0"); Serial.print(",");
       Serial.print("BAUD:"); Serial.print(baud_rate);
     }
