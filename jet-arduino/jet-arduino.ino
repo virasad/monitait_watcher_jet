@@ -80,11 +80,11 @@ void(* resetFunc) (void) = 0;
 #define EEPROM_VERBOSE_MODE 4      // 4-7: Verbose mode (0 for off, 1 for on)
 #define EEPROM_EXT_RESET_ENABLED 8 // 8-11: External reset enabled (0 for off, 1 for on)
 #define EEPROM_OK_OFFSET_DELAY 12  // 12-15: OK offset delay in pulses
-#define EEPROM_OK_DEBOUNCE_DELAY 16 // 16-19: OK debounce delay in pulses
+#define EEPROM_OK_DEBOUNCE_PULSE 16 // 16-19: OK debounce pulse count
 #define EEPROM_OK_DEBOUNCE_PERCENT 20 // 20-23: OK debounce percent
 #define EEPROM_OK_ENCODER_FACTOR 24 // 24-27: OK encoder factor
 #define EEPROM_NG_OFFSET_DELAY 28  // 28-31: NG offset delay in pulses
-#define EEPROM_NG_DEBOUNCE_DELAY 32 // 32-35: NG debounce delay in pulses
+#define EEPROM_NG_DEBOUNCE_PULSE 32 // 32-35: NG debounce pulse count
 #define EEPROM_NG_DEBOUNCE_PERCENT 36 // 36-39: NG debounce percent
 #define EEPROM_NG_ENCODER_FACTOR 40 // 40-43: NG encoder factor
 #define EEPROM_DOWNTIME_THRESHOLD 44 // 44-47: Downtime threshold
@@ -100,14 +100,14 @@ void(* resetFunc) (void) = 0;
 
 // Default delay values in milliseconds
 #define DEFAULT_OFFSET_DELAY_MS 0
-#define DEFAULT_DEBOUNCE_DELAY_MS 10
+#define DEFAULT_DEBOUNCE_PULSE 10
 #define DEFAULT_DEBOUNCE_PERCENT 60
 
 unsigned long ok_offset_delay = MS_TO_PULSES(DEFAULT_OFFSET_DELAY_MS);
-unsigned long ok_debounce_delay = MS_TO_PULSES(DEFAULT_DEBOUNCE_DELAY_MS);
+unsigned long ok_debounce_pulse = DEFAULT_DEBOUNCE_PULSE;
 unsigned long ok_debounce_percent = DEFAULT_DEBOUNCE_PERCENT;
 unsigned long ng_offset_delay = MS_TO_PULSES(DEFAULT_OFFSET_DELAY_MS);
-unsigned long ng_debounce_delay = MS_TO_PULSES(DEFAULT_DEBOUNCE_DELAY_MS);
+unsigned long ng_debounce_pulse = DEFAULT_DEBOUNCE_PULSE;
 unsigned long ng_debounce_percent = DEFAULT_DEBOUNCE_PERCENT;
 bool legacy_print_mode = false;  // false for new format, true for legacy format
 bool ext_reset_enabled = false;
@@ -163,8 +163,8 @@ int ng_encoder_factor = 1;  // Default NG encoder factor
 
 // Add this function to calculate thresholds
 void updateDebounceThresholds() {
-  ok_debounce_threshold = (ok_debounce_delay * ok_debounce_percent) / 100;
-  ng_debounce_threshold = (ng_debounce_delay * ng_debounce_percent) / 100;
+  ok_debounce_threshold = (ok_debounce_pulse * ok_debounce_percent) / 100;
+  ng_debounce_threshold = (ng_debounce_pulse * ng_debounce_percent) / 100;
 }
 
 // Add these helper functions after the EEPROM definitions
@@ -207,10 +207,10 @@ void initializeEEPROMIfEmpty() {
     EEPROMWriteULong(EEPROM_VERBOSE_MODE, 0);
     EEPROMWriteULong(EEPROM_EXT_RESET_ENABLED, 0);
     EEPROMWriteULong(EEPROM_OK_OFFSET_DELAY, DEFAULT_OFFSET_DELAY_MS);
-    EEPROMWriteULong(EEPROM_OK_DEBOUNCE_DELAY, DEFAULT_DEBOUNCE_DELAY_MS);
+    EEPROMWriteULong(EEPROM_OK_DEBOUNCE_PULSE, DEFAULT_DEBOUNCE_PULSE);
     EEPROMWriteULong(EEPROM_OK_DEBOUNCE_PERCENT, DEFAULT_DEBOUNCE_PERCENT);
     EEPROMWriteULong(EEPROM_NG_OFFSET_DELAY, DEFAULT_OFFSET_DELAY_MS);
-    EEPROMWriteULong(EEPROM_NG_DEBOUNCE_DELAY, DEFAULT_DEBOUNCE_DELAY_MS);
+    EEPROMWriteULong(EEPROM_NG_DEBOUNCE_PULSE, DEFAULT_DEBOUNCE_PULSE);
     EEPROMWriteULong(EEPROM_NG_DEBOUNCE_PERCENT, DEFAULT_DEBOUNCE_PERCENT);
     EEPROMWriteULong(EEPROM_DOWNTIME_THRESHOLD, 10);
     EEPROMWriteULong(EEPROM_BAUD_RATE, DEFAULT_BAUD_RATE);
@@ -279,19 +279,19 @@ void setup() {
 
   // Read settings from EEPROM and convert to pulses
   unsigned long ok_od = EEPROMReadULong(EEPROM_OK_OFFSET_DELAY);
-  unsigned long ok_dd = EEPROMReadULong(EEPROM_OK_DEBOUNCE_DELAY);
-  unsigned long ok_dp = EEPROMReadULong(EEPROM_OK_DEBOUNCE_PERCENT);
+  unsigned long ok_dp = EEPROMReadULong(EEPROM_OK_DEBOUNCE_PULSE);
+  unsigned long ok_dl = EEPROMReadULong(EEPROM_OK_DEBOUNCE_PERCENT);
   unsigned long ng_od = EEPROMReadULong(EEPROM_NG_OFFSET_DELAY);
-  unsigned long ng_dd = EEPROMReadULong(EEPROM_NG_DEBOUNCE_DELAY);
-  unsigned long ng_dp = EEPROMReadULong(EEPROM_NG_DEBOUNCE_PERCENT);
+  unsigned long ng_dp = EEPROMReadULong(EEPROM_NG_DEBOUNCE_PULSE);
+  unsigned long ng_dl = EEPROMReadULong(EEPROM_NG_DEBOUNCE_PERCENT);
   
   // Validate and set default values if EEPROM values are invalid
   ok_offset_delay = (ok_od == 0 || ok_od == 0xFFFFFFFF) ? MS_TO_PULSES(DEFAULT_OFFSET_DELAY_MS) : MS_TO_PULSES(ok_od);
-  ok_debounce_delay = (ok_dd == 0 || ok_dd == 0xFFFFFFFF) ? MS_TO_PULSES(DEFAULT_DEBOUNCE_DELAY_MS) : MS_TO_PULSES(ok_dd);
-  ok_debounce_percent = (ok_dp == 0 || ok_dp == 0xFFFFFFFF) ? DEFAULT_DEBOUNCE_PERCENT : ok_dp;
+  ok_debounce_pulse = (ok_dp == 0 || ok_dp == 0xFFFFFFFF) ? DEFAULT_DEBOUNCE_PULSE : ok_dp;
+  ok_debounce_percent = (ok_dl == 0 || ok_dl == 0xFFFFFFFF) ? DEFAULT_DEBOUNCE_PERCENT : ok_dl;
   ng_offset_delay = (ng_od == 0 || ng_od == 0xFFFFFFFF) ? MS_TO_PULSES(DEFAULT_OFFSET_DELAY_MS) : MS_TO_PULSES(ng_od);
-  ng_debounce_delay = (ng_dd == 0 || ng_dd == 0xFFFFFFFF) ? MS_TO_PULSES(DEFAULT_DEBOUNCE_DELAY_MS) : MS_TO_PULSES(ng_dd);
-  ng_debounce_percent = (ng_dp == 0 || ng_dp == 0xFFFFFFFF) ? DEFAULT_DEBOUNCE_PERCENT : ng_dp;
+  ng_debounce_pulse = (ng_dp == 0 || ng_dp == 0xFFFFFFFF) ? DEFAULT_DEBOUNCE_PULSE : ng_dp;
+  ng_debounce_percent = (ng_dl == 0 || ng_dl == 0xFFFFFFFF) ? DEFAULT_DEBOUNCE_PERCENT : ng_dl;
   
   // Read mode settings from EEPROM
   unsigned long stored_legacy = EEPROMReadULong(EEPROM_PRINT_MODE);
@@ -431,7 +431,7 @@ void put_byte_on_pins(byte in_byte){
 }
 
 void count_up_ok() {
-  if (ok_debounce_delay == 0) {  // If no debounce delay
+  if (ok_debounce_pulse == 0) {  // If no debounce delay
     // Handle short debounce directly in interrupt
     if (digitalRead(PIN_OK_INPUT) == HIGH) {
       inc = (digitalRead(PIN_NG_INPUT) == HIGH) ? -1 : 1;
@@ -447,7 +447,7 @@ void count_up_ok() {
 }
 
 void count_up_ng() {
-  if (ng_debounce_delay == 0) {  // If no debounce delay
+  if (ng_debounce_pulse == 0) {  // If no debounce delay
     // Handle short debounce directly in interrupt
     if (digitalRead(PIN_NG_INPUT) == HIGH) {
       inc = (digitalRead(PIN_OK_INPUT) == HIGH) ? 1 : -1;
@@ -476,14 +476,14 @@ void handleSerialAndAnalogData() {
 
   // Handle OK signal debouncing
   if (ok_interrupt_flag) {
-    if (current_time - ok_last_check_time >= TWO_MS_PULSES) {  // 2ms check
+    if (current_time - ok_last_check_time >= 1) {  // Check every pulse
       ok_last_check_time = current_time;
       
       if (digitalRead(PIN_OK_INPUT) == HIGH) {
-        ok_high_count += 2;  // Increment by 2 since we check every 2ms
+        ok_high_count += 1;  // Increment by 1 pulse
       }
       
-      if (ok_high_count >= ok_debounce_delay) {
+      if (ok_high_count >= ok_debounce_pulse) {
         if (ok_high_count > ok_debounce_threshold) {
           inc = (digitalRead(PIN_NG_INPUT) == HIGH) ? -1 : 1;
           encoder_events[encoder_head] = {current_time + ok_offset_delay, inc * ok_encoder_factor};
@@ -499,14 +499,14 @@ void handleSerialAndAnalogData() {
 
   // Handle NG signal debouncing
   if (ng_interrupt_flag) {
-    if (current_time - ng_last_check_time >= TWO_MS_PULSES) {  // 2ms check
+    if (current_time - ng_last_check_time >= 1) {  // Check every pulse
       ng_last_check_time = current_time;
       
       if (digitalRead(PIN_NG_INPUT) == HIGH) {
-        ng_high_count += 2;  // Increment by 2 since we check every 2ms
+        ng_high_count += 1;  // Increment by 1 pulse
       }
       
-      if (ng_high_count >= ng_debounce_delay) {
+      if (ng_high_count >= ng_debounce_pulse) {
         if (ng_high_count > ng_debounce_threshold) {
           inc = (digitalRead(PIN_OK_INPUT) == HIGH) ? 1 : -1;
           encoder_events[encoder_head] = {current_time + ng_offset_delay, inc * ng_encoder_factor};
@@ -546,13 +546,13 @@ void handleSerialAndAnalogData() {
                 ok_offset_delay = MS_TO_PULSES(value);
                 EEPROMWriteULong(EEPROM_OK_OFFSET_DELAY, value);
               }
-            } else if (subCmd == "dd") {
+            } else if (subCmd == "dp") {
               if (value >= 0) {
-                ok_debounce_delay = MS_TO_PULSES(value);
-                EEPROMWriteULong(EEPROM_OK_DEBOUNCE_DELAY, value);
+                ok_debounce_pulse = value;
+                EEPROMWriteULong(EEPROM_OK_DEBOUNCE_PULSE, value);
                 updateDebounceThresholds();
               }
-            } else if (subCmd == "dp") {
+            } else if (subCmd == "dl") {
               if (value >= 0 && value <= 100) {
                 ok_debounce_percent = value;
                 EEPROMWriteULong(EEPROM_OK_DEBOUNCE_PERCENT, ok_debounce_percent);
@@ -570,13 +570,13 @@ void handleSerialAndAnalogData() {
                 ng_offset_delay = MS_TO_PULSES(value);
                 EEPROMWriteULong(EEPROM_NG_OFFSET_DELAY, value);
               }
-            } else if (subCmd == "dd") {
+            } else if (subCmd == "dp") {
               if (value >= 0) {
-                ng_debounce_delay = MS_TO_PULSES(value);
-                EEPROMWriteULong(EEPROM_NG_DEBOUNCE_DELAY, value);
+                ng_debounce_pulse = value;
+                EEPROMWriteULong(EEPROM_NG_DEBOUNCE_PULSE, value);
                 updateDebounceThresholds();
               }
-            } else if (subCmd == "dp") {
+            } else if (subCmd == "dl") {
               if (value >= 0 && value <= 100) {
                 ng_debounce_percent = value;
                 EEPROMWriteULong(EEPROM_NG_DEBOUNCE_PERCENT, ng_debounce_percent);
@@ -694,10 +694,6 @@ void handleSerialAndAnalogData() {
             delay(100);
             Serial.begin(new_baud);
             
-            // Send confirmation
-            Serial.print("Baud rate changed to: ");
-            Serial.println(new_baud);
-            Serial.print("Please reset Arduino to apply changes permanently\n");
           }
         }
         break;
@@ -819,15 +815,15 @@ void printInfo() {
     if (verbose_mode) {
       Serial.print(",");
       Serial.print("OOD:"); Serial.print(PULSES_TO_MS(ok_offset_delay)); Serial.print(",");
-      Serial.print("ODD:"); Serial.print(PULSES_TO_MS(ok_debounce_delay)); Serial.print(",");
-      Serial.print("ODP:"); Serial.print(ok_debounce_percent); Serial.print(",");
+      Serial.print("ODP:"); Serial.print(ok_debounce_pulse); Serial.print(",");
+      Serial.print("ODL:"); Serial.print(ok_debounce_percent); Serial.print(",");
       Serial.print("OEF:"); Serial.print(ok_encoder_factor); Serial.print(",");  // Add OK encoder factor
       Serial.print("NOD:"); Serial.print(PULSES_TO_MS(ng_offset_delay)); Serial.print(",");
-      Serial.print("NDD:"); Serial.print(PULSES_TO_MS(ng_debounce_delay)); Serial.print(",");
-      Serial.print("NDP:"); Serial.print(ng_debounce_percent); Serial.print(",");
+      Serial.print("NDP:"); Serial.print(ng_debounce_pulse); Serial.print(",");
+      Serial.print("NDL:"); Serial.print(ng_debounce_percent); Serial.print(",");
       Serial.print("NEF:"); Serial.print(ng_encoder_factor); Serial.print(",");  // Add NG encoder factor
       Serial.print("EXT:"); Serial.print(ext_reset_enabled ? "1" : "0"); Serial.print(",");
-      Serial.print("BAUD:"); Serial.print(baud_rate);
+      Serial.print("BUD:"); Serial.print(baud_rate);
     }
     Serial.print("\n");
   } else {
