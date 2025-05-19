@@ -559,8 +559,8 @@ void handleSerialAndAnalogData() {
                 updateDebounceThresholds();
               }
             } else if (subCmd == "ef") {
-              if (value != 0) {  // Don't allow zero factor
-                ok_encoder_factor = value;
+              if (value == (int)value) {  // Ensure it's an integer
+                ok_encoder_factor = (int)value;
                 EEPROMWriteULong(EEPROM_OK_ENCODER_FACTOR, ok_encoder_factor);
               }
             }
@@ -583,8 +583,8 @@ void handleSerialAndAnalogData() {
                 updateDebounceThresholds();
               }
             } else if (subCmd == "ef") {
-              if (value != 0) {  // Don't allow zero factor
-                ng_encoder_factor = value;
+              if (value == (int)value) {  // Ensure it's an integer
+                ng_encoder_factor = (int)value;
                 EEPROMWriteULong(EEPROM_NG_ENCODER_FACTOR, ng_encoder_factor);
               }
             }
