@@ -328,13 +328,13 @@ void setup() {
 
   // Read encoder factors from EEPROM
   ok_encoder_factor = EEPROMReadULong(EEPROM_OK_ENCODER_FACTOR);
-  if (ok_encoder_factor == 0 || ok_encoder_factor == 0xFFFFFFFF) {
+  if (ok_encoder_factor == 0xFFFFFFFF) {  // Only set default if EEPROM is empty
     ok_encoder_factor = 1;
     EEPROMWriteULong(EEPROM_OK_ENCODER_FACTOR, ok_encoder_factor);
   }
   
   ng_encoder_factor = EEPROMReadULong(EEPROM_NG_ENCODER_FACTOR);
-  if (ng_encoder_factor == 0 || ng_encoder_factor == 0xFFFFFFFF) {
+  if (ng_encoder_factor == 0xFFFFFFFF) {  // Only set default if EEPROM is empty
     ng_encoder_factor = 1;
     EEPROMWriteULong(EEPROM_NG_ENCODER_FACTOR, ng_encoder_factor);
   }
