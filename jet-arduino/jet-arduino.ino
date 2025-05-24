@@ -750,7 +750,7 @@ void handleSerialAndAnalogData() {
     pulse_min_speed = (encoder_counter - last_encoder_count_minute) * (downtime_threshold > 0 ? (60 / downtime_threshold) : 1); // Pulses per minute
     last_encoder_count_minute = encoder_counter;
     last_speed_calc_minute_time = current_time;
-    if (pulse_sec_speed == 0) {
+    if (pulse_min_speed == 0) {
       downtime_seconds += downtime_threshold;
     }
   }
@@ -823,7 +823,8 @@ void printInfo() {
       Serial.print("NDL:"); Serial.print(ng_debounce_percent); Serial.print(",");
       Serial.print("NEF:"); Serial.print(ng_encoder_factor); Serial.print(",");  // Add NG encoder factor
       Serial.print("EXT:"); Serial.print(ext_reset_enabled ? "1" : "0"); Serial.print(",");
-      Serial.print("BUD:"); Serial.print(baud_rate);
+      Serial.print("BUD:"); Serial.print(baud_rate); Serial.print(",");
+      Serial.print("DWT:"); Serial.print(downtime_threshold);
     }
     Serial.print("\n");
   } else {
